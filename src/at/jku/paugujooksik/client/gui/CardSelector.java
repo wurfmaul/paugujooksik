@@ -1,16 +1,18 @@
-package at.jku.paugujooksik.client;
+package at.jku.paugujooksik.client.gui;
 
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 public class CardSelector {
+	private static final int MAX_OPEN_CARDS = 2; // FIXME parameterize selection
 	private final List<Card> selection = new LinkedList<>();
 	
 	public boolean pin(int index) {
 		int i = selection.indexOf(new Card(index));
-		if (i < 0 || 1 < i)
+		if (i < 0 || MAX_OPEN_CARDS <= i)
 			throw new SelectionException("Element can not be pinned: " + index);
+		
 		if (selection.get(i).pinned)
 			return false;
 		
