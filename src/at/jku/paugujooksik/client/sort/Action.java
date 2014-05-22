@@ -2,12 +2,47 @@ package at.jku.paugujooksik.client.sort;
 
 public abstract class Action {
 	public Type type;
+	
+	public static BinaryAction compare(int left, int right) {
+		return new BinaryAction(Type.COMPARE, left, right);
+	}
+	
+	public static UnaryAction open(int index) {
+		return new UnaryAction(Type.OPEN, index);
+	}
+	
+	public static BinaryAction open(int left, int right) {
+		return new BinaryAction(Type.OPEN, left, right);
+	}
+	
+	public static UnaryAction mark(int index) {
+		return new UnaryAction(Type.MARK, index);
+	}
+	
+	public static UnaryAction pin(int index) {
+		return new UnaryAction(Type.PIN, index);
+	}
+	
+	public static UnaryAction unpin(int index) {
+		return new UnaryAction(Type.UNPIN, index);
+	}
+	
+	public static BinaryAction swap(int left, int right) {
+		return new BinaryAction(Type.SWAP, left, right);
+	}
 
+	public static UnaryAction unmark(int index) {
+		return new UnaryAction(Type.UNMARK, index);
+	}
+	
+	public abstract boolean isCompatibleTo(Action other);
+	
 	@Override
 	public abstract boolean equals(Object obj);
 
 	@Override
 	public abstract String toString();
+
 }
 
 final class UnaryAction extends Action {
@@ -19,10 +54,15 @@ final class UnaryAction extends Action {
 	}
 
 	@Override
+	public boolean isCompatibleTo(Action other) {
+		return equals(other);
+	}
+	
+	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append(type);
-		sb.append(" of index ");
+		sb.append(" of card ");
 		sb.append(index + 1);
 		return sb.toString();
 	}
@@ -44,10 +84,20 @@ final class BinaryAction extends Action {
 	}
 
 	@Override
+	public boolean isCompatibleTo(Action other) {
+		if (type.equals(other.type) && other instanceof UnaryAction) {
+			final int index = ((UnaryAction) other).index;
+			if (index == indexLeft || index == indexRight)
+				return true;
+		}
+		return equals(other);
+	}
+	
+	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append(type);
-		sb.append(" of index ");
+		sb.append(" of cards ");
 		sb.append(indexLeft + 1);
 		sb.append(" and ");
 		sb.append(indexRight + 1);
@@ -68,7 +118,7 @@ final class BinaryAction extends Action {
 
 enum Type {
 	COMPARE("Comparing"), SWAP("Swapping"), OPEN("Opening"), PIN("Pinning"), UNPIN(
-			"Unpinning"), MARK("Marking");
+			"Unpinning"), MARK("Marking"), UNMARK("Unmarking");
 	private final String desc;
 
 	private Type(String desc) {

@@ -33,10 +33,6 @@ public class Client {
 		algorithm = new BubbleSort<>();
 		
 		final List<Action> actions = algorithm.getActions(values);
-//		for (Action a : actions) {
-//			System.out.println(a);
-//		}
-		
 		ClientGUI.initAndRun(values, actions);
 	}
 }

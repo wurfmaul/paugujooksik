@@ -14,17 +14,17 @@ public class SelectionSort<T extends Comparable<T>> extends SortAlgorithm<T> {
 		for (int j = 0; j < n - 1; j++) {
 			iMin = j;
 			for (int i = j + 1; i < n; i++) {
-				actions.add(open(i, iMin));
-//				actions.add(compare(i, iMin));
+				actions.add(Action.open(i, iMin));
+//				actions.add(Action.compare(i, iMin));
 				if (a.get(i).compareTo(a.get(iMin)) < 0) {
-					if (pinned != -1) actions.add(unpin(pinned));
+					if (pinned != -1) actions.add(Action.unpin(pinned));
 					iMin = i;
 					pinned = iMin;
-					actions.add(pin(iMin));
+					actions.add(Action.pin(iMin));
 				} else {
 					if (pinned == -1){
 						pinned = iMin;
-						actions.add(pin(pinned));
+						actions.add(Action.pin(pinned));
 					}
 				}
 			}
@@ -32,17 +32,16 @@ public class SelectionSort<T extends Comparable<T>> extends SortAlgorithm<T> {
 				T tmp = a.get(j);
 				a.set(j, a.get(iMin));
 				a.set(iMin, tmp);
-				actions.add(open(j, iMin));
-				actions.add(swap(j, iMin));
+				actions.add(Action.open(j, iMin));
+				actions.add(Action.swap(j, iMin));
 			}
 			if (pinned != -1) {
-				actions.add(unpin(pinned));
-				actions.add(mark(j));
+				actions.add(Action.unpin(pinned));
+				actions.add(Action.mark(j));
 			}
 			pinned = -1;
 		}
 		assert isListSorted(a);
 		return actions;
 	}
-
 }
