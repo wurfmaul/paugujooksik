@@ -9,6 +9,8 @@ public class InsertionSort<T extends Comparable<T>> extends SortAlgorithm<T> {
 		final List<T> a = cloneList(values);
 		final int n = a.size();
 		
+		
+		
 		return actions;
 	}
 

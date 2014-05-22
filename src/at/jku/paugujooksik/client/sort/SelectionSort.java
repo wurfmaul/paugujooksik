@@ -14,8 +14,10 @@ public class SelectionSort<T extends Comparable<T>> extends SortAlgorithm<T> {
 		for (int j = 0; j < n - 1; j++) {
 			iMin = j;
 			for (int i = j + 1; i < n; i++) {
-				actions.add(Action.open(i, iMin));
-//				actions.add(Action.compare(i, iMin));
+				final BinaryAction openAction = Action.open(i, iMin);
+				if (actions.size() < 1 || !actions.get(actions.size() - 1).equals(openAction))
+					actions.add(openAction);
+				
 				if (a.get(i).compareTo(a.get(iMin)) < 0) {
 					if (pinned != -1) actions.add(Action.unpin(pinned));
 					iMin = i;
@@ -41,6 +43,7 @@ public class SelectionSort<T extends Comparable<T>> extends SortAlgorithm<T> {
 			}
 			pinned = -1;
 		}
+		actions.add(Action.mark(n - 1));
 		assert isListSorted(a);
 		return actions;
 	}

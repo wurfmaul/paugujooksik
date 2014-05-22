@@ -4,10 +4,14 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Logger;
 
 import at.jku.paugujooksik.client.sort.Action;
 
 public class Cards<T extends Comparable<T>> {
+	private static final boolean MOVE_PIN = false;
+	private static final Logger DEBUG = Logger.getLogger("DEBUG");
+	
 	private final List<Card<T>> cards;
 	private final List<Action> expectedActions;
 	private int curAction;
@@ -23,12 +27,41 @@ public class Cards<T extends Comparable<T>> {
 		this.curAction = 0;
 	}
 
+	public boolean allMarked() {
+		for (Card<T> card : cards) {
+			if (!card.marked)
+				return false;
+		}
+		return true;
+	}
+
+	public Card<T> getCard(int index) {
+		return cards.get(index);
+	}
+
+	public int getOne() {
+		if (!one())
+			throw new SelectionException("One button must be selected");
+		return getSelection().get(0);
+	}
+
+	public int getLeft() {
+		if (!two())
+			throw new SelectionException("Two buttons must be selected!");
+		return getSelection().get(0);
+	}
+
+	public int getRight() {
+		if (!two())
+			throw new SelectionException("Two buttons must be selected!");
+		return getSelection().get(1);
+	}
+
 	public void select(int index) {
 		if (isSelected(index))
 			return;
 
-		if (!checkAction(Action.open(index)))
-			return;
+		checkAction(Action.open(index));
 		
 		if (two()) {
 			Card<T> left = cards.get(getLeft());
@@ -43,16 +76,55 @@ public class Cards<T extends Comparable<T>> {
 		case 2:
 			throw new SelectionException("Two cards are already pinned!");
 		case 1:
-			if (checkAction(Action.open(index, getOne())))
-				cards.get(index).selected = true;
+			checkAction(Action.open(index, getOne()));
+			cards.get(index).selected = true;
 			break;
 		case 0:
-			if (checkAction(Action.open(index)))
-				cards.get(index).selected = true;
+//			checkAction(Action.open(index));
+			cards.get(index).selected = true;
 			break;
 
 		default:
 			throw new SelectionException("Invalid index: " + index);
+		}
+	}
+
+	public void swapSelection() {
+		if (!two())
+			throw new SelectionException("Two cards need to be open.");
+	
+		checkAction(Action.swap(getLeft(), getRight()));
+		final Card<T> left = cards.get(getLeft());
+		final Card<T> right = cards.get(getRight());
+		cards.set(getLeft(), right);
+		cards.set(getRight(), left);
+		if (!MOVE_PIN) {
+			boolean leftPinned = left.pinned;
+			boolean rightPinned = right.pinned;
+			left.pinned = rightPinned;
+			right.pinned = leftPinned;
+		}
+	}
+
+	public void togglePin(int index) {
+		final Card<T> card = cards.get(index);
+		if (card.pinned) {
+			checkAction(Action.unpin(index));
+			card.pinned = false;
+		} else {
+			checkAction(Action.pin(index));
+			card.pinned = true;
+		}
+	}
+
+	public void toggleMark(int index) {
+		final Card<T> card = cards.get(index);
+		if (card.marked) {
+			checkAction(Action.unmark(index));
+			card.marked = false;
+		} else {
+			checkAction(Action.mark(index));
+			card.marked = true;
 		}
 	}
 
@@ -68,52 +140,11 @@ public class Cards<T extends Comparable<T>> {
 		return cards.get(index).selected;
 	}
 
-	public void togglePin(int index) {
-		final Card<T> card = cards.get(index);
-		if (card.pinned) {
-			if (checkAction(Action.unpin(index)))
-				card.pinned = false;
-		} else {
-			if (checkAction(Action.unpin(index)))
-				card.pinned = true;
-		}
-	}
-
-	public void toggleMark(int index) {
-		final Card<T> card = cards.get(index);
-		if (card.marked) {
-			if (checkAction(Action.unmark(index)))
-				card.marked = false;
-		} else {
-			if (checkAction(Action.mark(index)))
-				card.marked = true;
-		}
-	}
-
-	public int getLeft() {
-		if (!two())
-			throw new SelectionException("Two buttons must be selected!");
-		return getSelection().get(0);
-	}
-
-	public int getRight() {
-		if (!two())
-			throw new SelectionException("Two buttons must be selected!");
-		return getSelection().get(1);
-	}
-
-	public int getOne() {
-		if (!one())
-			throw new SelectionException("One button must be selected");
-		return getSelection().get(0);
-	}
-
-	public void reset() {
-		// clear flags
-		for (Card<T> c : cards) {
-			c.reset();
-		}
-		Collections.shuffle(cards);
+	public boolean isSorted() {
+		Object[] act = cards.toArray();
+		Object[] exp = cards.toArray();
+		Arrays.sort(exp);
+		return Arrays.equals(act, exp);
 	}
 
 	public boolean zero() {
@@ -128,27 +159,12 @@ public class Cards<T extends Comparable<T>> {
 		return getSelection().size() == 2;
 	}
 
-	public Card<T> get(int index) {
-		return cards.get(index);
-	}
-
-	public void swapSelection() {
-		if (!two())
-			throw new SelectionException("Two cards need to be open.");
-
-		if (checkAction(Action.swap(getLeft(), getRight()))) {
-			final Card<T> left = cards.get(getLeft());
-			final Card<T> right = cards.get(getRight());
-			cards.set(getLeft(), right);
-			cards.set(getRight(), left);
+	public void reset() {
+		// clear flags
+		for (Card<T> c : cards) {
+			c.reset();
 		}
-	}
-
-	public boolean success() {
-		Object[] act = cards.toArray();
-		Object[] exp = cards.toArray();
-		Arrays.sort(exp);
-		return Arrays.equals(act, exp);
+		Collections.shuffle(cards);
 	}
 
 	private List<Integer> getSelection() {
@@ -161,19 +177,21 @@ public class Cards<T extends Comparable<T>> {
 		return sel;
 	}
 
-	private boolean checkAction(Action action) {
+	private void checkAction(Action action) {
 		if (curAction < expectedActions.size()) {
 			final Action exp = expectedActions.get(curAction);
+			DEBUG.info("Expected: '" + exp + "'; actual: '" + action + "' "
+					+ "<" + (!exp.isCompatibleTo(action) ? "not " : "") + "compatible>"
+					+ "<" + (!exp.equals(action) ? "not " : "") + "equal>");
 			if (exp.isCompatibleTo(action)) {
-				if (exp.equals(action))
+				if (exp.equals(action)) {
 					curAction++;
-				return true;
+				}
 			} else {
-				System.out.println("Algorithm would do the following instead: " + exp);
-				return false;
+				throw new SelectionException("Algorithm would do the following instead: " + exp);
 			}
+		} else {
+			throw new SelectionException("No more actions necessary!");
 		}
-		System.out.println("No more actions necessary!");
-		return false;
 	}
 }

@@ -2,41 +2,37 @@ package at.jku.paugujooksik.client.sort;
 
 public abstract class Action {
 	public Type type;
-	
-	public static BinaryAction compare(int left, int right) {
-		return new BinaryAction(Type.COMPARE, left, right);
-	}
-	
+
 	public static UnaryAction open(int index) {
 		return new UnaryAction(Type.OPEN, index);
 	}
-	
+
 	public static BinaryAction open(int left, int right) {
 		return new BinaryAction(Type.OPEN, left, right);
 	}
-	
+
 	public static UnaryAction mark(int index) {
 		return new UnaryAction(Type.MARK, index);
-	}
-	
-	public static UnaryAction pin(int index) {
-		return new UnaryAction(Type.PIN, index);
-	}
-	
-	public static UnaryAction unpin(int index) {
-		return new UnaryAction(Type.UNPIN, index);
-	}
-	
-	public static BinaryAction swap(int left, int right) {
-		return new BinaryAction(Type.SWAP, left, right);
 	}
 
 	public static UnaryAction unmark(int index) {
 		return new UnaryAction(Type.UNMARK, index);
 	}
-	
+
+	public static UnaryAction pin(int index) {
+		return new UnaryAction(Type.PIN, index);
+	}
+
+	public static UnaryAction unpin(int index) {
+		return new UnaryAction(Type.UNPIN, index);
+	}
+
+	public static BinaryAction swap(int left, int right) {
+		return new BinaryAction(Type.SWAP, left, right);
+	}
+
 	public abstract boolean isCompatibleTo(Action other);
-	
+
 	@Override
 	public abstract boolean equals(Object obj);
 
@@ -57,7 +53,7 @@ final class UnaryAction extends Action {
 	public boolean isCompatibleTo(Action other) {
 		return equals(other);
 	}
-	
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
@@ -69,7 +65,11 @@ final class UnaryAction extends Action {
 
 	@Override
 	public boolean equals(Object obj) {
-		return obj instanceof UnaryAction && index == ((UnaryAction) obj).index;
+		if (obj instanceof UnaryAction) {
+			final UnaryAction other = (UnaryAction) obj;
+			return type.equals(other.type) && index == other.index;
+		}
+		return false;
 	}
 }
 
@@ -92,7 +92,7 @@ final class BinaryAction extends Action {
 		}
 		return equals(other);
 	}
-	
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
@@ -106,13 +106,13 @@ final class BinaryAction extends Action {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (!(obj instanceof BinaryAction))
-			return false;
-
-		final BinaryAction other = (BinaryAction) obj;
-		return indexLeft == other.indexLeft && indexRight == other.indexRight
-				|| indexLeft == other.indexRight
-				&& indexRight == other.indexLeft;
+		if (obj instanceof BinaryAction) {
+			final BinaryAction other = (BinaryAction) obj;
+			return type.equals(other.type) && 
+					(indexLeft == other.indexLeft && indexRight == other.indexRight 
+					|| indexLeft == other.indexRight && indexRight == other.indexLeft);
+		}
+		return false;
 	}
 }
 

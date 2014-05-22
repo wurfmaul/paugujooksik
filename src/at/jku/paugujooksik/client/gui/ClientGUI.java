@@ -18,6 +18,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.AbstractButton;
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -25,6 +26,9 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JSeparator;
+import javax.swing.JTextPane;
 import javax.swing.JToggleButton;
 import javax.swing.UIManager;
 
@@ -44,7 +48,10 @@ public class ClientGUI<T extends Comparable<T>> {
 	private JPanel pnlAbove;
 	private DrawPanel pnlBelow;
 	private JButton btnExchange;
+	private JTextPane txtErrors;
 	private JLabel lblHint;
+	private int errorCount = 0;
+
 
 	/**
 	 * Create the application.
@@ -73,10 +80,10 @@ public class ClientGUI<T extends Comparable<T>> {
 		pnlBelow.removeAll();
 
 		for (int i = 0; i < n; i++) {
-			final Card<T> c = cards.get(i);
+			final Card<T> c = cards.getCard(i);
 			final AbstractButton btnCard = cardBtns.get(i);
 			{
-				btnCard.setText(c.selected ? cards.get(i).toString()
+				btnCard.setText(c.selected ? cards.getCard(i).toString()
 						: DEFAULT_BUTTON_TEXT);
 				btnCard.setSelected(c.selected);
 				btnCard.setOpaque(c.marked);
@@ -97,8 +104,12 @@ public class ClientGUI<T extends Comparable<T>> {
 				btnExchange.addMouseListener(new MouseAdapter() {
 					@Override
 					public void mouseClicked(MouseEvent e) {
-						// exchange values
-						cards.swapSelection();
+						try {
+							cards.swapSelection();
+							clearErrors();
+						} catch (SelectionException ex) {
+							reportError(ex);
+						}
 						updateButtons();
 					}
 				});
@@ -108,18 +119,35 @@ public class ClientGUI<T extends Comparable<T>> {
 		frame.getContentPane().repaint();
 		checkFinish();
 	}
+	
+	private void clearErrors() {
+		lblHint.setText("");
+	}
+	
+	private void reportError(SelectionException ex) {
+		lblHint.setForeground(Color.RED);
+		lblHint.setText(ex.getMessage());
+		errorCount++;
+		updateStats();
+	}
+
+	private void updateStats() {
+		final StringBuilder sb = new StringBuilder();
+		sb.append("Errors: ");
+		sb.append(errorCount);
+		sb.append(System.lineSeparator());
+		sb.append("Swaps: 0");
+		txtErrors.setText(sb.toString());
+	}
 
 	private void checkFinish() {
-		for (int i = 0; i < n; i++) {
-			if (!finBtns.get(i).isSelected()) {
-				lblHint.setText("");
-				return;
+		if (cards.allMarked()) {
+			if (cards.isSorted()) {
+				lblHint.setForeground(Color.GREEN);
+				lblHint.setText("Congratulations!");
+			} else {
+				lblHint.setText("There is something wrong!");
 			}
-		}
-		if (cards.success()) {
-			lblHint.setText("Congratulations!");
-		} else {
-			lblHint.setText("There is something wrong!");
 		}
 	}
 
@@ -407,11 +435,13 @@ public class ClientGUI<T extends Comparable<T>> {
 		gbcLblHint.gridy = 4;
 		frame.getContentPane().add(lblHint, gbcLblHint);
 
-		JLabel lblCount = new JLabel("0");
+		txtErrors = new JTextPane();
 		GridBagConstraints gbcLblCount = new GridBagConstraints();
 		gbcLblCount.gridx = 1;
 		gbcLblCount.gridy = 4;
-		frame.getContentPane().add(lblCount, gbcLblCount);
+		txtErrors.setOpaque(false);
+		frame.getContentPane().add(txtErrors, gbcLblCount);
+		updateStats();
 
 		JMenuBar menuBar = new JMenuBar();
 		frame.setJMenuBar(menuBar);
@@ -438,8 +468,42 @@ public class ClientGUI<T extends Comparable<T>> {
 		});
 		mnFile.add(mntmExit);
 
-		JMenuItem mntmHelp = new JMenuItem("Help");
-		menuBar.add(mntmHelp);
+		JMenu mnConfig = new JMenu("Config"); // XXX
+		menuBar.add(mnConfig);
+
+		ButtonGroup algorithmGroup = new ButtonGroup();
+		JMenuItem mntmBubbleSort = new JRadioButtonMenuItem("BubbleSort");
+		mntmBubbleSort.setSelected(true);
+		mntmBubbleSort.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				
+			}
+		});
+		mnConfig.add(mntmBubbleSort);
+		algorithmGroup.add(mntmBubbleSort);
+		
+		JMenuItem mntmInsertionSort = new JRadioButtonMenuItem("InsertionSort");
+		mntmInsertionSort.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				
+			}
+		});
+		mnConfig.add(mntmInsertionSort);
+		algorithmGroup.add(mntmInsertionSort);
+
+		JMenuItem mntmSelectionSort = new JRadioButtonMenuItem("SelectionSort");
+		mntmSelectionSort.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				
+			}
+		});
+		mnConfig.add(mntmSelectionSort);
+		algorithmGroup.add(mntmSelectionSort);
+		
+		mnConfig.add(new JSeparator());
 
 		// Action Handlers
 		for (int i = 0; i < n; i++) {
@@ -450,21 +514,36 @@ public class ClientGUI<T extends Comparable<T>> {
 			btnCard.addMouseListener(new MouseAdapter() {
 				@Override
 				public void mouseClicked(MouseEvent e) {
-					cards.select(index);
+					try {
+						cards.select(index);
+						clearErrors();
+					} catch (SelectionException ex) {
+						reportError(ex);
+					}
 					updateButtons();
 				}
 			});
 			btnPin.addMouseListener(new MouseAdapter() {
 				@Override
 				public void mouseClicked(MouseEvent e) {
-					cards.togglePin(index);
+					try {
+						cards.togglePin(index);
+						clearErrors();
+					} catch (SelectionException ex) {
+						reportError(ex);
+					}
 					updateButtons();
 				}
 			});
 			btnFin.addMouseListener(new MouseAdapter() {
 				@Override
 				public void mouseClicked(MouseEvent e) {
-					cards.toggleMark(index);
+					try {
+						cards.toggleMark(index);
+						clearErrors();
+					} catch (SelectionException ex) {
+						reportError(ex);
+					}
 					updateButtons();
 				}
 			});
