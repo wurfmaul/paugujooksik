@@ -14,8 +14,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.swing.AbstractButton;
 import javax.swing.ButtonGroup;
@@ -32,12 +30,14 @@ import javax.swing.JTextPane;
 import javax.swing.JToggleButton;
 import javax.swing.UIManager;
 
-import at.jku.paugujooksik.client.sort.Action;
+import at.jku.paugujooksik.client.sort.SortAlgorithm;
 
 public class ClientGUI<T extends Comparable<T>> {
+	private static final int MIN_SIZE = 7;
+	private static final int MAX_SIZE = 15;
+	private static final int DEFAULT_SIZE = 7;
 	private static final String DEFAULT_BUTTON_TEXT = "  ";
 
-	private final Logger logger = Logger.getLogger(getClass().getName());
 	private final Cards<T> cards;
 	private final int n;
 	private final List<AbstractButton> cardBtns;
@@ -52,18 +52,16 @@ public class ClientGUI<T extends Comparable<T>> {
 	private JLabel lblHint;
 	private int errorCount = 0;
 
-
 	/**
 	 * Create the application.
 	 */
-	private ClientGUI(List<T> values, List<Action> expectedActions) {
+	private ClientGUI(List<T> values) {
 		this.n = values.size();
 		cardBtns = new LinkedList<>();
 		pinBtns = new LinkedList<>();
 		finBtns = new LinkedList<>();
-		cards = new Cards<>(values, expectedActions);
+		cards = new Cards<>(values);
 		initialize();
-		logger.setLevel(Level.ALL);
 	}
 
 	private void reset() {
@@ -72,7 +70,6 @@ public class ClientGUI<T extends Comparable<T>> {
 			cardBtns.get(i).setOpaque(false);
 			finBtns.get(i).setSelected(false);
 		}
-		logger.info("Game reset.");
 	}
 
 	private void updateButtons() {
@@ -119,11 +116,11 @@ public class ClientGUI<T extends Comparable<T>> {
 		frame.getContentPane().repaint();
 		checkFinish();
 	}
-	
+
 	private void clearErrors() {
 		lblHint.setText("");
 	}
-	
+
 	private void reportError(SelectionException ex) {
 		lblHint.setForeground(Color.RED);
 		lblHint.setText(ex.getMessage());
@@ -443,67 +440,7 @@ public class ClientGUI<T extends Comparable<T>> {
 		frame.getContentPane().add(txtErrors, gbcLblCount);
 		updateStats();
 
-		JMenuBar menuBar = new JMenuBar();
-		frame.setJMenuBar(menuBar);
-
-		JMenu mnFile = new JMenu("File");
-		menuBar.add(mnFile);
-
-		JMenuItem mntmRestart = new JMenuItem("Restart");
-		mntmRestart.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				reset();
-				updateButtons();
-			}
-		});
-		mnFile.add(mntmRestart);
-
-		JMenuItem mntmExit = new JMenuItem("Exit");
-		mntmExit.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				frame.dispose();
-			}
-		});
-		mnFile.add(mntmExit);
-
-		JMenu mnConfig = new JMenu("Config"); // XXX
-		menuBar.add(mnConfig);
-
-		ButtonGroup algorithmGroup = new ButtonGroup();
-		JMenuItem mntmBubbleSort = new JRadioButtonMenuItem("BubbleSort");
-		mntmBubbleSort.setSelected(true);
-		mntmBubbleSort.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				
-			}
-		});
-		mnConfig.add(mntmBubbleSort);
-		algorithmGroup.add(mntmBubbleSort);
-		
-		JMenuItem mntmInsertionSort = new JRadioButtonMenuItem("InsertionSort");
-		mntmInsertionSort.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				
-			}
-		});
-		mnConfig.add(mntmInsertionSort);
-		algorithmGroup.add(mntmInsertionSort);
-
-		JMenuItem mntmSelectionSort = new JRadioButtonMenuItem("SelectionSort");
-		mntmSelectionSort.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				
-			}
-		});
-		mnConfig.add(mntmSelectionSort);
-		algorithmGroup.add(mntmSelectionSort);
-		
-		mnConfig.add(new JSeparator());
+		frame.setJMenuBar(createMenuBar());
 
 		// Action Handlers
 		for (int i = 0; i < n; i++) {
@@ -551,11 +488,77 @@ public class ClientGUI<T extends Comparable<T>> {
 
 	}
 
+	private JMenuBar createMenuBar() {
+		JMenuBar menuBar = new JMenuBar();
+
+		JMenu mnFile = new JMenu("File");
+		{
+			JMenuItem mntmRestart = new JMenuItem("Restart");
+			mntmRestart.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					reset();
+					updateButtons();
+				}
+			});
+			mnFile.add(mntmRestart);
+
+			JMenuItem mntmExit = new JMenuItem("Exit");
+			mntmExit.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					frame.dispose();
+				}
+			});
+			mnFile.add(mntmExit);
+		}
+		menuBar.add(mnFile);
+
+		JMenu mnConfig = new JMenu("Config");
+		{
+			ButtonGroup algorithmGroup = new ButtonGroup();
+			int idx = 0;
+			for (SortAlgorithm<T> sort : cards.sort.getAll()) {
+				final int index = idx++;
+				final String name = sort.getClass().getSimpleName();
+				final JMenuItem item = new JRadioButtonMenuItem(name);
+				item.setSelected(cards.sort.getCurrent().equals(sort));
+				item.addActionListener(new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						cards.sort.setCurrent(index);
+						cards.reset();
+						updateButtons();
+					}
+				});
+				mnConfig.add(item);
+				algorithmGroup.add(item);
+			}
+
+			mnConfig.add(new JSeparator());
+
+			JMenu mnSize = new JMenu("Size");
+			{
+				ButtonGroup sizeGroup = new ButtonGroup();
+				for (int i = MIN_SIZE; i <= MAX_SIZE; i++) {
+					JMenuItem item = new JRadioButtonMenuItem(
+							Integer.toString(i));
+					item.setSelected(i == DEFAULT_SIZE);
+					sizeGroup.add(item);
+					mnSize.add(item);
+				}
+			}
+			mnConfig.add(mnSize);
+		}
+		menuBar.add(mnConfig);
+		return menuBar;
+	}
+
 	/**
 	 * Launch the application.
 	 */
 	public static <T extends Comparable<T>> void initAndRun(
-			final List<T> initValues, final List<Action> expectedActions) {
+			final List<T> initValues) {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
@@ -565,8 +568,7 @@ public class ClientGUI<T extends Comparable<T>> {
 					System.err.println(e.getLocalizedMessage());
 				}
 				try {
-					ClientGUI<T> window = new ClientGUI<>(initValues,
-							expectedActions);
+					ClientGUI<T> window = new ClientGUI<>(initValues);
 					window.frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();

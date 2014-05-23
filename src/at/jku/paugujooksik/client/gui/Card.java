@@ -10,12 +10,6 @@ public class Card<T extends Comparable<T>> implements Comparable<Card<T>> {
 		this.value = value;
 	}
 
-	public void reset() {
-		pinned = false;
-		marked = false;
-		selected = false;
-	}
-
 	@Override
 	public int compareTo(Card<T> o) {
 		return value.compareTo(o.value);

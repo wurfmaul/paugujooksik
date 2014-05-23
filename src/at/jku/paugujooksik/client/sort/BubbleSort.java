@@ -17,7 +17,6 @@ public class BubbleSort<T extends Comparable<T>> extends SortAlgorithm<T> {
 				T left = a.get(i - 1);
 				T right = a.get(i);
 				actions.add(Action.open(i - 1, i));
-//				actions.add(Action.compare(i - 1, i));
 				if (left.compareTo(right) > 0) {
 					a.set(i, left);
 					a.set(i - 1, right);

@@ -7,24 +7,28 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import at.jku.paugujooksik.client.sort.Action;
+import at.jku.paugujooksik.client.sort.BubbleSort;
+import at.jku.paugujooksik.client.sort.InsertionSort;
+import at.jku.paugujooksik.client.sort.SelectionSort;
+import at.jku.paugujooksik.client.sort.SortAlgorithm;
 
 public class Cards<T extends Comparable<T>> {
 	private static final boolean MOVE_PIN = false;
 	private static final Logger DEBUG = Logger.getLogger("DEBUG");
-	
+
+	private final List<T> values;
 	private final List<Card<T>> cards;
-	private final List<Action> expectedActions;
+
+	private List<Action> expectedActions;
 	private int curAction;
 
-	public Cards(List<T> values, List<Action> expectedActions) {
+	public final Sort sort;
+
+	public Cards(List<T> values) {
+		this.values = values;
 		this.cards = new LinkedList<>();
-		{
-			for (T value : values) {
-				cards.add(new Card<>(value));
-			}
-		}
-		this.expectedActions = Collections.unmodifiableList(expectedActions);
-		this.curAction = 0;
+		this.sort = new Sort();
+		reset();
 	}
 
 	public boolean allMarked() {
@@ -62,7 +66,7 @@ public class Cards<T extends Comparable<T>> {
 			return;
 
 		checkAction(Action.open(index));
-		
+
 		if (two()) {
 			Card<T> left = cards.get(getLeft());
 			Card<T> right = cards.get(getRight());
@@ -71,7 +75,7 @@ public class Cards<T extends Comparable<T>> {
 			if (!right.pinned)
 				right.selected = false;
 		}
-		
+
 		switch (getSelection().size()) {
 		case 2:
 			throw new SelectionException("Two cards are already pinned!");
@@ -80,7 +84,6 @@ public class Cards<T extends Comparable<T>> {
 			cards.get(index).selected = true;
 			break;
 		case 0:
-//			checkAction(Action.open(index));
 			cards.get(index).selected = true;
 			break;
 
@@ -92,7 +95,7 @@ public class Cards<T extends Comparable<T>> {
 	public void swapSelection() {
 		if (!two())
 			throw new SelectionException("Two cards need to be open.");
-	
+
 		checkAction(Action.swap(getLeft(), getRight()));
 		final Card<T> left = cards.get(getLeft());
 		final Card<T> right = cards.get(getRight());
@@ -160,11 +163,14 @@ public class Cards<T extends Comparable<T>> {
 	}
 
 	public void reset() {
-		// clear flags
-		for (Card<T> c : cards) {
-			c.reset();
+		Collections.shuffle(values);
+		cards.clear();
+		for (T value : values) {
+			cards.add(new Card<>(value));
 		}
-		Collections.shuffle(cards);
+		expectedActions = sort.getCurrent().getActions(values);
+		curAction = 0;
+		
 	}
 
 	private List<Integer> getSelection() {
@@ -181,17 +187,46 @@ public class Cards<T extends Comparable<T>> {
 		if (curAction < expectedActions.size()) {
 			final Action exp = expectedActions.get(curAction);
 			DEBUG.info("Expected: '" + exp + "'; actual: '" + action + "' "
-					+ "<" + (!exp.isCompatibleTo(action) ? "not " : "") + "compatible>"
-					+ "<" + (!exp.equals(action) ? "not " : "") + "equal>");
+					+ "<" + (!exp.isCompatibleTo(action) ? "not " : "")
+					+ "compatible>" + "<" + (!exp.equals(action) ? "not " : "")
+					+ "equal>");
 			if (exp.isCompatibleTo(action)) {
 				if (exp.equals(action)) {
 					curAction++;
 				}
 			} else {
-				throw new SelectionException("Algorithm would do the following instead: " + exp);
+				throw new SelectionException(
+						"Algorithm would do the following instead: " + exp);
 			}
 		} else {
 			throw new SelectionException("No more actions necessary!");
+		}
+	}
+
+	public class Sort {
+		private List<SortAlgorithm<T>> algorithms;
+		private SortAlgorithm<T> curAlgo;
+
+		public Sort() {
+			algorithms = new LinkedList<>();
+			{
+				algorithms.add(new BubbleSort<T>());
+				algorithms.add(new InsertionSort<T>());
+				algorithms.add(new SelectionSort<T>());
+			}
+			curAlgo = algorithms.get(0);
+		}
+
+		public List<SortAlgorithm<T>> getAll() {
+			return Collections.unmodifiableList(algorithms);
+		}
+
+		public SortAlgorithm<T> getCurrent() {
+			return curAlgo;
+		}
+
+		public void setCurrent(int index) {
+			this.curAlgo = algorithms.get(index);
 		}
 	}
 }
