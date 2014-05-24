@@ -23,4 +23,9 @@ public abstract class SortAlgorithm<T extends Comparable<T>> {
 		}
 		return true;
 	}
+	
+	@Override
+	public String toString() {
+		return getClass().getSimpleName();
+	}
 }

@@ -1,7 +1,10 @@
 package at.jku.paugujooksik.client.gui;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.EventQueue;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -12,11 +15,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Logger;
 
-import javax.swing.AbstractButton;
 import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -29,22 +34,24 @@ import javax.swing.JSeparator;
 import javax.swing.JTextPane;
 import javax.swing.JToggleButton;
 import javax.swing.UIManager;
+import javax.swing.border.BevelBorder;
+import javax.swing.border.TitledBorder;
 
+import at.jku.paugujooksik.client.gui.ValueGenerator.Mode;
 import at.jku.paugujooksik.client.gui.ValueGenerator.Type;
 import at.jku.paugujooksik.client.sort.SortAlgorithm;
 
 public class ClientGUI {
+	private static final Logger DEBUGLOG = Logger.getLogger("DEBUG");
+	private static final String DEFAULT_BUTTON_TEXT = "  ";
 	private static final int MIN_SIZE = 7;
 	private static final int MAX_SIZE = 15;
 	private static final int DEFAULT_SIZE = 7;
-	private static final String DEFAULT_BUTTON_TEXT = "  ";
 
+	private final JFrame frame;
 	private final ValueGenerator values;
-	private final List<AbstractButton> cardBtns;
-	private final List<AbstractButton> pinBtns;
-	private final List<AbstractButton> finBtns;
+	private final List<CardPanel> cardBtns;
 
-	private JFrame frame;
 	private JPanel pnlAbove;
 	private DrawPanel pnlBelow;
 	private JButton btnExchange;
@@ -52,74 +59,45 @@ public class ClientGUI {
 	private JLabel lblHint;
 	private Cards<?> cards;
 	private int errorCount = 0;
+	private int swapCount = 0;
 	private int n = DEFAULT_SIZE;
 
 	/**
 	 * Create the application.
 	 */
 	private ClientGUI() {
+		frame = new JFrame();
 		values = new ValueGenerator();
 		cardBtns = new LinkedList<>();
-		pinBtns = new LinkedList<>();
-		finBtns = new LinkedList<>();
-		cards = new Cards<>(ValueGenerator.defaultValues(DEFAULT_SIZE));
+		setCards();
 		initialize();
 	}
 
 	private void reset() {
+		errorCount = 0;
+		swapCount = 0;
 		cards.reset();
-		for (int i = 0; i < n; i++) {
-			cardBtns.get(i).setOpaque(false);
-			finBtns.get(i).setSelected(false);
-		}
+		updateButtons();
+		updateStats();
 	}
 
 	private void updateButtons() {
-		pnlAbove.removeAll();
-		pnlBelow.removeAll();
-
 		for (int i = 0; i < n; i++) {
-			final Card<?> c = cards.getCard(i);
-			final AbstractButton btnCard = cardBtns.get(i);
-			{
-				btnCard.setText(c.selected ? cards.getCard(i).toString()
-						: DEFAULT_BUTTON_TEXT);
-				btnCard.setSelected(c.selected);
-				btnCard.setOpaque(c.marked);
-			}
-			final AbstractButton btnPin = pinBtns.get(i);
-			{
-				btnPin.setSelected(c.pinned);
-				btnPin.setEnabled(c.selected);
-			}
-			finBtns.get(i).setSelected(c.marked);
+			cardBtns.get(i).setTo(cards.getCard(i));
 		}
 
+		pnlBelow.removeAll();
 		if (cards.two()) {
-			btnExchange = new JButton("<->");
-			{
-				final int center = pnlBelow.getCenter();
-				btnExchange.setBounds(center - 50, 30, 100, 50);
-				btnExchange.addMouseListener(new MouseAdapter() {
-					@Override
-					public void mouseClicked(MouseEvent e) {
-						try {
-							cards.swapSelection();
-							clearErrors();
-						} catch (SelectionException ex) {
-							reportError(ex);
-						}
-						updateButtons();
-					}
-				});
-			}
+			btnExchange = new SwapButton();
+			btnExchange.setBounds(pnlBelow.getCenter() - 50, 30, 100, 50);
 			pnlBelow.add(btnExchange);
 		}
-		frame.getContentPane().repaint();
+
+		frame.repaint();
 		checkFinish();
 	}
 
-	private void clearErrors() {
+	private void clearErrorHint() {
 		lblHint.setText("");
 	}
 
@@ -135,7 +113,8 @@ public class ClientGUI {
 		sb.append("Errors: ");
 		sb.append(errorCount);
 		sb.append(System.lineSeparator());
-		sb.append("Swaps: 0");
+		sb.append("Swaps: ");
+		sb.append(swapCount);
 		txtErrors.setText(sb.toString());
 	}
 
@@ -153,17 +132,17 @@ public class ClientGUI {
 	/**
 	 * Initialize the contents of the frame.
 	 */
-	private void initialize() { // XXX
-		frame = new JFrame();
+	private void initialize() {
 		frame.setBounds(100, 100, 700, 500);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		GridBagLayout gridBagLayout = new GridBagLayout();
-		gridBagLayout.columnWidths = new int[] { 350, 37, 0 };
-		gridBagLayout.rowHeights = new int[] { 0, 50, 150, 0, 21, 0 };
-		gridBagLayout.columnWeights = new double[] { 1.0, 0.0, Double.MIN_VALUE };
-		gridBagLayout.rowWeights = new double[] { 0.0, 0.0, 0.0, 1.0, 0.0,
+		GridBagLayout gblFrame = new GridBagLayout();
+		gblFrame.columnWidths = new int[] { 350, 40, 0 };
+		gblFrame.rowHeights = new int[] { 0, 50, 0, 0, 20, 0 };
+		gblFrame.columnWeights = new double[] { 1.0, 0.0, Double.MIN_VALUE };
+		gblFrame.rowWeights = new double[] { 0.0, 0.0, 0.0, 1.0, 0.0,
 				Double.MIN_VALUE };
-		frame.getContentPane().setLayout(gridBagLayout);
+		frame.getContentPane().setLayout(gblFrame);
+		frame.getContentPane().removeAll();
 
 		JLabel lblTitle = new JLabel("Task: Sort the following cards!");
 		lblTitle.setFont(new Font("Dialog", Font.BOLD, 16));
@@ -218,297 +197,41 @@ public class ClientGUI {
 	}
 
 	private void initCardPanel() {
-		JPanel pnlCards = new JPanel();
-		GridBagConstraints gbcPnLCards = new GridBagConstraints();
-		gbcPnLCards.gridwidth = 2;
-		gbcPnLCards.insets = new Insets(0, 0, 5, 0);
-		gbcPnLCards.fill = GridBagConstraints.BOTH;
-		gbcPnLCards.gridx = 0;
-		gbcPnLCards.gridy = 2;
+		final JPanel pnlCards = new JPanel();
+		final GridBagConstraints gbcPnLCards = new GridBagConstraints();
+		{
+			gbcPnLCards.gridwidth = 2;
+			gbcPnLCards.insets = new Insets(0, 0, 5, 0);
+			gbcPnLCards.fill = GridBagConstraints.BOTH;
+			gbcPnLCards.gridx = 0;
+			gbcPnLCards.gridy = 2;
+		}
 		frame.getContentPane().add(pnlCards, gbcPnLCards);
-		GridBagLayout gbl_panel = new GridBagLayout();
-		gbl_panel.columnWidths = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				0, 0, 0, 0 };
-		gbl_panel.rowHeights = new int[] { 0, 0, 0 };
-		gbl_panel.columnWeights = new double[] { 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-				1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, Double.MIN_VALUE };
-		gbl_panel.rowWeights = new double[] { 0.0, 1.0, Double.MIN_VALUE };
-		pnlCards.setLayout(gbl_panel);
 
-		// one col less
-		// JPanel pnlCards = new JPanel();
-		// GridBagConstraints gbcPnLCards = new GridBagConstraints();
-		// gbcPnLCards.gridwidth = 2;
-		// gbcPnLCards.insets = new Insets(0, 0, 5, 0);
-		// gbcPnLCards.fill = GridBagConstraints.BOTH;
-		// gbcPnLCards.gridx = 0;
-		// gbcPnLCards.gridy = 2;
-		// frame.getContentPane().add(pnlCards, gbcPnLCards);
-		// GridBagLayout gbl_panel = new GridBagLayout();
-		// gbl_panel.columnWidths = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		// 0, 0 };
-		// gbl_panel.rowHeights = new int[] { 0, 0, 0 };
-		// gbl_panel.columnWeights = new double[] { 1.0, 1.0, 1.0, 1.0, 1.0,
-		// 1.0,
-		// 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, Double.MIN_VALUE };
-		// gbl_panel.rowWeights = new double[] { 0.0, 1.0, Double.MIN_VALUE };
-		// pnlCards.setLayout(gbl_panel);
+		final GridBagLayout gblPnlCards = new GridBagLayout();
+		{
+			gblPnlCards.columnWidths = new int[n + 1];
+			gblPnlCards.rowHeights = new int[] { 0, 0 };
+			double[] weights = new double[n + 1];
+			{
+				Arrays.fill(weights, 1.0);
+				weights[weights.length - 1] = Double.MIN_VALUE;
+			}
+			gblPnlCards.columnWeights = weights;
+			gblPnlCards.rowWeights = new double[] { 0.0, Double.MIN_VALUE };
+		}
+		pnlCards.setLayout(gblPnlCards);
 
-		/*********
-		 * CARDS *
-		 *********/ // FIXME unclickable!
-
-		JToggleButton btnCard0Pin = new JToggleButton("!");
-		GridBagConstraints gbcBtnCard0Pin = new GridBagConstraints();
-		gbcBtnCard0Pin.fill = GridBagConstraints.HORIZONTAL;
-		gbcBtnCard0Pin.insets = new Insets(0, 0, 5, 5);
-		gbcBtnCard0Pin.gridx = 0;
-		gbcBtnCard0Pin.gridy = 0;
-		btnCard0Pin.setEnabled(false);
-		pnlCards.add(btnCard0Pin, gbcBtnCard0Pin);
-		pinBtns.add(btnCard0Pin);
-
-		JToggleButton btnCard0Fin = new JToggleButton("#");
-		GridBagConstraints gbcBtnCard0Fin = new GridBagConstraints();
-		gbcBtnCard0Fin.fill = GridBagConstraints.HORIZONTAL;
-		gbcBtnCard0Fin.insets = new Insets(0, 0, 5, 5);
-		gbcBtnCard0Fin.gridx = 1;
-		gbcBtnCard0Fin.gridy = 0;
-		pnlCards.add(btnCard0Fin, gbcBtnCard0Fin);
-		finBtns.add(btnCard0Fin);
-
-		JToggleButton btnCard1Pin = new JToggleButton("!");
-		GridBagConstraints gbcBtnCard1Pin = new GridBagConstraints();
-		gbcBtnCard1Pin.fill = GridBagConstraints.HORIZONTAL;
-		gbcBtnCard1Pin.insets = new Insets(0, 0, 5, 5);
-		gbcBtnCard1Pin.gridx = 2;
-		gbcBtnCard1Pin.gridy = 0;
-		btnCard1Pin.setEnabled(false);
-		pnlCards.add(btnCard1Pin, gbcBtnCard1Pin);
-		pinBtns.add(btnCard1Pin);
-
-		JToggleButton btnCard1Fin = new JToggleButton("#");
-		GridBagConstraints gbcBtnCard1Fin = new GridBagConstraints();
-		gbcBtnCard1Fin.fill = GridBagConstraints.HORIZONTAL;
-		gbcBtnCard1Fin.insets = new Insets(0, 0, 5, 5);
-		gbcBtnCard1Fin.gridx = 3;
-		gbcBtnCard1Fin.gridy = 0;
-		pnlCards.add(btnCard1Fin, gbcBtnCard1Fin);
-		finBtns.add(btnCard1Fin);
-
-		JToggleButton btnCard2Pin = new JToggleButton("!");
-		GridBagConstraints gbcBtnCard2Pin = new GridBagConstraints();
-		gbcBtnCard2Pin.fill = GridBagConstraints.HORIZONTAL;
-		gbcBtnCard2Pin.insets = new Insets(0, 0, 5, 5);
-		gbcBtnCard2Pin.gridx = 4;
-		gbcBtnCard2Pin.gridy = 0;
-		btnCard2Pin.setEnabled(false);
-		pnlCards.add(btnCard2Pin, gbcBtnCard2Pin);
-		pinBtns.add(btnCard2Pin);
-
-		JToggleButton btnCard2Fin = new JToggleButton("#");
-		GridBagConstraints gbcBtnCard2Fin = new GridBagConstraints();
-		gbcBtnCard2Fin.fill = GridBagConstraints.HORIZONTAL;
-		gbcBtnCard2Fin.insets = new Insets(0, 0, 5, 5);
-		gbcBtnCard2Fin.gridx = 5;
-		gbcBtnCard2Fin.gridy = 0;
-		pnlCards.add(btnCard2Fin, gbcBtnCard2Fin);
-		finBtns.add(btnCard2Fin);
-
-		JToggleButton btnCard3Pin = new JToggleButton("!");
-		GridBagConstraints gbcBtnCard3Pin = new GridBagConstraints();
-		gbcBtnCard3Pin.fill = GridBagConstraints.HORIZONTAL;
-		gbcBtnCard3Pin.insets = new Insets(0, 0, 5, 5);
-		gbcBtnCard3Pin.gridx = 6;
-		gbcBtnCard3Pin.gridy = 0;
-		btnCard3Pin.setEnabled(false);
-		pnlCards.add(btnCard3Pin, gbcBtnCard3Pin);
-		pinBtns.add(btnCard3Pin);
-
-		JToggleButton btnCard3Fin = new JToggleButton("#");
-		GridBagConstraints gbcBtnCard3Fin = new GridBagConstraints();
-		gbcBtnCard3Fin.fill = GridBagConstraints.HORIZONTAL;
-		gbcBtnCard3Fin.insets = new Insets(0, 0, 5, 5);
-		gbcBtnCard3Fin.gridx = 7;
-		gbcBtnCard3Fin.gridy = 0;
-		pnlCards.add(btnCard3Fin, gbcBtnCard3Fin);
-		finBtns.add(btnCard3Fin);
-
-		JToggleButton btnCard4Pin = new JToggleButton("!");
-		GridBagConstraints gbcBtnCard4Pin = new GridBagConstraints();
-		gbcBtnCard4Pin.fill = GridBagConstraints.HORIZONTAL;
-		gbcBtnCard4Pin.insets = new Insets(0, 0, 5, 5);
-		gbcBtnCard4Pin.gridx = 8;
-		gbcBtnCard4Pin.gridy = 0;
-		btnCard4Pin.setEnabled(false);
-		pnlCards.add(btnCard4Pin, gbcBtnCard4Pin);
-		pinBtns.add(btnCard4Pin);
-
-		JToggleButton btnCard4Fin = new JToggleButton("#");
-		GridBagConstraints gbcBtnCard4Fin = new GridBagConstraints();
-		gbcBtnCard4Fin.fill = GridBagConstraints.HORIZONTAL;
-		gbcBtnCard4Fin.insets = new Insets(0, 0, 5, 5);
-		gbcBtnCard4Fin.gridx = 9;
-		gbcBtnCard4Fin.gridy = 0;
-		pnlCards.add(btnCard4Fin, gbcBtnCard4Fin);
-		finBtns.add(btnCard4Fin);
-
-		JToggleButton btnCard5Pin = new JToggleButton("!");
-		GridBagConstraints gbcBtnCard5Pin = new GridBagConstraints();
-		gbcBtnCard5Pin.fill = GridBagConstraints.HORIZONTAL;
-		gbcBtnCard5Pin.insets = new Insets(0, 0, 5, 5);
-		gbcBtnCard5Pin.gridx = 10;
-		gbcBtnCard5Pin.gridy = 0;
-		btnCard5Pin.setEnabled(false);
-		pnlCards.add(btnCard5Pin, gbcBtnCard5Pin);
-		pinBtns.add(btnCard5Pin);
-
-		JToggleButton btnCard5Fin = new JToggleButton("#");
-		GridBagConstraints gbcBtnCard5Fin = new GridBagConstraints();
-		gbcBtnCard5Fin.fill = GridBagConstraints.HORIZONTAL;
-		gbcBtnCard5Fin.insets = new Insets(0, 0, 5, 5);
-		gbcBtnCard5Fin.gridx = 11;
-		gbcBtnCard5Fin.gridy = 0;
-		pnlCards.add(btnCard5Fin, gbcBtnCard5Fin);
-		finBtns.add(btnCard5Fin);
-
-		JToggleButton btnCard6Pin = new JToggleButton("!");
-		GridBagConstraints gbcBtnCard6Pin = new GridBagConstraints();
-		gbcBtnCard6Pin.fill = GridBagConstraints.HORIZONTAL;
-		gbcBtnCard6Pin.insets = new Insets(0, 0, 5, 5);
-		gbcBtnCard6Pin.gridx = 12;
-		gbcBtnCard6Pin.gridy = 0;
-		btnCard6Pin.setEnabled(false);
-		pnlCards.add(btnCard6Pin, gbcBtnCard6Pin);
-		pinBtns.add(btnCard6Pin);
-
-		JToggleButton btnCard6Fin = new JToggleButton("#");
-		GridBagConstraints gbcBtnCard6Fin = new GridBagConstraints();
-		gbcBtnCard6Fin.fill = GridBagConstraints.HORIZONTAL;
-		gbcBtnCard6Fin.insets = new Insets(0, 0, 5, 5);
-		gbcBtnCard6Fin.gridx = 13;
-		gbcBtnCard6Fin.gridy = 0;
-		pnlCards.add(btnCard6Fin, gbcBtnCard6Fin);
-		finBtns.add(btnCard6Fin);
-
-		JToggleButton btnCard0 = new JToggleButton(DEFAULT_BUTTON_TEXT);
-		GridBagConstraints gbc_btnCard0 = new GridBagConstraints();
-		gbc_btnCard0.gridwidth = 2;
-		gbc_btnCard0.fill = GridBagConstraints.BOTH;
-		gbc_btnCard0.insets = new Insets(0, 0, 0, 5);
-		gbc_btnCard0.gridx = 0;
-		gbc_btnCard0.gridy = 1;
-		pnlCards.add(btnCard0, gbc_btnCard0);
-		btnCard0.setBackground(Color.GREEN);
-		cardBtns.add(btnCard0);
-
-		JToggleButton btnCard1 = new JToggleButton(DEFAULT_BUTTON_TEXT);
-		GridBagConstraints gbc_btnCard1 = new GridBagConstraints();
-		gbc_btnCard1.gridwidth = 2;
-		gbc_btnCard1.fill = GridBagConstraints.BOTH;
-		gbc_btnCard1.insets = new Insets(0, 0, 0, 5);
-		gbc_btnCard1.gridx = 2;
-		gbc_btnCard1.gridy = 1;
-		pnlCards.add(btnCard1, gbc_btnCard1);
-		btnCard1.setBackground(Color.GREEN);
-		cardBtns.add(btnCard1);
-
-		JToggleButton btnCard2 = new JToggleButton(DEFAULT_BUTTON_TEXT);
-		GridBagConstraints gbc_btnCard2 = new GridBagConstraints();
-		gbc_btnCard2.gridwidth = 2;
-		gbc_btnCard2.fill = GridBagConstraints.BOTH;
-		gbc_btnCard2.insets = new Insets(0, 0, 0, 5);
-		gbc_btnCard2.gridx = 4;
-		gbc_btnCard2.gridy = 1;
-		pnlCards.add(btnCard2, gbc_btnCard2);
-		btnCard2.setBackground(Color.GREEN);
-		cardBtns.add(btnCard2);
-
-		JToggleButton btnCard3 = new JToggleButton(DEFAULT_BUTTON_TEXT);
-		GridBagConstraints gbc_btnCard3 = new GridBagConstraints();
-		gbc_btnCard3.gridwidth = 2;
-		gbc_btnCard3.fill = GridBagConstraints.BOTH;
-		gbc_btnCard3.insets = new Insets(0, 0, 0, 5);
-		gbc_btnCard3.gridx = 6;
-		gbc_btnCard3.gridy = 1;
-		pnlCards.add(btnCard3, gbc_btnCard3);
-		btnCard3.setBackground(Color.GREEN);
-		cardBtns.add(btnCard3);
-
-		JToggleButton btnCard4 = new JToggleButton(DEFAULT_BUTTON_TEXT);
-		GridBagConstraints gbc_btnCard4 = new GridBagConstraints();
-		gbc_btnCard4.gridwidth = 2;
-		gbc_btnCard4.fill = GridBagConstraints.BOTH;
-		gbc_btnCard4.insets = new Insets(0, 0, 0, 5);
-		gbc_btnCard4.gridx = 8;
-		gbc_btnCard4.gridy = 1;
-		pnlCards.add(btnCard4, gbc_btnCard4);
-		btnCard4.setBackground(Color.GREEN);
-		cardBtns.add(btnCard4);
-
-		JToggleButton btnCard5 = new JToggleButton(DEFAULT_BUTTON_TEXT);
-		GridBagConstraints gbc_btnCard5 = new GridBagConstraints();
-		gbc_btnCard5.gridwidth = 2;
-		gbc_btnCard5.fill = GridBagConstraints.BOTH;
-		gbc_btnCard5.insets = new Insets(0, 0, 0, 5);
-		gbc_btnCard5.gridx = 10;
-		gbc_btnCard5.gridy = 1;
-		pnlCards.add(btnCard5, gbc_btnCard5);
-		btnCard5.setBackground(Color.GREEN);
-		cardBtns.add(btnCard5);
-
-		JToggleButton btnCard6 = new JToggleButton(DEFAULT_BUTTON_TEXT);
-		GridBagConstraints gbc_btnCard6 = new GridBagConstraints();
-		gbc_btnCard6.gridwidth = 2;
-		gbc_btnCard6.fill = GridBagConstraints.BOTH;
-		gbc_btnCard6.gridx = 12;
-		gbc_btnCard6.gridy = 1;
-		pnlCards.add(btnCard6, gbc_btnCard6);
-		btnCard6.setBackground(Color.GREEN);
-		cardBtns.add(btnCard6);
-
-		// Action Handlers
+		cardBtns.clear();
 		for (int i = 0; i < n; i++) {
-			final int index = i;
-			final AbstractButton btnCard = cardBtns.get(index);
-			final AbstractButton btnPin = pinBtns.get(index);
-			final AbstractButton btnFin = finBtns.get(index);
-			btnCard.addMouseListener(new MouseAdapter() {
-				@Override
-				public void mouseClicked(MouseEvent e) {
-					try {
-						cards.select(index);
-						clearErrors();
-					} catch (SelectionException ex) {
-						reportError(ex);
-					}
-					updateButtons();
-				}
-			});
-			btnPin.addMouseListener(new MouseAdapter() {
-				@Override
-				public void mouseClicked(MouseEvent e) {
-					try {
-						cards.togglePin(index);
-						clearErrors();
-					} catch (SelectionException ex) {
-						reportError(ex);
-					}
-					updateButtons();
-				}
-			});
-			btnFin.addMouseListener(new MouseAdapter() {
-				@Override
-				public void mouseClicked(MouseEvent e) {
-					try {
-						cards.toggleMark(index);
-						clearErrors();
-					} catch (SelectionException ex) {
-						reportError(ex);
-					}
-					updateButtons();
-				}
-			});
+			final CardPanel card = new CardPanel(i);
+			final GridBagConstraints gbc = new GridBagConstraints();
+			{
+				gbc.fill = GridBagConstraints.BOTH;
+				gbc.insets = new Insets(0, 0, 0, 5);
+			}
+			pnlCards.add(card, gbc);
+			cardBtns.add(card);
 		}
 	}
 
@@ -521,8 +244,8 @@ public class ClientGUI {
 			mntmRestart.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
+					DEBUGLOG.fine("Restarting game");
 					reset();
-					updateButtons();
 				}
 			});
 			mnFile.add(mntmRestart);
@@ -531,6 +254,7 @@ public class ClientGUI {
 			mntmExit.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
+					DEBUGLOG.info("Exiting game");
 					frame.dispose();
 				}
 			});
@@ -544,15 +268,15 @@ public class ClientGUI {
 			int idx = 0;
 			for (SortAlgorithm<?> sort : cards.sort.getAll()) {
 				final int index = idx++;
-				final String name = sort.getClass().getSimpleName();
-				final JMenuItem item = new JRadioButtonMenuItem(name);
+				final JMenuItem item = new JRadioButtonMenuItem(sort.toString());
 				item.setSelected(cards.sort.getCurrent().equals(sort));
 				item.addActionListener(new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent e) {
+						DEBUGLOG.config("Set algorithm to "
+								+ cards.sort.getAll().get(index));
 						cards.sort.setCurrent(index);
-						cards.reset();
-						updateButtons();
+						reset();
 					}
 				});
 				mnConfig.add(item);
@@ -572,8 +296,10 @@ public class ClientGUI {
 					item.addActionListener(new ActionListener() {
 						@Override
 						public void actionPerformed(ActionEvent e) {
+							DEBUGLOG.config("Changed size to " + size);
 							n = size;
 							setCards();
+							initialize();
 						}
 					});
 					sizeGroup.add(item);
@@ -582,30 +308,83 @@ public class ClientGUI {
 			}
 			mnConfig.add(mnSize);
 
-			// TODO other config
+			JMenu mnType = new JMenu("Type");
+			{
+				final ButtonGroup typeGroup = new ButtonGroup();
+				final Type[] types = Type.values();
+
+				for (int i = 0; i < types.length; i++) {
+					final Type type = types[i];
+					JMenuItem item = new JRadioButtonMenuItem(type.toString());
+					item.setSelected(type == values.type);
+					item.addActionListener(new ActionListener() {
+						@Override
+						public void actionPerformed(ActionEvent e) {
+							DEBUGLOG.config("Changed type to " + type);
+							values.type = type;
+							setCards();
+							initialize();
+						}
+					});
+					typeGroup.add(item);
+					mnType.add(item);
+				}
+			}
+			mnConfig.add(mnType);
+
+			JMenu mnMode = new JMenu("Mode");
+			{
+				final ButtonGroup kindGroup = new ButtonGroup();
+				final Mode[] modes = Mode.values();
+
+				for (int i = 0; i < modes.length; i++) {
+					final Mode mode = modes[i];
+					JMenuItem item = new JRadioButtonMenuItem(mode.toString());
+					item.setSelected(mode == values.mode);
+					item.addActionListener(new ActionListener() {
+						@Override
+						public void actionPerformed(ActionEvent e) {
+							DEBUGLOG.config("Changed mode to " + mode);
+							values.mode = mode;
+							setCards();
+							initialize();
+						}
+					});
+					kindGroup.add(item);
+					mnMode.add(item);
+				}
+			}
+			mnConfig.add(mnMode);
 		}
 		menuBar.add(mnConfig);
 		return menuBar;
 	}
 
 	private void setCards() {
-		switch (values.mode) {
+		final Mode mode = values.mode;
+		final Type type = values.type;
+
+		switch (mode) {
 		case SMALL:
-			if (values.type == Type.INT)
+			if (type == Type.INTEGER) {
 				cards = new Cards<>(ValueGenerator.smallIntValues(n));
-			else if (values.type == Type.STRING)
+				return;
+			} else if (type == Type.STRING) {
 				cards = new Cards<>(ValueGenerator.smallStringValues(n));
+				return;
+			}
 			break;
 		case RANDOM:
-			if (values.type == Type.INT)
+			if (type == Type.INTEGER) {
 				cards = new Cards<>(ValueGenerator.randomIntValues(n));
-			else if (values.type == Type.STRING)
+				return;
+			} else if (type == Type.STRING) {
 				cards = new Cards<>(ValueGenerator.randomStringValues(n));
+				return;
+			}
 			break;
-		default:
-			System.err.println("unknown mode: " + values.mode);
 		}
-		initialize();
+		DEBUGLOG.severe("Unknown mode: '" + mode + "' or type: '" + type + "'");
 	}
 
 	/**
@@ -630,6 +409,34 @@ public class ClientGUI {
 		});
 	}
 
+	private class SwapButton extends JButton {
+		private static final String SWAP_ICON = "img/swap.png";
+		private static final long serialVersionUID = -6368213501613529319L;
+
+		public SwapButton() {
+			super(new ImageIcon(SWAP_ICON));
+			addMouseListener(new MouseAdapter() {
+				@Override
+				public void mouseClicked(MouseEvent e) {
+					try {
+						cards.swapSelection();
+						swapCount++;
+						clearErrorHint();
+						updateStats();
+					} catch (SelectionException ex) {
+						reportError(ex);
+					}
+					updateButtons();
+				}
+			});
+		}
+
+		protected void paintComponent(Graphics g) {
+			super.paintComponent(g);
+			setBounds(pnlBelow.getCenter() - 50, 30, 100, 50);
+		}
+	}
+
 	private class DrawPanel extends JPanel {
 		private static final long serialVersionUID = -7863948686242926432L;
 
@@ -648,17 +455,142 @@ public class ClientGUI {
 		}
 
 		private int getLeft() {
-			final AbstractButton btn = cardBtns.get(cards.getLeft());
+			final CardPanel btn = cardBtns.get(cards.getLeft());
 			return btn.getLocation().x + btn.getWidth() / 2;
 		}
 
 		private int getRight() {
-			final AbstractButton btn = cardBtns.get(cards.getRight());
+			final CardPanel btn = cardBtns.get(cards.getRight());
 			return btn.getLocation().x + btn.getWidth() / 2;
 		}
 
 		private int getCenter() {
 			return getLeft() + Math.abs(getRight() - getLeft()) / 2;
+		}
+	}
+
+	private class CardPanel extends JPanel {
+		private static final String GRAY_PIN_ICON = "img/pin-grey.png";
+		private static final String BLACK_PIN_ICON = "img/pin.png";
+		private static final String ROTATED_PIN_ICON = "img/pin-rot.png";
+		private static final String BLACK_CHECK_ICON = "img/check.png";
+		private static final String GRAY_CHECK_ICON = "img/check-gray.png";
+		private static final int DEFAULT_BUTTON_SIZE = 25;
+		private static final long serialVersionUID = 68959464664105468L;
+		private final JLabel label;
+		private final TitledBorder border;
+		private final JToggleButton pin;
+		private final JToggleButton fin;
+
+		public CardPanel(final int index) {
+			super(new BorderLayout(5, 5));
+			border = new TitledBorder(new BevelBorder(BevelBorder.RAISED),
+					Integer.toString(index + 1));
+			setBorder(border);
+			setOpaque(false);
+
+			label = new JLabel(DEFAULT_BUTTON_TEXT, JLabel.CENTER);
+			{
+				label.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 24));
+				add(label, BorderLayout.CENTER);
+			}
+			pin = new JToggleButton();
+			{
+				JPanel pnlPin = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+				pin.setEnabled(false);
+				pin.setIcon(new ImageIcon(GRAY_PIN_ICON));
+				pin.setSelectedIcon(new ImageIcon(ROTATED_PIN_ICON));
+				pin.setPreferredSize(new Dimension(DEFAULT_BUTTON_SIZE,
+						DEFAULT_BUTTON_SIZE));
+				pnlPin.add(pin);
+				add(pnlPin, BorderLayout.NORTH);
+			}
+			fin = new JToggleButton();
+			{
+				JPanel pnlFin = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+				fin.setIcon(new ImageIcon(GRAY_CHECK_ICON));
+				fin.setSelectedIcon(new ImageIcon(BLACK_CHECK_ICON));
+				fin.setPreferredSize(new Dimension(DEFAULT_BUTTON_SIZE,
+						DEFAULT_BUTTON_SIZE));
+				pnlFin.add(fin);
+				add(pnlFin, BorderLayout.SOUTH);
+			}
+
+			initMouseListeners(index);
+		}
+
+		private void initMouseListeners(final int index) {
+			addMouseListener(new MouseAdapter() {
+				@Override
+				public void mouseClicked(MouseEvent e) {
+					try {
+						cards.select(index);
+						clearErrorHint();
+					} catch (SelectionException ex) {
+						reportError(ex);
+					}
+					updateButtons();
+				}
+			});
+			pin.addMouseListener(new MouseAdapter() {
+				@Override
+				public void mouseEntered(MouseEvent e) {
+					pin.setIcon(new ImageIcon(BLACK_PIN_ICON));
+				}
+
+				@Override
+				public void mouseExited(MouseEvent e) {
+					if (!cards.isPinned(index))
+						pin.setIcon(new ImageIcon(GRAY_PIN_ICON));
+				}
+
+				@Override
+				public void mouseClicked(MouseEvent e) {
+					if (cards.getCard(index).selected) {
+						try {
+							cards.togglePin(index);
+							clearErrorHint();
+						} catch (SelectionException ex) {
+							reportError(ex);
+						}
+						updateButtons();
+					}
+				}
+			});
+			fin.addMouseListener(new MouseAdapter() {
+				@Override
+				public void mouseEntered(MouseEvent e) {
+					fin.setIcon(new ImageIcon(BLACK_CHECK_ICON));
+				}
+
+				@Override
+				public void mouseExited(MouseEvent e) {
+					fin.setIcon(new ImageIcon(GRAY_CHECK_ICON));
+				}
+
+				@Override
+				public void mouseClicked(MouseEvent e) {
+					try {
+						cards.toggleMark(index);
+						clearErrorHint();
+					} catch (SelectionException ex) {
+						reportError(ex);
+					}
+					updateButtons();
+				}
+			});
+		}
+
+		public void setTo(Card<?> c) {
+			border.setBorder(new BevelBorder(c.selected ? BevelBorder.LOWERED
+					: BevelBorder.RAISED));
+			label.setText(c.selected ? c.toString() : DEFAULT_BUTTON_TEXT);
+			pin.setEnabled(c.selected);
+			pin.setSelected(c.pinned);
+			pin.setIcon(new ImageIcon(c.pinned ? ROTATED_PIN_ICON
+					: GRAY_PIN_ICON));
+			fin.setSelected(c.marked);
+			setBackground(c.marked ? Color.GREEN : Color.GRAY);
 		}
 	}
 }

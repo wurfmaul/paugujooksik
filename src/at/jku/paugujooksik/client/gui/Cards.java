@@ -13,8 +13,8 @@ import at.jku.paugujooksik.client.sort.SelectionSort;
 import at.jku.paugujooksik.client.sort.SortAlgorithm;
 
 public class Cards<T extends Comparable<T>> {
+	private static final Logger DEBUGLOG = Logger.getLogger("DEBUG");
 	private static final boolean MOVE_PIN = false;
-	private static final Logger DEBUG = Logger.getLogger("DEBUG");
 
 	private final List<T> values;
 	private final List<Card<T>> cards;
@@ -170,7 +170,7 @@ public class Cards<T extends Comparable<T>> {
 		}
 		expectedActions = sort.getCurrent().getActions(values);
 		curAction = 0;
-		
+		DEBUGLOG.info("Generated values: " + values);
 	}
 
 	private List<Integer> getSelection() {
@@ -186,7 +186,7 @@ public class Cards<T extends Comparable<T>> {
 	private void checkAction(Action action) {
 		if (curAction < expectedActions.size()) {
 			final Action exp = expectedActions.get(curAction);
-			DEBUG.info("Expected: '" + exp + "'; actual: '" + action + "' "
+			DEBUGLOG.fine("Expected: '" + exp + "'; actual: '" + action + "' "
 					+ "<" + (!exp.isCompatibleTo(action) ? "not " : "")
 					+ "compatible>" + "<" + (!exp.equals(action) ? "not " : "")
 					+ "equal>");
