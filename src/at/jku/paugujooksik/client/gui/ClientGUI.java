@@ -30,16 +30,16 @@ import javax.swing.JTextPane;
 import javax.swing.JToggleButton;
 import javax.swing.UIManager;
 
+import at.jku.paugujooksik.client.gui.ValueGenerator.Type;
 import at.jku.paugujooksik.client.sort.SortAlgorithm;
 
-public class ClientGUI<T extends Comparable<T>> {
+public class ClientGUI {
 	private static final int MIN_SIZE = 7;
 	private static final int MAX_SIZE = 15;
 	private static final int DEFAULT_SIZE = 7;
 	private static final String DEFAULT_BUTTON_TEXT = "  ";
 
-	private final Cards<T> cards;
-	private final int n;
+	private final ValueGenerator values;
 	private final List<AbstractButton> cardBtns;
 	private final List<AbstractButton> pinBtns;
 	private final List<AbstractButton> finBtns;
@@ -50,17 +50,19 @@ public class ClientGUI<T extends Comparable<T>> {
 	private JButton btnExchange;
 	private JTextPane txtErrors;
 	private JLabel lblHint;
+	private Cards<?> cards;
 	private int errorCount = 0;
+	private int n = DEFAULT_SIZE;
 
 	/**
 	 * Create the application.
 	 */
-	private ClientGUI(List<T> values) {
-		this.n = values.size();
+	private ClientGUI() {
+		values = new ValueGenerator();
 		cardBtns = new LinkedList<>();
 		pinBtns = new LinkedList<>();
 		finBtns = new LinkedList<>();
-		cards = new Cards<>(values);
+		cards = new Cards<>(ValueGenerator.defaultValues(DEFAULT_SIZE));
 		initialize();
 	}
 
@@ -77,7 +79,7 @@ public class ClientGUI<T extends Comparable<T>> {
 		pnlBelow.removeAll();
 
 		for (int i = 0; i < n; i++) {
-			final Card<T> c = cards.getCard(i);
+			final Card<?> c = cards.getCard(i);
 			final AbstractButton btnCard = cardBtns.get(i);
 			{
 				btnCard.setText(c.selected ? cards.getCard(i).toString()
@@ -151,7 +153,7 @@ public class ClientGUI<T extends Comparable<T>> {
 	/**
 	 * Initialize the contents of the frame.
 	 */
-	private void initialize() {
+	private void initialize() { // XXX
 		frame = new JFrame();
 		frame.setBounds(100, 100, 700, 500);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -184,6 +186,38 @@ public class ClientGUI<T extends Comparable<T>> {
 		gbcPnlAbove.gridy = 1;
 		frame.getContentPane().add(pnlAbove, gbcPnlAbove);
 
+		initCardPanel();
+
+		pnlBelow = new DrawPanel();
+		pnlBelow.setLayout(null);
+		GridBagConstraints gbcPnlLines = new GridBagConstraints();
+		gbcPnlLines.gridwidth = 2;
+		gbcPnlLines.insets = new Insets(0, 0, 5, 0);
+		gbcPnlLines.fill = GridBagConstraints.BOTH;
+		gbcPnlLines.gridx = 0;
+		gbcPnlLines.gridy = 3;
+		frame.getContentPane().add(pnlBelow, gbcPnlLines);
+
+		lblHint = new JLabel("Click at one of the cards!");
+		GridBagConstraints gbcLblHint = new GridBagConstraints();
+		gbcLblHint.anchor = GridBagConstraints.WEST;
+		gbcLblHint.insets = new Insets(0, 0, 0, 5);
+		gbcLblHint.gridx = 0;
+		gbcLblHint.gridy = 4;
+		frame.getContentPane().add(lblHint, gbcLblHint);
+
+		txtErrors = new JTextPane();
+		GridBagConstraints gbcLblCount = new GridBagConstraints();
+		gbcLblCount.gridx = 1;
+		gbcLblCount.gridy = 4;
+		txtErrors.setOpaque(false);
+		frame.getContentPane().add(txtErrors, gbcLblCount);
+		updateStats();
+
+		frame.setJMenuBar(initMenuBar());
+	}
+
+	private void initCardPanel() {
 		JPanel pnlCards = new JPanel();
 		GridBagConstraints gbcPnLCards = new GridBagConstraints();
 		gbcPnLCards.gridwidth = 2;
@@ -201,9 +235,28 @@ public class ClientGUI<T extends Comparable<T>> {
 		gbl_panel.rowWeights = new double[] { 0.0, 1.0, Double.MIN_VALUE };
 		pnlCards.setLayout(gbl_panel);
 
+		// one col less
+		// JPanel pnlCards = new JPanel();
+		// GridBagConstraints gbcPnLCards = new GridBagConstraints();
+		// gbcPnLCards.gridwidth = 2;
+		// gbcPnLCards.insets = new Insets(0, 0, 5, 0);
+		// gbcPnLCards.fill = GridBagConstraints.BOTH;
+		// gbcPnLCards.gridx = 0;
+		// gbcPnLCards.gridy = 2;
+		// frame.getContentPane().add(pnlCards, gbcPnLCards);
+		// GridBagLayout gbl_panel = new GridBagLayout();
+		// gbl_panel.columnWidths = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		// 0, 0 };
+		// gbl_panel.rowHeights = new int[] { 0, 0, 0 };
+		// gbl_panel.columnWeights = new double[] { 1.0, 1.0, 1.0, 1.0, 1.0,
+		// 1.0,
+		// 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, Double.MIN_VALUE };
+		// gbl_panel.rowWeights = new double[] { 0.0, 1.0, Double.MIN_VALUE };
+		// pnlCards.setLayout(gbl_panel);
+
 		/*********
 		 * CARDS *
-		 *********/
+		 *********/ // FIXME unclickable!
 
 		JToggleButton btnCard0Pin = new JToggleButton("!");
 		GridBagConstraints gbcBtnCard0Pin = new GridBagConstraints();
@@ -211,7 +264,7 @@ public class ClientGUI<T extends Comparable<T>> {
 		gbcBtnCard0Pin.insets = new Insets(0, 0, 5, 5);
 		gbcBtnCard0Pin.gridx = 0;
 		gbcBtnCard0Pin.gridy = 0;
-		btnCard0Pin.setEnabled(false); // FIXME unclickable!
+		btnCard0Pin.setEnabled(false);
 		pnlCards.add(btnCard0Pin, gbcBtnCard0Pin);
 		pinBtns.add(btnCard0Pin);
 
@@ -414,34 +467,6 @@ public class ClientGUI<T extends Comparable<T>> {
 		btnCard6.setBackground(Color.GREEN);
 		cardBtns.add(btnCard6);
 
-		pnlBelow = new DrawPanel();
-		pnlBelow.setLayout(null);
-		GridBagConstraints gbcPnlLines = new GridBagConstraints();
-		gbcPnlLines.gridwidth = 2;
-		gbcPnlLines.insets = new Insets(0, 0, 5, 0);
-		gbcPnlLines.fill = GridBagConstraints.BOTH;
-		gbcPnlLines.gridx = 0;
-		gbcPnlLines.gridy = 3;
-		frame.getContentPane().add(pnlBelow, gbcPnlLines);
-
-		lblHint = new JLabel("Click at one of the cards!");
-		GridBagConstraints gbcLblHint = new GridBagConstraints();
-		gbcLblHint.anchor = GridBagConstraints.WEST;
-		gbcLblHint.insets = new Insets(0, 0, 0, 5);
-		gbcLblHint.gridx = 0;
-		gbcLblHint.gridy = 4;
-		frame.getContentPane().add(lblHint, gbcLblHint);
-
-		txtErrors = new JTextPane();
-		GridBagConstraints gbcLblCount = new GridBagConstraints();
-		gbcLblCount.gridx = 1;
-		gbcLblCount.gridy = 4;
-		txtErrors.setOpaque(false);
-		frame.getContentPane().add(txtErrors, gbcLblCount);
-		updateStats();
-
-		frame.setJMenuBar(createMenuBar());
-
 		// Action Handlers
 		for (int i = 0; i < n; i++) {
 			final int index = i;
@@ -485,10 +510,9 @@ public class ClientGUI<T extends Comparable<T>> {
 				}
 			});
 		}
-
 	}
 
-	private JMenuBar createMenuBar() {
+	private JMenuBar initMenuBar() {
 		JMenuBar menuBar = new JMenuBar();
 
 		JMenu mnFile = new JMenu("File");
@@ -518,7 +542,7 @@ public class ClientGUI<T extends Comparable<T>> {
 		{
 			ButtonGroup algorithmGroup = new ButtonGroup();
 			int idx = 0;
-			for (SortAlgorithm<T> sort : cards.sort.getAll()) {
+			for (SortAlgorithm<?> sort : cards.sort.getAll()) {
 				final int index = idx++;
 				final String name = sort.getClass().getSimpleName();
 				final JMenuItem item = new JRadioButtonMenuItem(name);
@@ -541,24 +565,53 @@ public class ClientGUI<T extends Comparable<T>> {
 			{
 				ButtonGroup sizeGroup = new ButtonGroup();
 				for (int i = MIN_SIZE; i <= MAX_SIZE; i++) {
+					final int size = i;
 					JMenuItem item = new JRadioButtonMenuItem(
-							Integer.toString(i));
+							Integer.toString(size));
 					item.setSelected(i == DEFAULT_SIZE);
+					item.addActionListener(new ActionListener() {
+						@Override
+						public void actionPerformed(ActionEvent e) {
+							n = size;
+							setCards();
+						}
+					});
 					sizeGroup.add(item);
 					mnSize.add(item);
 				}
 			}
 			mnConfig.add(mnSize);
+
+			// TODO other config
 		}
 		menuBar.add(mnConfig);
 		return menuBar;
 	}
 
+	private void setCards() {
+		switch (values.mode) {
+		case SMALL:
+			if (values.type == Type.INT)
+				cards = new Cards<>(ValueGenerator.smallIntValues(n));
+			else if (values.type == Type.STRING)
+				cards = new Cards<>(ValueGenerator.smallStringValues(n));
+			break;
+		case RANDOM:
+			if (values.type == Type.INT)
+				cards = new Cards<>(ValueGenerator.randomIntValues(n));
+			else if (values.type == Type.STRING)
+				cards = new Cards<>(ValueGenerator.randomStringValues(n));
+			break;
+		default:
+			System.err.println("unknown mode: " + values.mode);
+		}
+		initialize();
+	}
+
 	/**
 	 * Launch the application.
 	 */
-	public static <T extends Comparable<T>> void initAndRun(
-			final List<T> initValues) {
+	public static <T extends Comparable<T>> void initAndRun() {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
@@ -568,7 +621,7 @@ public class ClientGUI<T extends Comparable<T>> {
 					System.err.println(e.getLocalizedMessage());
 				}
 				try {
-					ClientGUI<T> window = new ClientGUI<>(initValues);
+					ClientGUI window = new ClientGUI();
 					window.frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
