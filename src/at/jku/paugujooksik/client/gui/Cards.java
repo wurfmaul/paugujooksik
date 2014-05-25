@@ -164,13 +164,13 @@ public class Cards<T extends Comparable<T>> {
 
 	public void reset() {
 		Collections.shuffle(values);
+		DEBUGLOG.info("Generated values: " + values);
 		cards.clear();
 		for (T value : values) {
 			cards.add(new Card<>(value));
 		}
 		expectedActions = sort.getCurrent().getActions(values);
 		curAction = 0;
-		DEBUGLOG.info("Generated values: " + values);
 	}
 
 	private List<Integer> getSelection() {

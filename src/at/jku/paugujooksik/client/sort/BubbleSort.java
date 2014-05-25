@@ -6,11 +6,10 @@ public class BubbleSort<T extends Comparable<T>> extends SortAlgorithm<T> {
 
 	@Override
 	public List<Action> getActions(List<T> values) {
-		final List<T> a = cloneList(values);
-		final int n = a.size();
-		
+		setup(values);
 		boolean swapped = true;
 		int max = n - 1;
+		
 		while (swapped) {
 			swapped = false;
 			for (int i = 1; i <= max; i++) {
@@ -32,6 +31,7 @@ public class BubbleSort<T extends Comparable<T>> extends SortAlgorithm<T> {
 			actions.add(Action.mark(max--));
 		}
 		
+		DEBUGLOG.info("BubbleSort sorted the values " + values);
 		assert isListSorted(a);
 		return actions;
 	}

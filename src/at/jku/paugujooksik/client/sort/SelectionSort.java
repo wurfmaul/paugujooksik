@@ -6,8 +6,7 @@ public class SelectionSort<T extends Comparable<T>> extends SortAlgorithm<T> {
 
 	@Override
 	public List<Action> getActions(List<T> values) {
-		final List<T> a = cloneList(values);
-		final int n = a.size();
+		setup(values);
 		int pinned = -1;
 
 		int iMin;
@@ -44,6 +43,8 @@ public class SelectionSort<T extends Comparable<T>> extends SortAlgorithm<T> {
 			pinned = -1;
 		}
 		actions.add(Action.mark(n - 1));
+		
+		DEBUGLOG.info("SelectionSort sorted the values " + values);
 		assert isListSorted(a);
 		return actions;
 	}

@@ -2,26 +2,38 @@ package at.jku.paugujooksik.client.sort;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Logger;
 
 public abstract class SortAlgorithm<T extends Comparable<T>> {
+	protected static final Logger DEBUGLOG = Logger.getLogger("DEBUG");
 	protected final List<Action> actions = new LinkedList<>();
+	
+	protected List<T> a;
+	protected int n;
 	
 	public abstract List<Action> getActions(List<T> values);
 	
-	protected List<T> cloneList(List<T> list) {
+	private List<T> cloneList(List<T> list) {
 		List<T> copy = new LinkedList<>();
 		for (T e : list) {
 			copy.add(e);
 		}
+		assert list.equals(copy);
 		return copy;
 	}
 	
-	protected boolean isListSorted(List<T> list) {
-		for (int i = 1; i < list.size(); i++) {
-			if (list.get(i-1).compareTo(list.get(i)) > 0)
+	protected boolean isListSorted(List<T> values) {
+		for (int i = 1; i < values.size(); i++) {
+			if (values.get(i-1).compareTo(values.get(i)) > 0)
 				return false;
 		}
 		return true;
+	}
+	
+	protected void setup(List<T> values) {
+		a = cloneList(values);
+		n = a.size();
+		actions.clear();
 	}
 	
 	@Override
