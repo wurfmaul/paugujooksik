@@ -9,6 +9,7 @@ import at.jku.paugujooksik.client.gui.ClientGUI;
 
 public class Client {
 	private static final Logger DEBUGLOG = Logger.getLogger("DEBUG");
+	private static final Level LOGLEVEL = Level.CONFIG;
 
 	public static void main(String[] args) {
 		configureLoggers();
@@ -25,6 +26,6 @@ public class Client {
 		final ConsoleHandler handler = new ConsoleHandler();
 		handler.setLevel(Level.ALL);
 		DEBUGLOG.addHandler(handler);
-		DEBUGLOG.setLevel(Level.CONFIG);
+		DEBUGLOG.setLevel(LOGLEVEL);
 	}
 }

@@ -56,6 +56,7 @@ public class ClientGUI {
 	private DrawPanel pnlBelow;
 	private JButton btnExchange;
 	private JTextPane txtErrors;
+	private JLabel lblTitle;
 	private JLabel lblHint;
 	private Cards<?> cards;
 	private int errorCount = 0;
@@ -70,6 +71,7 @@ public class ClientGUI {
 		values = new ValueGenerator();
 		cardBtns = new LinkedList<>();
 		setCards();
+		initFrame();
 		initialize();
 	}
 
@@ -77,24 +79,8 @@ public class ClientGUI {
 		errorCount = 0;
 		swapCount = 0;
 		cards.reset();
-		updateButtons();
+		updateComponents();
 		updateStats();
-	}
-
-	private void updateButtons() {
-		for (int i = 0; i < n; i++) {
-			cardBtns.get(i).setTo(cards.getCard(i));
-		}
-
-		pnlBelow.removeAll();
-		if (cards.two()) {
-			btnExchange = new SwapButton();
-			btnExchange.setBounds(pnlBelow.getCenter() - 50, 30, 100, 50);
-			pnlBelow.add(btnExchange);
-		}
-
-		frame.repaint();
-		checkFinish();
 	}
 
 	private void clearErrorHint() {
@@ -106,6 +92,24 @@ public class ClientGUI {
 		lblHint.setText(ex.getMessage());
 		errorCount++;
 		updateStats();
+	}
+
+	private void updateComponents() {
+		for (int i = 0; i < n; i++) {
+			cardBtns.get(i).setTo(cards.getCard(i));
+		}
+	
+		pnlBelow.removeAll();
+		if (cards.two()) {
+			btnExchange = new SwapButton();
+			btnExchange.setBounds(pnlBelow.getCenter() - 50, 30, 100, 50);
+			pnlBelow.add(btnExchange);
+		}
+		
+		lblTitle.setText(cards.sort.getCurrent().toString());
+	
+		frame.repaint();
+		checkFinish();
 	}
 
 	private void updateStats() {
@@ -133,18 +137,9 @@ public class ClientGUI {
 	 * Initialize the contents of the frame.
 	 */
 	private void initialize() {
-		frame.setBounds(100, 100, 700, 500);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		GridBagLayout gblFrame = new GridBagLayout();
-		gblFrame.columnWidths = new int[] { 350, 40, 0 };
-		gblFrame.rowHeights = new int[] { 0, 50, 0, 0, 20, 0 };
-		gblFrame.columnWeights = new double[] { 1.0, 0.0, Double.MIN_VALUE };
-		gblFrame.rowWeights = new double[] { 0.0, 0.0, 0.0, 1.0, 0.0,
-				Double.MIN_VALUE };
-		frame.getContentPane().setLayout(gblFrame);
 		frame.getContentPane().removeAll();
 
-		JLabel lblTitle = new JLabel("Task: Sort the following cards!");
+		lblTitle = new JLabel(cards.sort.getCurrent().toString());
 		lblTitle.setFont(new Font("Dialog", Font.BOLD, 16));
 		GridBagConstraints gbc_lblTitle = new GridBagConstraints();
 		gbc_lblTitle.gridwidth = 2;
@@ -194,6 +189,18 @@ public class ClientGUI {
 		updateStats();
 
 		frame.setJMenuBar(initMenuBar());
+	}
+	
+	private void initFrame() {
+		frame.setBounds(100, 100, 700, 500);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		GridBagLayout gblFrame = new GridBagLayout();
+		gblFrame.columnWidths = new int[] { 350, 40, 0 };
+		gblFrame.rowHeights = new int[] { 0, 50, 0, 0, 20, 0 };
+		gblFrame.columnWeights = new double[] { 1.0, 0.0, Double.MIN_VALUE };
+		gblFrame.rowWeights = new double[] { 0.0, 0.0, 0.0, 1.0, 0.0,
+				Double.MIN_VALUE };
+		frame.getContentPane().setLayout(gblFrame);
 	}
 
 	private void initCardPanel() {
@@ -292,7 +299,7 @@ public class ClientGUI {
 					final int size = i;
 					JMenuItem item = new JRadioButtonMenuItem(
 							Integer.toString(size));
-					item.setSelected(i == DEFAULT_SIZE);
+					item.setSelected(i == n);
 					item.addActionListener(new ActionListener() {
 						@Override
 						public void actionPerformed(ActionEvent e) {
@@ -300,6 +307,7 @@ public class ClientGUI {
 							n = size;
 							setCards();
 							initialize();
+							reset();
 						}
 					});
 					sizeGroup.add(item);
@@ -324,6 +332,7 @@ public class ClientGUI {
 							values.type = type;
 							setCards();
 							initialize();
+							reset();
 						}
 					});
 					typeGroup.add(item);
@@ -348,6 +357,7 @@ public class ClientGUI {
 							values.mode = mode;
 							setCards();
 							initialize();
+							reset();
 						}
 					});
 					kindGroup.add(item);
@@ -410,11 +420,12 @@ public class ClientGUI {
 	}
 
 	private class SwapButton extends JButton {
-		private static final String SWAP_ICON = "img/swap.png";
+		private static final String SWAP_ICON = "/img/swap.png";
 		private static final long serialVersionUID = -6368213501613529319L;
 
 		public SwapButton() {
-			super(new ImageIcon(SWAP_ICON));
+			super(new ImageIcon(SwapButton.class.getResource(SWAP_ICON)));
+			
 			addMouseListener(new MouseAdapter() {
 				@Override
 				public void mouseClicked(MouseEvent e) {
@@ -426,7 +437,7 @@ public class ClientGUI {
 					} catch (SelectionException ex) {
 						reportError(ex);
 					}
-					updateButtons();
+					updateComponents();
 				}
 			});
 		}
@@ -470,11 +481,11 @@ public class ClientGUI {
 	}
 
 	private class CardPanel extends JPanel {
-		private static final String GRAY_PIN_ICON = "img/pin-grey.png";
-		private static final String BLACK_PIN_ICON = "img/pin.png";
-		private static final String ROTATED_PIN_ICON = "img/pin-rot.png";
-		private static final String BLACK_CHECK_ICON = "img/check.png";
-		private static final String GRAY_CHECK_ICON = "img/check-gray.png";
+		private static final String GRAY_PIN_ICON = "/img/pin-grey.png";
+		private static final String BLACK_PIN_ICON = "/img/pin.png";
+		private static final String ROTATED_PIN_ICON = "/img/pin-rot.png";
+		private static final String BLACK_CHECK_ICON = "/img/check.png";
+		private static final String GRAY_CHECK_ICON = "/img/check-gray.png";
 		private static final int DEFAULT_BUTTON_SIZE = 25;
 		private static final long serialVersionUID = 68959464664105468L;
 		private final JLabel label;
@@ -498,8 +509,8 @@ public class ClientGUI {
 			{
 				JPanel pnlPin = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 				pin.setEnabled(false);
-				pin.setIcon(new ImageIcon(GRAY_PIN_ICON));
-				pin.setSelectedIcon(new ImageIcon(ROTATED_PIN_ICON));
+				pin.setIcon(new ImageIcon(getClass().getResource(GRAY_PIN_ICON)));
+				pin.setSelectedIcon(new ImageIcon(getClass().getResource(ROTATED_PIN_ICON)));
 				pin.setPreferredSize(new Dimension(DEFAULT_BUTTON_SIZE,
 						DEFAULT_BUTTON_SIZE));
 				pnlPin.add(pin);
@@ -508,8 +519,8 @@ public class ClientGUI {
 			fin = new JToggleButton();
 			{
 				JPanel pnlFin = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-				fin.setIcon(new ImageIcon(GRAY_CHECK_ICON));
-				fin.setSelectedIcon(new ImageIcon(BLACK_CHECK_ICON));
+				fin.setIcon(new ImageIcon(getClass().getResource(GRAY_CHECK_ICON)));
+				fin.setSelectedIcon(new ImageIcon(getClass().getResource(BLACK_CHECK_ICON)));
 				fin.setPreferredSize(new Dimension(DEFAULT_BUTTON_SIZE,
 						DEFAULT_BUTTON_SIZE));
 				pnlFin.add(fin);
@@ -529,19 +540,19 @@ public class ClientGUI {
 					} catch (SelectionException ex) {
 						reportError(ex);
 					}
-					updateButtons();
+					updateComponents();
 				}
 			});
 			pin.addMouseListener(new MouseAdapter() {
 				@Override
 				public void mouseEntered(MouseEvent e) {
-					pin.setIcon(new ImageIcon(BLACK_PIN_ICON));
+					pin.setIcon(new ImageIcon(getClass().getResource(BLACK_PIN_ICON)));
 				}
 
 				@Override
 				public void mouseExited(MouseEvent e) {
 					if (!cards.isPinned(index))
-						pin.setIcon(new ImageIcon(GRAY_PIN_ICON));
+						pin.setIcon(new ImageIcon(getClass().getResource(GRAY_PIN_ICON)));
 				}
 
 				@Override
@@ -553,19 +564,19 @@ public class ClientGUI {
 						} catch (SelectionException ex) {
 							reportError(ex);
 						}
-						updateButtons();
+						updateComponents();
 					}
 				}
 			});
 			fin.addMouseListener(new MouseAdapter() {
 				@Override
 				public void mouseEntered(MouseEvent e) {
-					fin.setIcon(new ImageIcon(BLACK_CHECK_ICON));
+					fin.setIcon(new ImageIcon(getClass().getResource(BLACK_CHECK_ICON)));
 				}
 
 				@Override
 				public void mouseExited(MouseEvent e) {
-					fin.setIcon(new ImageIcon(GRAY_CHECK_ICON));
+					fin.setIcon(new ImageIcon(getClass().getResource(GRAY_CHECK_ICON)));
 				}
 
 				@Override
@@ -576,7 +587,7 @@ public class ClientGUI {
 					} catch (SelectionException ex) {
 						reportError(ex);
 					}
-					updateButtons();
+					updateComponents();
 				}
 			});
 		}
@@ -587,8 +598,8 @@ public class ClientGUI {
 			label.setText(c.selected ? c.toString() : DEFAULT_BUTTON_TEXT);
 			pin.setEnabled(c.selected);
 			pin.setSelected(c.pinned);
-			pin.setIcon(new ImageIcon(c.pinned ? ROTATED_PIN_ICON
-					: GRAY_PIN_ICON));
+			pin.setIcon(new ImageIcon(getClass().getResource(c.pinned ? ROTATED_PIN_ICON
+					: GRAY_PIN_ICON)));
 			fin.setSelected(c.marked);
 			setBackground(c.marked ? Color.GREEN : Color.GRAY);
 		}
