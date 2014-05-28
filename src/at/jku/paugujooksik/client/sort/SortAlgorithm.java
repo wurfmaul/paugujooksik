@@ -36,6 +36,10 @@ public abstract class SortAlgorithm<T extends Comparable<T>> {
 		actions.clear();
 	}
 	
+	public boolean allowsMoreActions() {
+		return false;
+	}
+
 	@Override
 	public String toString() {
 		return getClass().getSimpleName();

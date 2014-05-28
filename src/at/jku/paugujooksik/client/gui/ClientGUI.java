@@ -2,6 +2,7 @@ package at.jku.paugujooksik.client.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.FlowLayout;
@@ -35,6 +36,7 @@ import javax.swing.JTextPane;
 import javax.swing.JToggleButton;
 import javax.swing.UIManager;
 import javax.swing.border.BevelBorder;
+import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import at.jku.paugujooksik.client.gui.ValueGenerator.Mode;
@@ -96,18 +98,18 @@ public class ClientGUI {
 
 	private void updateComponents() {
 		for (int i = 0; i < n; i++) {
-			cardBtns.get(i).setTo(cards.getCard(i));
+			cardBtns.get(i).updateCard(cards.getCard(i));
 		}
-	
+
 		pnlBelow.removeAll();
 		if (cards.two()) {
 			btnExchange = new SwapButton();
 			btnExchange.setBounds(pnlBelow.getCenter() - 50, 30, 100, 50);
 			pnlBelow.add(btnExchange);
 		}
-		
+
 		lblTitle.setText(cards.sort.getCurrent().toString());
-	
+
 		frame.repaint();
 		checkFinish();
 	}
@@ -186,11 +188,11 @@ public class ClientGUI {
 		gbcLblCount.gridy = 4;
 		txtErrors.setOpaque(false);
 		frame.getContentPane().add(txtErrors, gbcLblCount);
-		updateStats();
 
-		frame.setJMenuBar(initMenuBar());
+		updateStats();
+		initMenuBar();
 	}
-	
+
 	private void initFrame() {
 		frame.setBounds(100, 100, 700, 500);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -231,18 +233,20 @@ public class ClientGUI {
 
 		cardBtns.clear();
 		for (int i = 0; i < n; i++) {
-			final CardPanel card = new CardPanel(i);
+			final CardSlot slot = new CardSlot(i);
 			final GridBagConstraints gbc = new GridBagConstraints();
 			{
 				gbc.fill = GridBagConstraints.BOTH;
 				gbc.insets = new Insets(0, 0, 0, 5);
 			}
-			pnlCards.add(card, gbc);
+			final CardPanel card = new CardPanel(i);
+			slot.add(card);
 			cardBtns.add(card);
+			pnlCards.add(slot, gbc);
 		}
 	}
 
-	private JMenuBar initMenuBar() {
+	private void initMenuBar() {
 		JMenuBar menuBar = new JMenuBar();
 
 		JMenu mnFile = new JMenu("File");
@@ -367,7 +371,7 @@ public class ClientGUI {
 			mnConfig.add(mnMode);
 		}
 		menuBar.add(mnConfig);
-		return menuBar;
+		frame.setJMenuBar(menuBar);
 	}
 
 	private void setCards() {
@@ -425,7 +429,7 @@ public class ClientGUI {
 
 		public SwapButton() {
 			super(new ImageIcon(SwapButton.class.getResource(SWAP_ICON)));
-			
+
 			addMouseListener(new MouseAdapter() {
 				@Override
 				public void mouseClicked(MouseEvent e) {
@@ -466,13 +470,13 @@ public class ClientGUI {
 		}
 
 		private int getLeft() {
-			final CardPanel btn = cardBtns.get(cards.getLeft());
-			return btn.getLocation().x + btn.getWidth() / 2;
+			final Component comp = cardBtns.get(cards.getLeft()).getParent();
+			return comp.getLocation().x + comp.getWidth() / 2;
 		}
 
 		private int getRight() {
-			final CardPanel btn = cardBtns.get(cards.getRight());
-			return btn.getLocation().x + btn.getWidth() / 2;
+			final Component comp = cardBtns.get(cards.getRight()).getParent();
+			return comp.getLocation().x + comp.getWidth() / 2;
 		}
 
 		private int getCenter() {
@@ -480,7 +484,24 @@ public class ClientGUI {
 		}
 	}
 
+	private class CardSlot extends JPanel {
+		private static final long serialVersionUID = 4041694836525555796L;
+
+		public CardSlot(int index) {
+			super(new BorderLayout());
+			final TitledBorder border = new TitledBorder(new EtchedBorder(
+					EtchedBorder.RAISED));
+			{
+				border.setTitle(Integer.toString(index + 1));
+				border.setTitlePosition(TitledBorder.TOP);
+				border.setTitleJustification(TitledBorder.CENTER);
+			}
+			setBorder(border);
+		}
+	}
+
 	private class CardPanel extends JPanel {
+		private static final int CARD_HEIGHT = 120;
 		private static final String GRAY_PIN_ICON = "/img/pin-grey.png";
 		private static final String BLACK_PIN_ICON = "/img/pin.png";
 		private static final String ROTATED_PIN_ICON = "/img/pin-rot.png";
@@ -489,44 +510,52 @@ public class ClientGUI {
 		private static final int DEFAULT_BUTTON_SIZE = 25;
 		private static final long serialVersionUID = 68959464664105468L;
 		private final JLabel label;
-		private final TitledBorder border;
 		private final JToggleButton pin;
 		private final JToggleButton fin;
+		private final Color markColor = Color.GREEN; // TODO nicer green
+		private final Color defaultBackground;
 
 		public CardPanel(final int index) {
-			super(new BorderLayout(5, 5));
-			border = new TitledBorder(new BevelBorder(BevelBorder.RAISED),
-					Integer.toString(index + 1));
-			setBorder(border);
-			setOpaque(false);
+			super(new BorderLayout());
+			setBorder(new CardBorder(false));
+			setPreferredSize(new Dimension(getWidth(), CARD_HEIGHT));
 
 			label = new JLabel(DEFAULT_BUTTON_TEXT, JLabel.CENTER);
 			{
-				label.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 24));
+				label.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 36));
 				add(label, BorderLayout.CENTER);
 			}
 			pin = new JToggleButton();
 			{
 				JPanel pnlPin = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-				pin.setEnabled(false);
+				pin.setVisible(false);
 				pin.setIcon(new ImageIcon(getClass().getResource(GRAY_PIN_ICON)));
-				pin.setSelectedIcon(new ImageIcon(getClass().getResource(ROTATED_PIN_ICON)));
+				pin.setRolloverIcon(new ImageIcon(getClass().getResource(
+						BLACK_PIN_ICON)));
+				pin.setSelectedIcon(new ImageIcon(getClass().getResource(
+						ROTATED_PIN_ICON)));
 				pin.setPreferredSize(new Dimension(DEFAULT_BUTTON_SIZE,
 						DEFAULT_BUTTON_SIZE));
+				pnlPin.setOpaque(false);
 				pnlPin.add(pin);
 				add(pnlPin, BorderLayout.NORTH);
 			}
 			fin = new JToggleButton();
 			{
 				JPanel pnlFin = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-				fin.setIcon(new ImageIcon(getClass().getResource(GRAY_CHECK_ICON)));
-				fin.setSelectedIcon(new ImageIcon(getClass().getResource(BLACK_CHECK_ICON)));
+				fin.setIcon(new ImageIcon(getClass().getResource(
+						GRAY_CHECK_ICON)));
+				fin.setSelectedIcon(new ImageIcon(getClass().getResource(
+						BLACK_CHECK_ICON)));
+				fin.setRolloverIcon(new ImageIcon(getClass().getResource(
+						BLACK_CHECK_ICON)));
 				fin.setPreferredSize(new Dimension(DEFAULT_BUTTON_SIZE,
 						DEFAULT_BUTTON_SIZE));
+				pnlFin.setOpaque(false);
 				pnlFin.add(fin);
 				add(pnlFin, BorderLayout.SOUTH);
 			}
-
+			defaultBackground = getBackground();
 			initMouseListeners(index);
 		}
 
@@ -545,17 +574,6 @@ public class ClientGUI {
 			});
 			pin.addMouseListener(new MouseAdapter() {
 				@Override
-				public void mouseEntered(MouseEvent e) {
-					pin.setIcon(new ImageIcon(getClass().getResource(BLACK_PIN_ICON)));
-				}
-
-				@Override
-				public void mouseExited(MouseEvent e) {
-					if (!cards.isPinned(index))
-						pin.setIcon(new ImageIcon(getClass().getResource(GRAY_PIN_ICON)));
-				}
-
-				@Override
 				public void mouseClicked(MouseEvent e) {
 					if (cards.getCard(index).selected) {
 						try {
@@ -570,16 +588,6 @@ public class ClientGUI {
 			});
 			fin.addMouseListener(new MouseAdapter() {
 				@Override
-				public void mouseEntered(MouseEvent e) {
-					fin.setIcon(new ImageIcon(getClass().getResource(BLACK_CHECK_ICON)));
-				}
-
-				@Override
-				public void mouseExited(MouseEvent e) {
-					fin.setIcon(new ImageIcon(getClass().getResource(GRAY_CHECK_ICON)));
-				}
-
-				@Override
 				public void mouseClicked(MouseEvent e) {
 					try {
 						cards.toggleMark(index);
@@ -592,16 +600,29 @@ public class ClientGUI {
 			});
 		}
 
-		public void setTo(Card<?> c) {
-			border.setBorder(new BevelBorder(c.selected ? BevelBorder.LOWERED
-					: BevelBorder.RAISED));
+		public void updateCard(Card<?> c) {
+			setBorder(new CardBorder(c.selected));
 			label.setText(c.selected ? c.toString() : DEFAULT_BUTTON_TEXT);
-			pin.setEnabled(c.selected);
+			pin.setVisible(c.selected);
 			pin.setSelected(c.pinned);
-			pin.setIcon(new ImageIcon(getClass().getResource(c.pinned ? ROTATED_PIN_ICON
-					: GRAY_PIN_ICON)));
 			fin.setSelected(c.marked);
-			setBackground(c.marked ? Color.GREEN : Color.GRAY);
+			setOpaque(true);
+			setBackground(c.marked ? markColor : defaultBackground);
+		}
+	}
+
+	private class CardBorder extends BevelBorder {
+		private static final long serialVersionUID = 822279921799807495L;
+
+		public CardBorder(boolean selected) {
+			super(selected ? LOWERED : RAISED);
+		}
+
+		@Override
+		protected void paintLoweredBevel(Component c, Graphics g, int x, int y,
+				int width, int height) {
+			// TODO rounded edges
+			super.paintLoweredBevel(c, g, x, y, width, height);
 		}
 	}
 }

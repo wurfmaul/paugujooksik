@@ -22,7 +22,7 @@ public abstract class Action {
 	public static UnaryAction pin(int index) {
 		return new UnaryAction(Type.PIN, index);
 	}
-
+	
 	public static UnaryAction unpin(int index) {
 		return new UnaryAction(Type.UNPIN, index);
 	}

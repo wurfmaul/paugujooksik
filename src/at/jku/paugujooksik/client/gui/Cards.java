@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 import at.jku.paugujooksik.client.sort.Action;
 import at.jku.paugujooksik.client.sort.BubbleSort;
 import at.jku.paugujooksik.client.sort.InsertionSort;
+import at.jku.paugujooksik.client.sort.PlayMode;
 import at.jku.paugujooksik.client.sort.SelectionSort;
 import at.jku.paugujooksik.client.sort.SortAlgorithm;
 
@@ -198,7 +199,7 @@ public class Cards<T extends Comparable<T>> {
 				throw new SelectionException(
 						"Algorithm would do the following instead: " + exp);
 			}
-		} else {
+		} else if (!sort.curAlgo.allowsMoreActions()) {
 			throw new SelectionException("No more actions necessary!");
 		}
 	}
@@ -210,6 +211,7 @@ public class Cards<T extends Comparable<T>> {
 		public Sort() {
 			algorithms = new LinkedList<>();
 			{
+				algorithms.add(new PlayMode<T>());
 				algorithms.add(new BubbleSort<T>());
 				algorithms.add(new InsertionSort<T>());
 				algorithms.add(new SelectionSort<T>());
