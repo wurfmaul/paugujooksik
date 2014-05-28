@@ -3,49 +3,59 @@ package at.jku.paugujooksik.client.sort;
 import java.util.List;
 
 public class SelectionSort<T extends Comparable<T>> extends SortAlgorithm<T> {
-
+	int pinned;
+	
 	@Override
 	public List<Action> getActions(List<T> values) {
 		setup(values);
-		int pinned = -1;
+		pinned = -1;
 
 		int iMin;
 		for (int j = 0; j < n - 1; j++) {
 			iMin = j;
 			for (int i = j + 1; i < n; i++) {
-				final BinaryAction openAction = Action.open(i, iMin);
-				if (actions.size() < 1 || !actions.get(actions.size() - 1).equals(openAction))
-					actions.add(openAction);
-				
+				actionOpen(iMin, i);
 				if (a.get(i).compareTo(a.get(iMin)) < 0) {
-					if (pinned != -1) actions.add(Action.unpin(pinned));
 					iMin = i;
-					pinned = iMin;
-					actions.add(Action.pin(iMin));
-				} else {
-					if (pinned == -1){
-						pinned = iMin;
-						actions.add(Action.pin(pinned));
-					}
 				}
+				actionPin(iMin);
 			}
 			if (iMin != j) {
 				T tmp = a.get(j);
 				a.set(j, a.get(iMin));
 				a.set(iMin, tmp);
-				actions.add(Action.open(j, iMin));
-				actions.add(Action.swap(j, iMin));
+				actionOpen(j, iMin);
+				actionSwap(iMin, j);
 			}
-			if (pinned != -1) {
-				actions.add(Action.unpin(pinned));
-				actions.add(Action.mark(j));
-			}
-			pinned = -1;
+			actionMark(j);
 		}
 		actions.add(Action.mark(n - 1));
 		
 		DEBUGLOG.info("SelectionSort sorted the values " + values);
 		assert isListSorted(a);
 		return actions;
+	}
+
+	private void actionMark(int i) {
+		if (pinned != -1) {
+			actions.add(Action.mark(i));
+		}
+	}
+
+	private void actionSwap(int i, int j) {
+		actions.add(Action.swap(i, j));
+	}
+
+	private void actionPin(int i) {
+		if (pinned != i) {
+			pinned = i;
+			actions.add(Action.pin(i));
+		}
+	}
+
+	private void actionOpen(int i, int j) {
+		final BinaryAction openAction = Action.open(i, j);
+		if (actions.size() < 1 || !actions.get(actions.size() - 1).equals(openAction))
+			actions.add(openAction);
 	}
 }

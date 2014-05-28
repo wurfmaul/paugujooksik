@@ -17,18 +17,18 @@ public class Cards<T extends Comparable<T>> {
 	private static final Logger DEBUGLOG = Logger.getLogger("DEBUG");
 	private static final boolean MOVE_PIN = false;
 
+	private final Statistics stat = new Statistics();
+	private final List<Card<T>> cards = new LinkedList<>();
 	private final List<T> values;
-	private final List<Card<T>> cards;
 
 	private List<Action> expectedActions;
 	private int curAction;
+	private int pinIndex = -1;
 
-	public final Sort sort;
+	public final Sort sort = new Sort();
 
 	public Cards(List<T> values) {
 		this.values = values;
-		this.cards = new LinkedList<>();
-		this.sort = new Sort();
 		reset();
 	}
 
@@ -44,33 +44,48 @@ public class Cards<T extends Comparable<T>> {
 		return cards.get(index);
 	}
 
-	public int getOne() {
-		if (!one())
+	public int getSelectedIndex() {
+		if (!oneSelected())
 			throw new SelectionException("One button must be selected");
 		return getSelection().get(0);
 	}
 
-	public int getLeft() {
-		if (!two())
+	public int getFirstSelectedIndex() {
+		if (!twoSelected())
 			throw new SelectionException("Two buttons must be selected!");
 		return getSelection().get(0);
 	}
 
-	public int getRight() {
-		if (!two())
+	public int getSecondSelectedIndex() {
+		if (!twoSelected())
 			throw new SelectionException("Two buttons must be selected!");
 		return getSelection().get(1);
 	}
 
-	public void select(int index) {
-		if (isSelected(index))
-			return;
+	public int getErrorCount() {
+		return stat.errorCount;
+	}
 
+	public int getSwapCount() {
+		return stat.swapCount;
+	}
+
+	public int getCompareCount() {
+		return stat.compareCount;
+	}
+
+	public void select(int index) {
+		if (isSelected(index) && oneSelected()) {
+			// click twice at same card
+			cards.get(index).selected = false;
+			return;
+		}
+		
 		checkAction(Action.open(index));
 
-		if (two()) {
-			Card<T> left = cards.get(getLeft());
-			Card<T> right = cards.get(getRight());
+		if (twoSelected()) {
+			Card<T> left = cards.get(getFirstSelectedIndex());
+			Card<T> right = cards.get(getSecondSelectedIndex());
 			if (!left.pinned)
 				left.selected = false;
 			if (!right.pinned)
@@ -78,12 +93,9 @@ public class Cards<T extends Comparable<T>> {
 		}
 
 		switch (getSelection().size()) {
-		case 2:
-			throw new SelectionException("Two cards are already pinned!");
 		case 1:
-			checkAction(Action.open(index, getOne()));
-			cards.get(index).selected = true;
-			break;
+			checkAction(Action.open(index, getSelectedIndex()));
+			stat.compareCount++;
 		case 0:
 			cards.get(index).selected = true;
 			break;
@@ -94,30 +106,34 @@ public class Cards<T extends Comparable<T>> {
 	}
 
 	public void swapSelection() {
-		if (!two())
+		if (!twoSelected())
 			throw new SelectionException("Two cards need to be open.");
 
-		checkAction(Action.swap(getLeft(), getRight()));
-		final Card<T> left = cards.get(getLeft());
-		final Card<T> right = cards.get(getRight());
-		cards.set(getLeft(), right);
-		cards.set(getRight(), left);
+		checkAction(Action.swap(getFirstSelectedIndex(),
+				getSecondSelectedIndex()));
+		final Card<T> left = cards.get(getFirstSelectedIndex());
+		final Card<T> right = cards.get(getSecondSelectedIndex());
+		cards.set(getFirstSelectedIndex(), right);
+		cards.set(getSecondSelectedIndex(), left);
 		if (!MOVE_PIN) {
 			boolean leftPinned = left.pinned;
 			boolean rightPinned = right.pinned;
 			left.pinned = rightPinned;
 			right.pinned = leftPinned;
 		}
+		stat.swapCount++;
 	}
 
 	public void togglePin(int index) {
-		final Card<T> card = cards.get(index);
-		if (card.pinned) {
-			checkAction(Action.unpin(index));
-			card.pinned = false;
-		} else {
+		if (pinIndex == -1 || pinIndex != index) {
 			checkAction(Action.pin(index));
-			card.pinned = true;
+			if (pinIndex != -1)
+				cards.get(pinIndex).pinned = false;
+			cards.get(index).pinned = true;
+			pinIndex = index;
+		} else {
+			cards.get(pinIndex).pinned = false;
+			pinIndex = -1;
 		}
 	}
 
@@ -151,16 +167,24 @@ public class Cards<T extends Comparable<T>> {
 		return Arrays.equals(act, exp);
 	}
 
-	public boolean zero() {
+	public boolean zeroSelected() {
 		return getSelection().size() == 0;
 	}
 
-	public boolean one() {
+	public boolean oneSelected() {
 		return getSelection().size() == 1;
 	}
 
-	public boolean two() {
+	public boolean twoSelected() {
 		return getSelection().size() == 2;
+	}
+
+	public void selectAll() {
+		assert allMarked();
+
+		for (Card<T> c : cards) {
+			c.selected = true;
+		}
 	}
 
 	public void reset() {
@@ -172,6 +196,7 @@ public class Cards<T extends Comparable<T>> {
 		}
 		expectedActions = sort.getCurrent().getActions(values);
 		curAction = 0;
+		stat.reset();
 	}
 
 	private List<Integer> getSelection() {
@@ -196,6 +221,7 @@ public class Cards<T extends Comparable<T>> {
 					curAction++;
 				}
 			} else {
+				stat.errorCount++;
 				throw new SelectionException(
 						"Algorithm would do the following instead: " + exp);
 			}
@@ -229,6 +255,18 @@ public class Cards<T extends Comparable<T>> {
 
 		public void setCurrent(int index) {
 			this.curAlgo = algorithms.get(index);
+		}
+	}
+
+	private class Statistics {
+		public int errorCount = 0;
+		public int swapCount = 0;
+		public int compareCount = 0;
+
+		public void reset() {
+			errorCount = 0;
+			swapCount = 0;
+			compareCount = 0;
 		}
 	}
 }

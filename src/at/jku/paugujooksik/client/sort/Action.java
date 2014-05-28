@@ -22,10 +22,6 @@ public abstract class Action {
 	public static UnaryAction pin(int index) {
 		return new UnaryAction(Type.PIN, index);
 	}
-	
-	public static UnaryAction unpin(int index) {
-		return new UnaryAction(Type.UNPIN, index);
-	}
 
 	public static BinaryAction swap(int left, int right) {
 		return new BinaryAction(Type.SWAP, left, right);

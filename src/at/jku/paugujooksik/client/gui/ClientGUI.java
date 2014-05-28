@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import javax.swing.ButtonGroup;
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -45,7 +46,7 @@ import at.jku.paugujooksik.client.sort.SortAlgorithm;
 
 public class ClientGUI {
 	private static final Logger DEBUGLOG = Logger.getLogger("DEBUG");
-	private static final String DEFAULT_BUTTON_TEXT = "  ";
+	private static final String DEFAULT_CARD_TEXT = "  ";
 	private static final int MIN_SIZE = 7;
 	private static final int MAX_SIZE = 15;
 	private static final int DEFAULT_SIZE = 7;
@@ -57,12 +58,10 @@ public class ClientGUI {
 	private JPanel pnlAbove;
 	private DrawPanel pnlBelow;
 	private JButton btnExchange;
-	private JTextPane txtErrors;
+	private JTextPane txtStats;
 	private JLabel lblTitle;
-	private JLabel lblHint;
+	private JTextPane txtHint;
 	private Cards<?> cards;
-	private int errorCount = 0;
-	private int swapCount = 0;
 	private int n = DEFAULT_SIZE;
 
 	/**
@@ -78,22 +77,40 @@ public class ClientGUI {
 	}
 
 	private void reset() {
-		errorCount = 0;
-		swapCount = 0;
 		cards.reset();
-		updateComponents();
+		checkComponents();
 		updateStats();
 	}
 
 	private void clearErrorHint() {
-		lblHint.setText("");
+		txtHint.setText("");
 	}
 
 	private void reportError(SelectionException ex) {
-		lblHint.setForeground(Color.RED);
-		lblHint.setText(ex.getMessage());
-		errorCount++;
+		txtHint.setForeground(Color.RED);
+		txtHint.setText(ex.getMessage());
 		updateStats();
+	}
+
+	private void checkComponents() {
+		updateComponents();
+		checkFinish();
+	}
+
+	private void checkFinish() {
+		if (cards.allMarked()) {
+			if (cards.isSorted()) {
+				txtHint.setForeground(Color.GREEN);
+				txtHint.setText("Congratulations!");
+			} else {
+				txtHint.setForeground(Color.RED);
+				txtHint.setText("There is something wrong!");
+			}
+			pnlBelow.removeAll();
+			cards.selectAll();
+			// TODO deactivate everything
+			updateComponents();
+		}
 	}
 
 	private void updateComponents() {
@@ -102,37 +119,26 @@ public class ClientGUI {
 		}
 
 		pnlBelow.removeAll();
-		if (cards.two()) {
+		if (cards.twoSelected()) {
 			btnExchange = new SwapButton();
 			btnExchange.setBounds(pnlBelow.getCenter() - 50, 30, 100, 50);
 			pnlBelow.add(btnExchange);
 		}
-
 		lblTitle.setText(cards.sort.getCurrent().toString());
-
 		frame.repaint();
-		checkFinish();
 	}
 
 	private void updateStats() {
 		final StringBuilder sb = new StringBuilder();
 		sb.append("Errors: ");
-		sb.append(errorCount);
+		sb.append(cards.getErrorCount());
 		sb.append(System.lineSeparator());
 		sb.append("Swaps: ");
-		sb.append(swapCount);
-		txtErrors.setText(sb.toString());
-	}
-
-	private void checkFinish() {
-		if (cards.allMarked()) {
-			if (cards.isSorted()) {
-				lblHint.setForeground(Color.GREEN);
-				lblHint.setText("Congratulations!");
-			} else {
-				lblHint.setText("There is something wrong!");
-			}
-		}
+		sb.append(cards.getSwapCount());
+		sb.append(System.lineSeparator());
+		sb.append("Compares: ");
+		sb.append(cards.getCompareCount());
+		txtStats.setText(sb.toString());
 	}
 
 	/**
@@ -143,14 +149,14 @@ public class ClientGUI {
 
 		lblTitle = new JLabel(cards.sort.getCurrent().toString());
 		lblTitle.setFont(new Font("Dialog", Font.BOLD, 16));
-		GridBagConstraints gbc_lblTitle = new GridBagConstraints();
-		gbc_lblTitle.gridwidth = 2;
-		gbc_lblTitle.anchor = GridBagConstraints.NORTH;
-		gbc_lblTitle.fill = GridBagConstraints.HORIZONTAL;
-		gbc_lblTitle.insets = new Insets(0, 0, 5, 0);
-		gbc_lblTitle.gridx = 0;
-		gbc_lblTitle.gridy = 0;
-		frame.getContentPane().add(lblTitle, gbc_lblTitle);
+		GridBagConstraints gbcLblTitle = new GridBagConstraints();
+		gbcLblTitle.gridwidth = 2;
+		gbcLblTitle.anchor = GridBagConstraints.NORTH;
+		gbcLblTitle.insets = new Insets(0, 5, 5, 0);
+		gbcLblTitle.fill = GridBagConstraints.HORIZONTAL;
+		gbcLblTitle.gridx = 0;
+		gbcLblTitle.gridy = 0;
+		frame.getContentPane().add(lblTitle, gbcLblTitle);
 
 		pnlAbove = new JPanel();
 		pnlAbove.setLayout(null);
@@ -174,23 +180,26 @@ public class ClientGUI {
 		gbcPnlLines.gridy = 3;
 		frame.getContentPane().add(pnlBelow, gbcPnlLines);
 
-		lblHint = new JLabel("Click at one of the cards!");
+		txtHint = new JTextPane();
+		txtHint.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 16));
+		txtHint.setOpaque(false);
 		GridBagConstraints gbcLblHint = new GridBagConstraints();
 		gbcLblHint.anchor = GridBagConstraints.WEST;
-		gbcLblHint.insets = new Insets(0, 0, 0, 5);
+		gbcLblHint.insets = new Insets(0, 5, 0, 5);
+		gbcLblHint.fill = GridBagConstraints.HORIZONTAL;
 		gbcLblHint.gridx = 0;
 		gbcLblHint.gridy = 4;
-		frame.getContentPane().add(lblHint, gbcLblHint);
+		frame.getContentPane().add(txtHint, gbcLblHint);
 
-		txtErrors = new JTextPane();
+		txtStats = new JTextPane();
+		txtStats.setOpaque(false);
 		GridBagConstraints gbcLblCount = new GridBagConstraints();
 		gbcLblCount.gridx = 1;
 		gbcLblCount.gridy = 4;
-		txtErrors.setOpaque(false);
-		frame.getContentPane().add(txtErrors, gbcLblCount);
+		frame.getContentPane().add(txtStats, gbcLblCount);
 
-		updateStats();
 		initMenuBar();
+		updateStats();
 	}
 
 	private void initFrame() {
@@ -435,13 +444,12 @@ public class ClientGUI {
 				public void mouseClicked(MouseEvent e) {
 					try {
 						cards.swapSelection();
-						swapCount++;
 						clearErrorHint();
 						updateStats();
 					} catch (SelectionException ex) {
 						reportError(ex);
 					}
-					updateComponents();
+					checkComponents();
 				}
 			});
 		}
@@ -458,7 +466,7 @@ public class ClientGUI {
 		@Override
 		protected void paintComponent(Graphics g) {
 			super.paintComponent(g);
-			if (cards.two()) {
+			if (cards.twoSelected()) {
 				final Graphics2D g2d = (Graphics2D) g;
 				{
 					g2d.drawLine(getLeft(), 20, getRight(), 20);
@@ -470,12 +478,12 @@ public class ClientGUI {
 		}
 
 		private int getLeft() {
-			final Component comp = cardBtns.get(cards.getLeft()).getParent();
+			final Component comp = cardBtns.get(cards.getFirstSelectedIndex()).getParent();
 			return comp.getLocation().x + comp.getWidth() / 2;
 		}
 
 		private int getRight() {
-			final Component comp = cardBtns.get(cards.getRight()).getParent();
+			final Component comp = cardBtns.get(cards.getSecondSelectedIndex()).getParent();
 			return comp.getLocation().x + comp.getWidth() / 2;
 		}
 
@@ -509,10 +517,11 @@ public class ClientGUI {
 		private static final String GRAY_CHECK_ICON = "/img/check-gray.png";
 		private static final int DEFAULT_BUTTON_SIZE = 25;
 		private static final long serialVersionUID = 68959464664105468L;
+
+		private final Color markColor = Color.GREEN; // TODO nicer green
 		private final JLabel label;
 		private final JToggleButton pin;
 		private final JToggleButton fin;
-		private final Color markColor = Color.GREEN; // TODO nicer green
 		private final Color defaultBackground;
 
 		public CardPanel(final int index) {
@@ -520,7 +529,7 @@ public class ClientGUI {
 			setBorder(new CardBorder(false));
 			setPreferredSize(new Dimension(getWidth(), CARD_HEIGHT));
 
-			label = new JLabel(DEFAULT_BUTTON_TEXT, JLabel.CENTER);
+			label = new JLabel(DEFAULT_CARD_TEXT, JLabel.CENTER);
 			{
 				label.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 36));
 				add(label, BorderLayout.CENTER);
@@ -529,11 +538,9 @@ public class ClientGUI {
 			{
 				JPanel pnlPin = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 				pin.setVisible(false);
-				pin.setIcon(new ImageIcon(getClass().getResource(GRAY_PIN_ICON)));
-				pin.setRolloverIcon(new ImageIcon(getClass().getResource(
-						BLACK_PIN_ICON)));
-				pin.setSelectedIcon(new ImageIcon(getClass().getResource(
-						ROTATED_PIN_ICON)));
+				pin.setIcon(icon(GRAY_PIN_ICON));
+				pin.setRolloverIcon(icon(BLACK_PIN_ICON));
+				pin.setSelectedIcon(icon(ROTATED_PIN_ICON));
 				pin.setPreferredSize(new Dimension(DEFAULT_BUTTON_SIZE,
 						DEFAULT_BUTTON_SIZE));
 				pnlPin.setOpaque(false);
@@ -543,12 +550,9 @@ public class ClientGUI {
 			fin = new JToggleButton();
 			{
 				JPanel pnlFin = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-				fin.setIcon(new ImageIcon(getClass().getResource(
-						GRAY_CHECK_ICON)));
-				fin.setSelectedIcon(new ImageIcon(getClass().getResource(
-						BLACK_CHECK_ICON)));
-				fin.setRolloverIcon(new ImageIcon(getClass().getResource(
-						BLACK_CHECK_ICON)));
+				fin.setIcon(icon(GRAY_CHECK_ICON));
+				fin.setSelectedIcon(icon(BLACK_CHECK_ICON));
+				fin.setRolloverIcon(icon(BLACK_CHECK_ICON));
 				fin.setPreferredSize(new Dimension(DEFAULT_BUTTON_SIZE,
 						DEFAULT_BUTTON_SIZE));
 				pnlFin.setOpaque(false);
@@ -559,17 +563,22 @@ public class ClientGUI {
 			initMouseListeners(index);
 		}
 
+		private Icon icon(String name) {
+			return new ImageIcon(getClass().getResource(name));
+		}
+
 		private void initMouseListeners(final int index) {
 			addMouseListener(new MouseAdapter() {
 				@Override
 				public void mouseClicked(MouseEvent e) {
 					try {
 						cards.select(index);
+						updateStats();
 						clearErrorHint();
 					} catch (SelectionException ex) {
 						reportError(ex);
 					}
-					updateComponents();
+					checkComponents();
 				}
 			});
 			pin.addMouseListener(new MouseAdapter() {
@@ -582,7 +591,7 @@ public class ClientGUI {
 						} catch (SelectionException ex) {
 							reportError(ex);
 						}
-						updateComponents();
+						checkComponents();
 					}
 				}
 			});
@@ -595,14 +604,14 @@ public class ClientGUI {
 					} catch (SelectionException ex) {
 						reportError(ex);
 					}
-					updateComponents();
+					checkComponents();
 				}
 			});
 		}
 
 		public void updateCard(Card<?> c) {
 			setBorder(new CardBorder(c.selected));
-			label.setText(c.selected ? c.toString() : DEFAULT_BUTTON_TEXT);
+			label.setText(c.selected ? c.toString() : DEFAULT_CARD_TEXT);
 			pin.setVisible(c.selected);
 			pin.setSelected(c.pinned);
 			fin.setSelected(c.marked);
