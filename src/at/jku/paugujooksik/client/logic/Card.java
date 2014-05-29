@@ -1,4 +1,4 @@
-package at.jku.paugujooksik.client.gui;
+package at.jku.paugujooksik.client.logic;
 
 public class Card<T extends Comparable<T>> implements Comparable<Card<T>> {
 	public final T value;

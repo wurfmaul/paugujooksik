@@ -1,16 +1,12 @@
-package at.jku.paugujooksik.client.gui;
+package at.jku.paugujooksik.client.logic;
 
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import at.jku.paugujooksik.client.gui.SelectionException;
 import at.jku.paugujooksik.client.sort.Action;
-import at.jku.paugujooksik.client.sort.BubbleSort;
-import at.jku.paugujooksik.client.sort.InsertionSort;
-import at.jku.paugujooksik.client.sort.PlayMode;
-import at.jku.paugujooksik.client.sort.SelectionSort;
-import at.jku.paugujooksik.client.sort.SortAlgorithm;
 
 public class Cards<T extends Comparable<T>> {
 	private static final Logger DEBUGLOG = Logger.getLogger("DEBUG");
@@ -26,7 +22,7 @@ public class Cards<T extends Comparable<T>> {
 	private int curAction;
 	private int pinIndex = -1;
 
-	public final Sort sort = new Sort();
+	public final SortConfig<T> sort = new SortConfig<>();
 
 	public Cards(List<T> values) {
 		this.values = values;
@@ -247,36 +243,8 @@ public class Cards<T extends Comparable<T>> {
 				throw new SelectionException(
 						"Algorithm would do the following instead: " + exp + "!");
 			}
-		} else if (!sort.curAlgo.allowsMoreActions()) {
+		} else if (!sort.getCurrent().allowsMoreActions()) {
 			throw new SelectionException("No more actions necessary!");
-		}
-	}
-
-	public class Sort {
-		private List<SortAlgorithm<T>> algorithms;
-		private SortAlgorithm<T> curAlgo;
-
-		public Sort() {
-			algorithms = new LinkedList<>();
-			{
-				algorithms.add(new PlayMode<T>());
-				algorithms.add(new BubbleSort<T>());
-				algorithms.add(new InsertionSort<T>());
-				algorithms.add(new SelectionSort<T>());
-			}
-			curAlgo = algorithms.get(0);
-		}
-
-		public List<SortAlgorithm<T>> getAll() {
-			return Collections.unmodifiableList(algorithms);
-		}
-
-		public SortAlgorithm<T> getCurrent() {
-			return curAlgo;
-		}
-
-		public void setCurrent(int index) {
-			this.curAlgo = algorithms.get(index);
 		}
 	}
 

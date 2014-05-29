@@ -104,8 +104,8 @@ final class BinaryAction extends Action {
 	public boolean equals(Object obj) {
 		if (obj instanceof BinaryAction) {
 			final BinaryAction other = (BinaryAction) obj;
-			return type.equals(other.type) && 
-					(indexLeft == other.indexLeft && indexRight == other.indexRight 
+			return type.equals(other.type) 
+					&& (indexLeft == other.indexLeft && indexRight == other.indexRight 
 					|| indexLeft == other.indexRight && indexRight == other.indexLeft);
 		}
 		return false;
@@ -113,14 +113,20 @@ final class BinaryAction extends Action {
 }
 
 enum Type {
-	COMPARE("Comparing"), SWAP("Swapping"), OPEN("Opening"), PIN("Pinning"), UNPIN(
-			"Unpinning"), MARK("Marking"), UNMARK("Unmarking");
+	COMPARE("Comparing"), 
+	SWAP("Swapping"), 
+	OPEN("Opening"), 
+	PIN("Pinning"), 
+	MARK("Marking"), 
+	UNMARK("Unmarking");
+	
 	private final String desc;
 
 	private Type(String desc) {
 		this.desc = desc;
 	}
 
+	@Override
 	public String toString() {
 		return desc;
 	};
