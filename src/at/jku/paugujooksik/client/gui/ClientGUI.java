@@ -36,8 +36,8 @@ import javax.swing.JSeparator;
 import javax.swing.JTextPane;
 import javax.swing.JToggleButton;
 import javax.swing.UIManager;
-import javax.swing.border.BevelBorder;
 import javax.swing.border.EtchedBorder;
+import javax.swing.border.SoftBevelBorder;
 import javax.swing.border.TitledBorder;
 
 import at.jku.paugujooksik.client.gui.ValueGenerator.Mode;
@@ -185,6 +185,7 @@ public class ClientGUI {
 		txtHint = new JTextPane();
 		txtHint.setFont(new Font(Font.SERIF, Font.BOLD, 16));
 		txtHint.setOpaque(false);
+		txtHint.setFocusable(false);
 		GridBagConstraints gbcLblHint = new GridBagConstraints();
 		gbcLblHint.anchor = GridBagConstraints.WEST;
 		gbcLblHint.insets = new Insets(0, 5, 0, 5);
@@ -195,6 +196,7 @@ public class ClientGUI {
 
 		txtStats = new JTextPane();
 		txtStats.setOpaque(false);
+		txtStats.setFocusable(false);
 		GridBagConstraints gbcLblCount = new GridBagConstraints();
 		gbcLblCount.gridx = 1;
 		gbcLblCount.gridy = 4;
@@ -522,10 +524,10 @@ public class ClientGUI {
 
 		private final Color markColor = Color.GREEN; // TODO nicer green
 		private final Color errorColor = Color.RED;
+		private final Color defaultBackground = Color.LIGHT_GRAY;
 		private final JLabel label;
 		private final JToggleButton pin;
 		private final JToggleButton fin;
-		private final Color defaultBackground;
 		private MouseAdapter cardMouseAdapter;
 		private MouseAdapter pinMouseAdapter;
 		private MouseAdapter finMouseAdapter;
@@ -533,6 +535,7 @@ public class ClientGUI {
 		public CardPanel(final int index) {
 			super(new BorderLayout());
 			initMouseListeners(index);
+			setBackground(defaultBackground);
 			setBorder(new CardBorder(false));
 			setPreferredSize(new Dimension(getWidth(), CARD_HEIGHT));
 			addMouseListener(cardMouseAdapter);
@@ -573,7 +576,6 @@ public class ClientGUI {
 				pnlFin.add(fin);
 				add(pnlFin, BorderLayout.SOUTH);
 			}
-			defaultBackground = getBackground();
 		}
 
 		private Icon icon(String name) {
@@ -642,18 +644,11 @@ public class ClientGUI {
 		}
 	}
 
-	private class CardBorder extends BevelBorder {
+	private class CardBorder extends SoftBevelBorder {
 		private static final long serialVersionUID = 822279921799807495L;
 
 		public CardBorder(boolean selected) {
 			super(selected ? LOWERED : RAISED);
-		}
-
-		@Override
-		protected void paintLoweredBevel(Component c, Graphics g, int x, int y,
-				int width, int height) {
-			// TODO rounded edges
-			super.paintLoweredBevel(c, g, x, y, width, height);
 		}
 	}
 }
