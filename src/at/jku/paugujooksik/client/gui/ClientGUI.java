@@ -47,28 +47,26 @@ import at.jku.paugujooksik.client.sort.SortAlgorithm;
 public class ClientGUI {
 	private static final Logger DEBUGLOG = Logger.getLogger("DEBUG");
 	private static final String DEFAULT_CARD_TEXT = "  ";
+	private static final boolean GROW_CARDS = false;
 	private static final int MIN_SIZE = 7;
 	private static final int MAX_SIZE = 15;
 	private static final int DEFAULT_SIZE = 7;
 
-	private final JFrame frame;
-	private final ValueGenerator values;
-	private final List<CardPanel> cardBtns;
-	private DrawPanel pnlBelow;
+	private final JFrame frame = new JFrame();
+	private final ValueGenerator values = new ValueGenerator();
+	private final List<CardPanel> cardBtns = new LinkedList<>();
+	private int n = DEFAULT_SIZE;
+	private DrawPanel pnlSwap;
 	private JButton btnExchange;
 	private JTextPane txtStats;
 	private JLabel lblTitle;
 	private JTextPane txtHint;
 	private Cards<?> cards;
-	private int n = DEFAULT_SIZE;
 
 	/**
 	 * Create the application.
 	 */
 	private ClientGUI() {
-		frame = new JFrame();
-		values = new ValueGenerator();
-		cardBtns = new LinkedList<>();
 		setCards();
 		initFrame();
 		initialize();
@@ -104,7 +102,7 @@ public class ClientGUI {
 				txtHint.setForeground(Color.RED);
 				txtHint.setText("There is something wrong!");
 			}
-			pnlBelow.removeAll();
+			pnlSwap.removeAll();
 			cards.selectAll();
 			updateComponents();
 			for (int i = 0; i < n; i++) {
@@ -117,15 +115,28 @@ public class ClientGUI {
 		for (int i = 0; i < n; i++) {
 			cardBtns.get(i).updateCard(cards.getCard(i));
 		}
-
-		pnlBelow.removeAll();
+		
+		pnlSwap.removeAll();
 		if (cards.twoSelected()) {
 			btnExchange = new SwapButton();
-			btnExchange.setBounds(pnlBelow.getCenter() - 50, 30, 100, 50);
-			pnlBelow.add(btnExchange);
+			btnExchange.setBounds(pnlSwap.getCenter() - 50, 30, 100, 50);
+			pnlSwap.add(btnExchange);
 		}
-		lblTitle.setText(cards.sort.getCurrent().toString());
+		lblTitle.setText(printConfig());
 		frame.repaint();
+	}
+
+	private String printConfig() {
+		final StringBuilder sb = new StringBuilder();
+		sb.append(cards.sort.getCurrent().toString());
+		sb.append(" (");
+		sb.append(n);
+		sb.append(" ");
+		sb.append(values.mode);
+		sb.append(" ");
+		sb.append(values.type);
+		sb.append(")");
+		return sb.toString();
 	}
 
 	private void updateStats() {
@@ -147,7 +158,7 @@ public class ClientGUI {
 	private void initialize() {
 		frame.getContentPane().removeAll();
 
-		lblTitle = new JLabel(cards.sort.getCurrent().toString());
+		lblTitle = new JLabel(printConfig());
 		lblTitle.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 16));
 		GridBagConstraints gbcLblTitle = new GridBagConstraints();
 		gbcLblTitle.fill = GridBagConstraints.BOTH;
@@ -168,16 +179,26 @@ public class ClientGUI {
 
 		initCardPanel();
 
-		pnlBelow = new DrawPanel();
-		pnlBelow.setLayout(null);
+		pnlSwap = new DrawPanel();
+		pnlSwap.setLayout(null);
 		GridBagConstraints gbcPnlLines = new GridBagConstraints();
 		gbcPnlLines.gridwidth = 2;
 		gbcPnlLines.insets = new Insets(0, 0, 5, 0);
 		gbcPnlLines.fill = GridBagConstraints.BOTH;
 		gbcPnlLines.gridx = 0;
 		gbcPnlLines.gridy = 2;
-		frame.getContentPane().add(pnlBelow, gbcPnlLines);
+		frame.getContentPane().add(pnlSwap, gbcPnlLines);
 
+		JPanel pnlPlaceholder = new JPanel();
+		pnlPlaceholder.setLayout(null);
+		GridBagConstraints gbcPnlPlaceholder = new GridBagConstraints();
+		gbcPnlLines.gridwidth = 2;
+		gbcPnlLines.insets = new Insets(0, 0, 0, 0);
+		gbcPnlLines.fill = GridBagConstraints.BOTH;
+		gbcPnlLines.gridx = 0;
+		gbcPnlLines.gridy = 3;
+		frame.getContentPane().add(pnlPlaceholder, gbcPnlPlaceholder);
+		
 		txtHint = new JTextPane();
 		txtHint.setFont(new Font(Font.SERIF, Font.BOLD, 16));
 		txtHint.setOpaque(false);
@@ -187,7 +208,7 @@ public class ClientGUI {
 		gbcLblHint.insets = new Insets(0, 5, 5, 5);
 		gbcLblHint.fill = GridBagConstraints.BOTH;
 		gbcLblHint.gridx = 0;
-		gbcLblHint.gridy = 3;
+		gbcLblHint.gridy = 4;
 		frame.getContentPane().add(txtHint, gbcLblHint);
 
 		initMenuBar();
@@ -196,14 +217,17 @@ public class ClientGUI {
 
 	private void initFrame() {
 		frame.setBounds(100, 100, 700, 500);
+		frame.setMinimumSize(new Dimension(500, 450));
 		frame.setTitle("Sort the Cards!");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		GridBagLayout gblFrame = new GridBagLayout();
 		gblFrame.columnWidths = new int[] { 578, 120, 0 };
-		gblFrame.rowHeights = new int[] { 75, 120, 90, 75, 0 };
+		gblFrame.rowHeights = new int[] { 90, 160, 90, 10, 90, 0 };
 		gblFrame.columnWeights = new double[] { 1.0, 0.0, Double.MIN_VALUE };
-		gblFrame.rowWeights = new double[] { 0.0, 1.0, 0.0, 0.0,
-				Double.MIN_VALUE };
+		if (GROW_CARDS)
+			gblFrame.rowWeights = new double[] { 0.0, 1.0, 0.0, 0.0, 0.0, Double.MIN_VALUE };
+		else
+			gblFrame.rowWeights = new double[] { 0.0, 0.0, 0.0, 1.0, 0.0, Double.MIN_VALUE };
 		frame.getContentPane().setLayout(gblFrame);
 	}
 
@@ -452,7 +476,7 @@ public class ClientGUI {
 
 		protected void paintComponent(Graphics g) {
 			super.paintComponent(g);
-			setBounds(pnlBelow.getCenter() - 50, 30, 100, 50);
+			setBounds(pnlSwap.getCenter() - 50, 30, 100, 50);
 		}
 	}
 
@@ -516,7 +540,7 @@ public class ClientGUI {
 		private static final int DEFAULT_BUTTON_SIZE = 25;
 		private static final long serialVersionUID = 68959464664105468L;
 
-		private final Color markColor = Color.GREEN; // TODO nicer green
+		private final Color markColor = Color.GREEN;
 		private final Color errorColor = Color.RED;
 		private final Color defaultBackground = Color.LIGHT_GRAY;
 		private final JLabel label;

@@ -55,9 +55,24 @@ public class ValueGenerator {
 
 	public enum Mode {
 		SMALL, RANDOM;
+		
+		@Override
+		public String toString() {
+			return name().toLowerCase();
+		};
 	}
 	
 	public enum Type {
 		INTEGER, STRING;
+		
+		@Override
+		public String toString() {
+			assert name().length() > 1;
+			final StringBuilder sb = new StringBuilder();
+			sb.append(name().charAt(0));
+			sb.append(name().substring(1).toLowerCase());
+			sb.append("s");
+			return sb.toString();
+		};
 	}
 }

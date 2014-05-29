@@ -245,7 +245,7 @@ public class Cards<T extends Comparable<T>> {
 			} else {
 				stat.errorCount++;
 				throw new SelectionException(
-						"Algorithm would do the following instead: " + exp);
+						"Algorithm would do the following instead: " + exp + "!");
 			}
 		} else if (!sort.curAlgo.allowsMoreActions()) {
 			throw new SelectionException("No more actions necessary!");
