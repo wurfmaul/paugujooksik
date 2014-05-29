@@ -108,8 +108,10 @@ public class ClientGUI {
 			}
 			pnlBelow.removeAll();
 			cards.selectAll();
-			// TODO deactivate everything
 			updateComponents();
+			for (int i = 0; i < n; i++) {
+				cardBtns.get(i).finish(!cards.isOnRightPosition(i));
+			}
 		}
 	}
 
@@ -148,7 +150,7 @@ public class ClientGUI {
 		frame.getContentPane().removeAll();
 
 		lblTitle = new JLabel(cards.sort.getCurrent().toString());
-		lblTitle.setFont(new Font("Dialog", Font.BOLD, 16));
+		lblTitle.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 16));
 		GridBagConstraints gbcLblTitle = new GridBagConstraints();
 		gbcLblTitle.gridwidth = 2;
 		gbcLblTitle.anchor = GridBagConstraints.NORTH;
@@ -181,7 +183,7 @@ public class ClientGUI {
 		frame.getContentPane().add(pnlBelow, gbcPnlLines);
 
 		txtHint = new JTextPane();
-		txtHint.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 16));
+		txtHint.setFont(new Font(Font.SERIF, Font.BOLD, 16));
 		txtHint.setOpaque(false);
 		GridBagConstraints gbcLblHint = new GridBagConstraints();
 		gbcLblHint.anchor = GridBagConstraints.WEST;
@@ -519,15 +521,21 @@ public class ClientGUI {
 		private static final long serialVersionUID = 68959464664105468L;
 
 		private final Color markColor = Color.GREEN; // TODO nicer green
+		private final Color errorColor = Color.RED;
 		private final JLabel label;
 		private final JToggleButton pin;
 		private final JToggleButton fin;
 		private final Color defaultBackground;
+		private MouseAdapter cardMouseAdapter;
+		private MouseAdapter pinMouseAdapter;
+		private MouseAdapter finMouseAdapter;
 
 		public CardPanel(final int index) {
 			super(new BorderLayout());
+			initMouseListeners(index);
 			setBorder(new CardBorder(false));
 			setPreferredSize(new Dimension(getWidth(), CARD_HEIGHT));
+			addMouseListener(cardMouseAdapter);
 
 			label = new JLabel(DEFAULT_CARD_TEXT, JLabel.CENTER);
 			{
@@ -537,12 +545,15 @@ public class ClientGUI {
 			pin = new JToggleButton();
 			{
 				JPanel pnlPin = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+				pin.setBorderPainted(false);
+				pin.setFocusable(false);
 				pin.setVisible(false);
 				pin.setIcon(icon(GRAY_PIN_ICON));
 				pin.setRolloverIcon(icon(BLACK_PIN_ICON));
 				pin.setSelectedIcon(icon(ROTATED_PIN_ICON));
 				pin.setPreferredSize(new Dimension(DEFAULT_BUTTON_SIZE,
 						DEFAULT_BUTTON_SIZE));
+				pin.addMouseListener(pinMouseAdapter);
 				pnlPin.setOpaque(false);
 				pnlPin.add(pin);
 				add(pnlPin, BorderLayout.NORTH);
@@ -550,17 +561,19 @@ public class ClientGUI {
 			fin = new JToggleButton();
 			{
 				JPanel pnlFin = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+				fin.setBorderPainted(false);
+				fin.setFocusable(false);
 				fin.setIcon(icon(GRAY_CHECK_ICON));
 				fin.setSelectedIcon(icon(BLACK_CHECK_ICON));
 				fin.setRolloverIcon(icon(BLACK_CHECK_ICON));
 				fin.setPreferredSize(new Dimension(DEFAULT_BUTTON_SIZE,
 						DEFAULT_BUTTON_SIZE));
+				fin.addMouseListener(finMouseAdapter);
 				pnlFin.setOpaque(false);
 				pnlFin.add(fin);
 				add(pnlFin, BorderLayout.SOUTH);
 			}
 			defaultBackground = getBackground();
-			initMouseListeners(index);
 		}
 
 		private Icon icon(String name) {
@@ -568,7 +581,7 @@ public class ClientGUI {
 		}
 
 		private void initMouseListeners(final int index) {
-			addMouseListener(new MouseAdapter() {
+			cardMouseAdapter = new MouseAdapter() {
 				@Override
 				public void mouseClicked(MouseEvent e) {
 					try {
@@ -580,8 +593,8 @@ public class ClientGUI {
 					}
 					checkComponents();
 				}
-			});
-			pin.addMouseListener(new MouseAdapter() {
+			};
+			pinMouseAdapter = new MouseAdapter() {
 				@Override
 				public void mouseClicked(MouseEvent e) {
 					if (cards.getCard(index).selected) {
@@ -594,8 +607,8 @@ public class ClientGUI {
 						checkComponents();
 					}
 				}
-			});
-			fin.addMouseListener(new MouseAdapter() {
+			};
+			finMouseAdapter = new MouseAdapter() {
 				@Override
 				public void mouseClicked(MouseEvent e) {
 					try {
@@ -606,9 +619,18 @@ public class ClientGUI {
 					}
 					checkComponents();
 				}
-			});
+			};
 		}
 
+		public void finish(boolean hasError) {
+			setBackground(hasError ? errorColor : markColor);
+			removeMouseListener(cardMouseAdapter);
+			pin.setEnabled(false);
+			pin.removeMouseListener(pinMouseAdapter);
+			fin.setEnabled(false);
+			fin.removeMouseListener(finMouseAdapter);
+		}
+		
 		public void updateCard(Card<?> c) {
 			setBorder(new CardBorder(c.selected));
 			label.setText(c.selected ? c.toString() : DEFAULT_CARD_TEXT);

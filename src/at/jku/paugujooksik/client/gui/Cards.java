@@ -1,6 +1,5 @@
 package at.jku.paugujooksik.client.gui;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -16,10 +15,12 @@ import at.jku.paugujooksik.client.sort.SortAlgorithm;
 public class Cards<T extends Comparable<T>> {
 	private static final Logger DEBUGLOG = Logger.getLogger("DEBUG");
 	private static final boolean MOVE_PIN = false;
+	private static final boolean MOVE_MARK = false;
 
 	private final Statistics stat = new Statistics();
 	private final List<Card<T>> cards = new LinkedList<>();
 	private final List<T> values;
+	private final List<T> sortedValues;
 
 	private List<Action> expectedActions;
 	private int curAction;
@@ -29,6 +30,7 @@ public class Cards<T extends Comparable<T>> {
 
 	public Cards(List<T> values) {
 		this.values = values;
+		this.sortedValues = getSortedCopy(values);
 		reset();
 	}
 
@@ -121,6 +123,12 @@ public class Cards<T extends Comparable<T>> {
 			left.pinned = rightPinned;
 			right.pinned = leftPinned;
 		}
+		if (!MOVE_MARK) {
+			boolean leftMarked = left.marked;
+			boolean rightMarked = right.marked;
+			left.marked = rightMarked;
+			right.marked = leftMarked;
+		}
 		stat.swapCount++;
 	}
 
@@ -152,6 +160,10 @@ public class Cards<T extends Comparable<T>> {
 		return cards.get(index).marked;
 	}
 
+	public boolean isOnRightPosition(int index) {
+		return cards.get(index).value.equals(sortedValues.get(index));
+	}
+
 	public boolean isPinned(int index) {
 		return cards.get(index).pinned;
 	}
@@ -161,10 +173,11 @@ public class Cards<T extends Comparable<T>> {
 	}
 
 	public boolean isSorted() {
-		Object[] act = cards.toArray();
-		Object[] exp = cards.toArray();
-		Arrays.sort(exp);
-		return Arrays.equals(act, exp);
+		for (int i = 0; i < values.size(); i++) {
+			if (!isOnRightPosition(i))
+				return false;
+		}
+		return true;
 	}
 
 	public boolean zeroSelected() {
@@ -197,6 +210,15 @@ public class Cards<T extends Comparable<T>> {
 		expectedActions = sort.getCurrent().getActions(values);
 		curAction = 0;
 		stat.reset();
+	}
+
+	private List<T> getSortedCopy(List<T> values) {
+		final List<T> sorted = new LinkedList<>();
+		for (T e : values) {
+			sorted.add(e);
+		}
+		Collections.sort(sorted);
+		return Collections.unmodifiableList(sorted);
 	}
 
 	private List<Integer> getSelection() {
