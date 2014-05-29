@@ -54,8 +54,6 @@ public class ClientGUI {
 	private final JFrame frame;
 	private final ValueGenerator values;
 	private final List<CardPanel> cardBtns;
-
-	private JPanel pnlAbove;
 	private DrawPanel pnlBelow;
 	private JButton btnExchange;
 	private JTextPane txtStats;
@@ -152,23 +150,21 @@ public class ClientGUI {
 		lblTitle = new JLabel(cards.sort.getCurrent().toString());
 		lblTitle.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 16));
 		GridBagConstraints gbcLblTitle = new GridBagConstraints();
-		gbcLblTitle.gridwidth = 2;
-		gbcLblTitle.anchor = GridBagConstraints.NORTH;
-		gbcLblTitle.insets = new Insets(0, 5, 5, 0);
-		gbcLblTitle.fill = GridBagConstraints.HORIZONTAL;
+		gbcLblTitle.fill = GridBagConstraints.BOTH;
+		gbcLblTitle.insets = new Insets(0, 5, 5, 5);
 		gbcLblTitle.gridx = 0;
 		gbcLblTitle.gridy = 0;
 		frame.getContentPane().add(lblTitle, gbcLblTitle);
 
-		pnlAbove = new JPanel();
-		pnlAbove.setLayout(null);
-		GridBagConstraints gbcPnlAbove = new GridBagConstraints();
-		gbcPnlAbove.gridwidth = 2;
-		gbcPnlAbove.insets = new Insets(0, 0, 5, 0);
-		gbcPnlAbove.fill = GridBagConstraints.BOTH;
-		gbcPnlAbove.gridx = 0;
-		gbcPnlAbove.gridy = 1;
-		frame.getContentPane().add(pnlAbove, gbcPnlAbove);
+		txtStats = new JTextPane();
+		txtStats.setOpaque(false);
+		txtStats.setFocusable(false);
+		GridBagConstraints gbcLblCount = new GridBagConstraints();
+		gbcLblCount.insets = new Insets(0, 0, 5, 0);
+		gbcLblCount.fill = GridBagConstraints.BOTH;
+		gbcLblCount.gridx = 1;
+		gbcLblCount.gridy = 0;
+		frame.getContentPane().add(txtStats, gbcLblCount);
 
 		initCardPanel();
 
@@ -179,7 +175,7 @@ public class ClientGUI {
 		gbcPnlLines.insets = new Insets(0, 0, 5, 0);
 		gbcPnlLines.fill = GridBagConstraints.BOTH;
 		gbcPnlLines.gridx = 0;
-		gbcPnlLines.gridy = 3;
+		gbcPnlLines.gridy = 2;
 		frame.getContentPane().add(pnlBelow, gbcPnlLines);
 
 		txtHint = new JTextPane();
@@ -187,20 +183,12 @@ public class ClientGUI {
 		txtHint.setOpaque(false);
 		txtHint.setFocusable(false);
 		GridBagConstraints gbcLblHint = new GridBagConstraints();
-		gbcLblHint.anchor = GridBagConstraints.WEST;
-		gbcLblHint.insets = new Insets(0, 5, 0, 5);
-		gbcLblHint.fill = GridBagConstraints.HORIZONTAL;
+		gbcLblHint.gridwidth = 2;
+		gbcLblHint.insets = new Insets(0, 5, 5, 5);
+		gbcLblHint.fill = GridBagConstraints.BOTH;
 		gbcLblHint.gridx = 0;
-		gbcLblHint.gridy = 4;
+		gbcLblHint.gridy = 3;
 		frame.getContentPane().add(txtHint, gbcLblHint);
-
-		txtStats = new JTextPane();
-		txtStats.setOpaque(false);
-		txtStats.setFocusable(false);
-		GridBagConstraints gbcLblCount = new GridBagConstraints();
-		gbcLblCount.gridx = 1;
-		gbcLblCount.gridy = 4;
-		frame.getContentPane().add(txtStats, gbcLblCount);
 
 		initMenuBar();
 		updateStats();
@@ -208,12 +196,13 @@ public class ClientGUI {
 
 	private void initFrame() {
 		frame.setBounds(100, 100, 700, 500);
+		frame.setTitle("Sort the Cards!");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		GridBagLayout gblFrame = new GridBagLayout();
-		gblFrame.columnWidths = new int[] { 350, 40, 0 };
-		gblFrame.rowHeights = new int[] { 0, 50, 0, 0, 20, 0 };
+		gblFrame.columnWidths = new int[] { 578, 120, 0 };
+		gblFrame.rowHeights = new int[] { 75, 120, 90, 75, 0 };
 		gblFrame.columnWeights = new double[] { 1.0, 0.0, Double.MIN_VALUE };
-		gblFrame.rowWeights = new double[] { 0.0, 0.0, 0.0, 1.0, 0.0,
+		gblFrame.rowWeights = new double[] { 0.0, 1.0, 0.0, 0.0,
 				Double.MIN_VALUE };
 		frame.getContentPane().setLayout(gblFrame);
 	}
@@ -226,21 +215,21 @@ public class ClientGUI {
 			gbcPnLCards.insets = new Insets(0, 0, 5, 0);
 			gbcPnLCards.fill = GridBagConstraints.BOTH;
 			gbcPnLCards.gridx = 0;
-			gbcPnLCards.gridy = 2;
+			gbcPnLCards.gridy = 1;
 		}
 		frame.getContentPane().add(pnlCards, gbcPnLCards);
 
 		final GridBagLayout gblPnlCards = new GridBagLayout();
 		{
 			gblPnlCards.columnWidths = new int[n + 1];
-			gblPnlCards.rowHeights = new int[] { 0, 0 };
+			gblPnlCards.rowHeights = new int[] { 0 };
 			double[] weights = new double[n + 1];
 			{
 				Arrays.fill(weights, 1.0);
 				weights[weights.length - 1] = Double.MIN_VALUE;
 			}
 			gblPnlCards.columnWeights = weights;
-			gblPnlCards.rowWeights = new double[] { 0.0, Double.MIN_VALUE };
+			gblPnlCards.rowWeights = new double[] { 1.0 };
 		}
 		pnlCards.setLayout(gblPnlCards);
 
@@ -250,12 +239,15 @@ public class ClientGUI {
 			final GridBagConstraints gbc = new GridBagConstraints();
 			{
 				gbc.fill = GridBagConstraints.BOTH;
-				gbc.insets = new Insets(0, 0, 0, 5);
+				gbc.insets = new Insets(0, 2, 0, 2);
+				gbc.gridx = i;
+				gbc.gridy = 0;
 			}
+			pnlCards.add(slot, gbc);
+
 			final CardPanel card = new CardPanel(i);
 			slot.add(card);
 			cardBtns.add(card);
-			pnlCards.add(slot, gbc);
 		}
 	}
 
@@ -482,12 +474,14 @@ public class ClientGUI {
 		}
 
 		private int getLeft() {
-			final Component comp = cardBtns.get(cards.getFirstSelectedIndex()).getParent();
+			final Component comp = cardBtns.get(cards.getFirstSelectedIndex())
+					.getParent();
 			return comp.getLocation().x + comp.getWidth() / 2;
 		}
 
 		private int getRight() {
-			final Component comp = cardBtns.get(cards.getSecondSelectedIndex()).getParent();
+			final Component comp = cardBtns.get(cards.getSecondSelectedIndex())
+					.getParent();
 			return comp.getLocation().x + comp.getWidth() / 2;
 		}
 
@@ -501,6 +495,7 @@ public class ClientGUI {
 
 		public CardSlot(int index) {
 			super(new BorderLayout());
+			setOpaque(false);
 			final TitledBorder border = new TitledBorder(new EtchedBorder(
 					EtchedBorder.RAISED));
 			{
@@ -513,7 +508,6 @@ public class ClientGUI {
 	}
 
 	private class CardPanel extends JPanel {
-		private static final int CARD_HEIGHT = 120;
 		private static final String GRAY_PIN_ICON = "/img/pin-grey.png";
 		private static final String BLACK_PIN_ICON = "/img/pin.png";
 		private static final String ROTATED_PIN_ICON = "/img/pin-rot.png";
@@ -535,11 +529,11 @@ public class ClientGUI {
 		public CardPanel(final int index) {
 			super(new BorderLayout());
 			initMouseListeners(index);
-			setBackground(defaultBackground);
-			setBorder(new CardBorder(false));
-			setPreferredSize(new Dimension(getWidth(), CARD_HEIGHT));
-			addMouseListener(cardMouseAdapter);
-
+			{
+				setBackground(defaultBackground);
+				setBorder(new CardBorder(false));
+				addMouseListener(cardMouseAdapter);
+			}
 			label = new JLabel(DEFAULT_CARD_TEXT, JLabel.CENTER);
 			{
 				label.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 36));
@@ -632,7 +626,7 @@ public class ClientGUI {
 			fin.setEnabled(false);
 			fin.removeMouseListener(finMouseAdapter);
 		}
-		
+
 		public void updateCard(Card<?> c) {
 			setBorder(new CardBorder(c.selected));
 			label.setText(c.selected ? c.toString() : DEFAULT_CARD_TEXT);
