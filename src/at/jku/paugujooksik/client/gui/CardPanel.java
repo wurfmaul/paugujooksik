@@ -16,7 +16,7 @@ import at.jku.paugujooksik.client.logic.Card;
 
 public class CardPanel extends AbstractPanel {
 	private static final long serialVersionUID = 68959464664105468L;
-	
+
 	private static final String DEFAULT_CARD_TEXT = "  ";
 	private static final int DEFAULT_BUTTON_SIZE = 25;
 	private static final int FONT_SIZE_ONECHAR = 36;
@@ -45,7 +45,8 @@ public class CardPanel extends AbstractPanel {
 		}
 		label = new JLabel(DEFAULT_CARD_TEXT, JLabel.CENTER);
 		{
-			label.setFont(new Font(Font.SANS_SERIF, Font.BOLD, FONT_SIZE_ONECHAR));
+			label.setFont(new Font(Font.SANS_SERIF, Font.BOLD,
+					FONT_SIZE_ONECHAR));
 			add(label, BorderLayout.CENTER);
 		}
 		pin = new JToggleButton();
@@ -81,30 +82,6 @@ public class CardPanel extends AbstractPanel {
 		}
 	}
 
-	private void initMouseListeners(final int index) {
-		cardMouseAdapter = new MouseAdapter() {
-			@Override
-			public void mouseReleased(MouseEvent e) {
-				if (withinSameComponent(e))
-					target.performSelect(index);
-			}
-		};
-		pinMouseAdapter = new MouseAdapter() {
-			@Override
-			public void mouseReleased(MouseEvent e) {
-				if (withinSameComponent(e))
-					target.performPin(index);
-			}
-		};
-		finMouseAdapter = new MouseAdapter() {
-			@Override
-			public void mouseReleased(MouseEvent e) {
-				if (withinSameComponent(e))
-					target.performMark(index);
-			}
-		};
-	}
-
 	public void finish(boolean hasError) {
 		setBackground(hasError ? errorColor : markColor);
 		removeMouseListener(cardMouseAdapter);
@@ -124,6 +101,30 @@ public class CardPanel extends AbstractPanel {
 		setBackground(c.marked ? markColor : defaultBackground);
 	}
 
+	private void initMouseListeners(final int index) {
+		cardMouseAdapter = new MouseAdapter() {
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				if (staysInsideComponent(e))
+					target.performSelect(index);
+			}
+		};
+		pinMouseAdapter = new MouseAdapter() {
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				if (staysInsideComponent(e))
+					target.performPin(index);
+			}
+		};
+		finMouseAdapter = new MouseAdapter() {
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				if (staysInsideComponent(e))
+					target.performMark(index);
+			}
+		};
+	}
+
 	private void updateText(Card<?> c) {
 		float size = FONT_SIZE_ONECHAR;
 		String text = DEFAULT_CARD_TEXT;
@@ -133,7 +134,7 @@ public class CardPanel extends AbstractPanel {
 				size = FONT_SIZE_TWOCHAR;
 			else if (text.length() == 3)
 				size = FONT_SIZE_THREECHAR;
-			
+
 		}
 		label.setFont(label.getFont().deriveFont(size));
 		label.setText(text);

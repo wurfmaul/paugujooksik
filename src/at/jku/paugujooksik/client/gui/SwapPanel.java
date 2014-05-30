@@ -56,7 +56,7 @@ public class SwapPanel extends AbstractPanel {
 			addMouseListener(new MouseAdapter() {
 				@Override
 				public void mouseReleased(MouseEvent e) {
-					if (withinSameComponent(e))
+					if (staysInsideComponent(e))
 						target.performSwap();
 				}
 			});
