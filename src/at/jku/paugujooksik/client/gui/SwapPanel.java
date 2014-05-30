@@ -5,20 +5,15 @@ import java.awt.Graphics2D;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JPanel;
 
-public class SwapPanel extends JPanel {
+public class SwapPanel extends AbstractPanel {
 	private static final long serialVersionUID = -7863948686242926432L;
-	private static final String SWAP_ICON = "/img/swap.png";
-
 	private final ClientGUI target;
 
 	public SwapPanel(ClientGUI target) {
-		super();
+		super(null);
 		this.target = target;
-		setLayout(null);
 	}
 
 	@Override
@@ -56,12 +51,13 @@ public class SwapPanel extends JPanel {
 		private static final long serialVersionUID = -6368213501613529319L;
 
 		public SwapButton() {
-			super(new ImageIcon(SwapButton.class.getResource(SWAP_ICON)));
+			super(icon(SWAP_ICON));
 
 			addMouseListener(new MouseAdapter() {
 				@Override
-				public void mouseClicked(MouseEvent e) {
-					target.performSwap();
+				public void mouseReleased(MouseEvent e) {
+					if (withinSameComponent(e))
+						target.performSwap();
 				}
 			});
 		}

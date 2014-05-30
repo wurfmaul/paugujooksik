@@ -72,6 +72,7 @@ public class ClientGUI {
 	private void reportError(SelectionException ex) {
 		txtHint.setForeground(Color.RED);
 		txtHint.setText(ex.getMessage());
+		// TODO play sound
 		updateStats();
 	}
 

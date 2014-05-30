@@ -15,7 +15,6 @@ public class SortConfig<T extends Comparable<T>> {
 	private int curAlgo;
 
 	SortConfig(int defaultIndex) {
-		// TODO reflect ?
 		algorithms.add(new PlayMode<T>());
 		algorithms.add(new BubbleSort<T>());
 		algorithms.add(new InsertionSort<T>());

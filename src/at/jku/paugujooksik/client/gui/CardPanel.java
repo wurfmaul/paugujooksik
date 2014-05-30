@@ -8,22 +8,15 @@ import java.awt.Font;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-import javax.swing.Icon;
-import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JToggleButton;
 
 import at.jku.paugujooksik.client.logic.Card;
 
-public class CardPanel extends JPanel {
+public class CardPanel extends AbstractPanel {
 	private static final long serialVersionUID = 68959464664105468L;
 	
-	private static final String GRAY_PIN_ICON = "/img/pin-grey.png";
-	private static final String BLACK_PIN_ICON = "/img/pin.png";
-	private static final String ROTATED_PIN_ICON = "/img/pin-rot.png";
-	private static final String BLACK_CHECK_ICON = "/img/check.png";
-	private static final String GRAY_CHECK_ICON = "/img/check-gray.png";
 	private static final String DEFAULT_CARD_TEXT = "  ";
 	private static final int DEFAULT_BUTTON_SIZE = 25;
 	private static final int FONT_SIZE_ONECHAR = 36;
@@ -88,27 +81,26 @@ public class CardPanel extends JPanel {
 		}
 	}
 
-	private Icon icon(String name) {
-		return new ImageIcon(getClass().getResource(name));
-	}
-
 	private void initMouseListeners(final int index) {
 		cardMouseAdapter = new MouseAdapter() {
 			@Override
-			public void mouseClicked(MouseEvent e) {
-				target.performSelect(index);
+			public void mouseReleased(MouseEvent e) {
+				if (withinSameComponent(e))
+					target.performSelect(index);
 			}
 		};
 		pinMouseAdapter = new MouseAdapter() {
 			@Override
-			public void mouseClicked(MouseEvent e) {
-				target.performPin(index);
+			public void mouseReleased(MouseEvent e) {
+				if (withinSameComponent(e))
+					target.performPin(index);
 			}
 		};
 		finMouseAdapter = new MouseAdapter() {
 			@Override
-			public void mouseClicked(MouseEvent e) {
-				target.performMark(index);
+			public void mouseReleased(MouseEvent e) {
+				if (withinSameComponent(e))
+					target.performMark(index);
 			}
 		};
 	}
