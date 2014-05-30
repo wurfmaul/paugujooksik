@@ -10,11 +10,17 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.ButtonGroup;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -73,6 +79,28 @@ public class ClientGUI {
 		txtHint.setForeground(Color.RED);
 		txtHint.setText(ex.getMessage());
 		// TODO play sound
+		System.out.println("play sound");
+		
+		URL url = ClientGUI.class.getResource("/snd/beep.wav");
+		// way 1
+		try {
+			Clip clip = AudioSystem.getClip();
+			clip.open(AudioSystem.getAudioInputStream(url));
+			clip.start();
+		} catch (LineUnavailableException | UnsupportedAudioFileException
+				| IOException e) {
+			e.printStackTrace();
+		}
+		
+		// way 2
+//		try {
+//			AudioClip clip = Applet.newAudioClip(url);
+//			clip.play();
+//			Thread.sleep(2000);
+//		} catch (InterruptedException e) {
+//			e.printStackTrace();
+//		}
+		
 		updateStats();
 	}
 
