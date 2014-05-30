@@ -4,7 +4,6 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.Font;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
@@ -19,9 +18,9 @@ public class CardPanel extends AbstractPanel {
 
 	private static final String DEFAULT_CARD_TEXT = "  ";
 	private static final int DEFAULT_BUTTON_SIZE = 25;
-	private static final int FONT_SIZE_ONECHAR = 36;
-	private static final int FONT_SIZE_TWOCHAR = 24;
-	private static final int FONT_SIZE_THREECHAR = 16;
+	private static final float FONT_SIZE_ONECHAR = 36;
+	private static final float FONT_SIZE_TWOCHAR = 24;
+	private static final float FONT_SIZE_THREECHAR = 16;
 
 	private final Color markColor = Color.GREEN;
 	private final Color errorColor = Color.RED;
@@ -45,8 +44,8 @@ public class CardPanel extends AbstractPanel {
 		}
 		label = new JLabel(DEFAULT_CARD_TEXT, JLabel.CENTER);
 		{
-			label.setFont(new Font(Font.SANS_SERIF, Font.BOLD,
-					FONT_SIZE_ONECHAR));
+			label.setFont(ClientGUI.DEFAULT_FONT_BOLD
+					.deriveFont(FONT_SIZE_ONECHAR));
 			add(label, BorderLayout.CENTER);
 		}
 		pin = new JToggleButton();
@@ -55,6 +54,7 @@ public class CardPanel extends AbstractPanel {
 			pin.setBorderPainted(false);
 			pin.setFocusable(false);
 			pin.setVisible(false);
+			pin.setOpaque(false);
 			pin.setIcon(icon(GRAY_PIN_ICON));
 			pin.setRolloverIcon(icon(BLACK_PIN_ICON));
 			pin.setSelectedIcon(icon(ROTATED_PIN_ICON));
@@ -70,6 +70,7 @@ public class CardPanel extends AbstractPanel {
 			JPanel pnlFin = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 			fin.setBorderPainted(false);
 			fin.setFocusable(false);
+			fin.setOpaque(false);
 			fin.setIcon(icon(GRAY_CHECK_ICON));
 			fin.setSelectedIcon(icon(BLACK_CHECK_ICON));
 			fin.setRolloverIcon(icon(BLACK_CHECK_ICON));
@@ -85,10 +86,8 @@ public class CardPanel extends AbstractPanel {
 	public void finish(boolean hasError) {
 		setBackground(hasError ? errorColor : markColor);
 		removeMouseListener(cardMouseAdapter);
-		pin.setEnabled(false);
-		pin.removeMouseListener(pinMouseAdapter);
-		fin.setEnabled(false);
-		fin.removeMouseListener(finMouseAdapter);
+		pin.setVisible(false);
+		fin.setVisible(false);
 	}
 
 	public void updateCard(Card<?> c) {
@@ -136,7 +135,7 @@ public class CardPanel extends AbstractPanel {
 				size = FONT_SIZE_THREECHAR;
 
 		}
-		label.setFont(label.getFont().deriveFont(size));
+		label.setFont(ClientGUI.DEFAULT_FONT_BOLD.deriveFont(size));
 		label.setText(text);
 	}
 }

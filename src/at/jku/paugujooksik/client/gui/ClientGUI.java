@@ -5,6 +5,8 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Font;
+import java.awt.FontFormatException;
+import java.awt.GraphicsEnvironment;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -46,9 +48,14 @@ public class ClientGUI {
 	private static final int MAX_SIZE = 15;
 	private static final int DEFAULT_SIZE = 7;
 
+	public static final Font DEFAULT_FONT;
+	public static final Font DEFAULT_FONT_BOLD;
+	public static final Font DEFAULT_FONT_SERIF;
+
 	private final JFrame frame = new JFrame();
 	private final ValueGenerator values = new ValueGenerator();
 	private final List<CardPanel> cardBtns = new LinkedList<>();
+
 	private int n = DEFAULT_SIZE;
 	private SwapPanel pnlSwap;
 	private JTextPane txtStats;
@@ -56,9 +63,18 @@ public class ClientGUI {
 	private JTextPane txtHint;
 	private Cards<?> cards;
 
-	/**
-	 * Create the application.
-	 */
+	static {
+		if (loadFonts()) {
+			DEFAULT_FONT = new Font("DejaVuSans", Font.PLAIN, 16);
+			DEFAULT_FONT_BOLD = new Font("DejaVuSans-Bold", Font.BOLD, 16);
+			DEFAULT_FONT_SERIF = new Font("DejaVuSerif", Font.PLAIN, 16);
+		} else {
+			DEFAULT_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 16);
+			DEFAULT_FONT_BOLD = new Font(Font.SANS_SERIF, Font.BOLD, 16);
+			DEFAULT_FONT_SERIF = new Font(Font.SERIF, Font.PLAIN, 16);
+		}
+	}
+
 	private ClientGUI() {
 		setCards();
 		initFrame();
@@ -78,29 +94,30 @@ public class ClientGUI {
 	private void reportError(SelectionException ex) {
 		txtHint.setForeground(Color.RED);
 		txtHint.setText(ex.getMessage());
-		// TODO play sound
-		System.out.println("play sound");
-		
-		URL url = ClientGUI.class.getResource("/snd/beep.wav");
-		// way 1
-		try {
-			Clip clip = AudioSystem.getClip();
-			clip.open(AudioSystem.getAudioInputStream(url));
-			clip.start();
-		} catch (LineUnavailableException | UnsupportedAudioFileException
-				| IOException e) {
-			e.printStackTrace();
+
+		{
+			// TODO play sound
+			URL url = ClientGUI.class.getResource("/snd/beep.wav");
+			// way 1
+			try {
+				Clip clip = AudioSystem.getClip();
+				clip.open(AudioSystem.getAudioInputStream(url));
+				clip.start();
+			} catch (LineUnavailableException | UnsupportedAudioFileException
+					| IOException e) {
+				e.printStackTrace();
+			}
+
+			// way 2
+			// try {
+			// AudioClip clip = Applet.newAudioClip(url);
+			// clip.play();
+			// Thread.sleep(2000);
+			// } catch (InterruptedException e) {
+			// e.printStackTrace();
+			// }
 		}
-		
-		// way 2
-//		try {
-//			AudioClip clip = Applet.newAudioClip(url);
-//			clip.play();
-//			Thread.sleep(2000);
-//		} catch (InterruptedException e) {
-//			e.printStackTrace();
-//		}
-		
+
 		updateStats();
 	}
 
@@ -170,7 +187,7 @@ public class ClientGUI {
 		frame.getContentPane().removeAll();
 
 		lblTitle = new JLabel(printConfig());
-		lblTitle.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 16));
+		lblTitle.setFont(DEFAULT_FONT.deriveFont(30f));
 		GridBagConstraints gbcLblTitle = new GridBagConstraints();
 		gbcLblTitle.fill = GridBagConstraints.BOTH;
 		gbcLblTitle.insets = new Insets(0, 5, 5, 5);
@@ -179,6 +196,7 @@ public class ClientGUI {
 		frame.getContentPane().add(lblTitle, gbcLblTitle);
 
 		txtStats = new JTextPane();
+		txtStats.setFont(DEFAULT_FONT.deriveFont(24f));
 		txtStats.setOpaque(false);
 		txtStats.setFocusable(false);
 		GridBagConstraints gbcLblCount = new GridBagConstraints();
@@ -210,7 +228,7 @@ public class ClientGUI {
 		frame.getContentPane().add(pnlPlaceholder, gbcPnlPlaceholder);
 
 		txtHint = new JTextPane();
-		txtHint.setFont(new Font(Font.SERIF, Font.BOLD, 16));
+		txtHint.setFont(DEFAULT_FONT_BOLD.deriveFont(24f));
 		txtHint.setOpaque(false);
 		txtHint.setFocusable(false);
 		GridBagConstraints gbcLblHint = new GridBagConstraints();
@@ -231,7 +249,7 @@ public class ClientGUI {
 		frame.setTitle("Sort the Cards!");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		GridBagLayout gblFrame = new GridBagLayout();
-		gblFrame.columnWidths = new int[] { 578, 120, 0 };
+		gblFrame.columnWidths = new int[] { 508, 190, 0 };
 		gblFrame.rowHeights = new int[] { 90, 160, 90, 10, 90, 0 };
 		gblFrame.columnWeights = new double[] { 1.0, 0.0, Double.MIN_VALUE };
 		if (GROW_CARDS)
@@ -297,6 +315,7 @@ public class ClientGUI {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					DEBUGLOG.fine("Restarting game");
+					initialize();
 					reset();
 				}
 			});
@@ -415,10 +434,10 @@ public class ClientGUI {
 	private void setCards() {
 		final Mode mode = values.mode;
 		final Type type = values.type;
-		
+
 		int sort = 0;
 		if (cards != null)
-			 sort = cards.sort.getCurrentIndex();
+			sort = cards.sort.getCurrentIndex();
 
 		switch (mode) {
 		case SMALL:
@@ -503,6 +522,24 @@ public class ClientGUI {
 		return cards.twoSelected();
 	}
 
+	private static boolean loadFonts() {
+		final String[] fonts = new String[] { "DejaVuSans", "DejaVuSans-Bold" };
+		final GraphicsEnvironment ge = GraphicsEnvironment
+				.getLocalGraphicsEnvironment();
+
+		for (String s : fonts) {
+			try {
+				URL res = ClientGUI.class.getResource("/font/" + s + ".ttf");
+				ge.registerFont(Font.createFont(Font.TRUETYPE_FONT,
+						res.openStream()));
+			} catch (FontFormatException | IOException e) {
+				DEBUGLOG.severe("Could not load font '" + s + "'!");
+				return false;
+			}
+		}
+		return true;
+	}
+
 	/**
 	 * Launch the application.
 	 */
@@ -513,7 +550,6 @@ public class ClientGUI {
 					UIManager.setLookAndFeel(UIManager
 							.getSystemLookAndFeelClassName());
 				} catch (Exception e) {
-					System.err.println(e.getLocalizedMessage());
 				}
 				try {
 					ClientGUI window = new ClientGUI();
