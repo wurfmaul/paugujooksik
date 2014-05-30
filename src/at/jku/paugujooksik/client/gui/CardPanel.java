@@ -26,6 +26,9 @@ public class CardPanel extends JPanel {
 	private static final String GRAY_CHECK_ICON = "/img/check-gray.png";
 	private static final String DEFAULT_CARD_TEXT = "  ";
 	private static final int DEFAULT_BUTTON_SIZE = 25;
+	private static final int FONT_SIZE_ONECHAR = 36;
+	private static final int FONT_SIZE_TWOCHAR = 24;
+	private static final int FONT_SIZE_THREECHAR = 16;
 
 	private final Color markColor = Color.GREEN;
 	private final Color errorColor = Color.RED;
@@ -49,7 +52,7 @@ public class CardPanel extends JPanel {
 		}
 		label = new JLabel(DEFAULT_CARD_TEXT, JLabel.CENTER);
 		{
-			label.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 36)); //TODO adapt size
+			label.setFont(new Font(Font.SANS_SERIF, Font.BOLD, FONT_SIZE_ONECHAR));
 			add(label, BorderLayout.CENTER);
 		}
 		pin = new JToggleButton();
@@ -121,11 +124,26 @@ public class CardPanel extends JPanel {
 
 	public void updateCard(Card<?> c) {
 		setBorder(new CardBorder(c.selected));
-		label.setText(c.selected ? c.toString() : DEFAULT_CARD_TEXT);
+		updateText(c);
 		pin.setVisible(c.selected);
 		pin.setSelected(c.pinned);
 		fin.setSelected(c.marked);
 		setOpaque(true);
 		setBackground(c.marked ? markColor : defaultBackground);
+	}
+
+	private void updateText(Card<?> c) {
+		float size = FONT_SIZE_ONECHAR;
+		String text = DEFAULT_CARD_TEXT;
+		if (c.selected) {
+			text = c.toString();
+			if (text.length() == 2)
+				size = FONT_SIZE_TWOCHAR;
+			else if (text.length() == 3)
+				size = FONT_SIZE_THREECHAR;
+			
+		}
+		label.setFont(label.getFont().deriveFont(size));
+		label.setText(text);
 	}
 }

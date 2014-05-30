@@ -322,7 +322,7 @@ public class ClientGUI {
 							DEBUGLOG.config("Changed size to " + size);
 							n = size;
 							setCards();
-							initialize(); //FIXME don't change algo!
+							initialize();
 						}
 					});
 					sizeGroup.add(item);
