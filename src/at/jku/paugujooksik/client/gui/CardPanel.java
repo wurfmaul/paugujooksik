@@ -49,7 +49,7 @@ public class CardPanel extends JPanel {
 		}
 		label = new JLabel(DEFAULT_CARD_TEXT, JLabel.CENTER);
 		{
-			label.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 36));
+			label.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 36)); //TODO adapt size
 			add(label, BorderLayout.CENTER);
 		}
 		pin = new JToggleButton();

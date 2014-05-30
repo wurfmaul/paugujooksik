@@ -322,8 +322,7 @@ public class ClientGUI {
 							DEBUGLOG.config("Changed size to " + size);
 							n = size;
 							setCards();
-							initialize();
-							reset();
+							initialize(); //FIXME don't change algo!
 						}
 					});
 					sizeGroup.add(item);
@@ -348,7 +347,6 @@ public class ClientGUI {
 							values.type = type;
 							setCards();
 							initialize();
-							reset();
 						}
 					});
 					typeGroup.add(item);
@@ -373,7 +371,6 @@ public class ClientGUI {
 							values.mode = mode;
 							setCards();
 							initialize();
-							reset();
 						}
 					});
 					kindGroup.add(item);
@@ -389,23 +386,27 @@ public class ClientGUI {
 	private void setCards() {
 		final Mode mode = values.mode;
 		final Type type = values.type;
+		
+		int sort = 0;
+		if (cards != null)
+			 sort = cards.sort.getCurrentIndex();
 
 		switch (mode) {
 		case SMALL:
 			if (type == Type.INTEGER) {
-				cards = new Cards<>(ValueGenerator.smallIntValues(n));
+				cards = new Cards<>(ValueGenerator.smallIntValues(n), sort);
 				return;
 			} else if (type == Type.STRING) {
-				cards = new Cards<>(ValueGenerator.smallStringValues(n));
+				cards = new Cards<>(ValueGenerator.smallStringValues(n), sort);
 				return;
 			}
 			break;
 		case RANDOM:
 			if (type == Type.INTEGER) {
-				cards = new Cards<>(ValueGenerator.randomIntValues(n));
+				cards = new Cards<>(ValueGenerator.randomIntValues(n), sort);
 				return;
 			} else if (type == Type.STRING) {
-				cards = new Cards<>(ValueGenerator.randomStringValues(n));
+				cards = new Cards<>(ValueGenerator.randomStringValues(n), sort);
 				return;
 			}
 			break;

@@ -22,11 +22,12 @@ public class Cards<T extends Comparable<T>> {
 	private int curAction;
 	private int pinIndex = -1;
 
-	public final SortConfig<T> sort = new SortConfig<>();
+	public final SortConfig<T> sort;
 
-	public Cards(List<T> values) {
+	public Cards(List<T> values, int sortAlgoIndex) {
 		this.values = values;
 		this.sortedValues = getSortedCopy(values);
+		this.sort = new SortConfig<>(sortAlgoIndex);
 		reset();
 	}
 

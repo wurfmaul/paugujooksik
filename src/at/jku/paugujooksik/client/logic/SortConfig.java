@@ -11,18 +11,16 @@ import at.jku.paugujooksik.client.sort.SelectionSort;
 import at.jku.paugujooksik.client.sort.SortAlgorithm;
 
 public class SortConfig<T extends Comparable<T>> {
-	private final List<SortAlgorithm<T>> algorithms;
-	private SortAlgorithm<T> curAlgo;
+	private final List<SortAlgorithm<T>> algorithms = new LinkedList<>();
+	private int curAlgo;
 
-	SortConfig() {
-		algorithms = new LinkedList<>();
-		{
-			algorithms.add(new PlayMode<T>());
-			algorithms.add(new BubbleSort<T>());
-			algorithms.add(new InsertionSort<T>());
-			algorithms.add(new SelectionSort<T>());
-		}
-		curAlgo = algorithms.get(0);
+	SortConfig(int defaultIndex) {
+		// TODO reflect ?
+		algorithms.add(new PlayMode<T>());
+		algorithms.add(new BubbleSort<T>());
+		algorithms.add(new InsertionSort<T>());
+		algorithms.add(new SelectionSort<T>());
+		curAlgo = defaultIndex;
 	}
 
 	public List<SortAlgorithm<T>> getAll() {
@@ -30,10 +28,14 @@ public class SortConfig<T extends Comparable<T>> {
 	}
 
 	public SortAlgorithm<T> getCurrent() {
+		return algorithms.get(curAlgo);
+	}
+	
+	public int getCurrentIndex() {
 		return curAlgo;
 	}
 
 	public void setCurrent(int index) {
-		this.curAlgo = algorithms.get(index);
+		this.curAlgo = index;
 	}
 }
