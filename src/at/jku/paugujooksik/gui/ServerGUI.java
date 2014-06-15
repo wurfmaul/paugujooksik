@@ -20,13 +20,12 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JSlider;
 import javax.swing.JTextArea;
-import javax.swing.JTextPane;
+import javax.swing.JTextField;
 import javax.swing.UIManager;
 import javax.swing.border.BevelBorder;
 
@@ -37,9 +36,9 @@ public class ServerGUI extends AbstractGUI {
 	private static final String HOST_IP;
 	private static final int HOST_PORT = 1099;
 	private JTextArea txtPlayers;
-	
+
 	private JFrame frame; // FIXME use super.frame
-	
+
 	static {
 		String ip = "unknown";
 		try {
@@ -67,18 +66,20 @@ public class ServerGUI extends AbstractGUI {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private void initialize() {
 		frame = new JFrame();
-		frame.setBounds(100, 100, 700, 420);
-		frame.setMinimumSize(new Dimension(500, 420));
+		frame.setBounds(100, 100, 700, 430);
+		frame.setMinimumSize(new Dimension(500, 430));
 		frame.setTitle("Paugujooksik - Presenter Mode");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		GridBagLayout gblFrame = new GridBagLayout();
 		gblFrame.columnWidths = new int[] { 175, 175, 175, 175, 0 };
-		gblFrame.rowHeights = new int[] { 50, 80, 0, 50, 40, 40, 40, 40, 0 };
-		gblFrame.columnWeights = new double[] { 1.0, 1.0, 1.0, 1.0, Double.MIN_VALUE };
-		gblFrame.rowWeights = new double[] { 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, Double.MIN_VALUE };
+		gblFrame.rowHeights = new int[] { 50, 40, 40, 50, 40, 40, 40, 40, 0 };
+		gblFrame.columnWeights = new double[] { 1.0, 1.0, 1.0, 1.0,
+				Double.MIN_VALUE };
+		gblFrame.rowWeights = new double[] { 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+				1.0, Double.MIN_VALUE };
 		frame.getContentPane().setLayout(gblFrame);
 
 		JLabel lblConnTitle = new JLabel("Connection");
@@ -91,6 +92,42 @@ public class ServerGUI extends AbstractGUI {
 		gbcLblConnTitle.gridy = 0;
 		frame.getContentPane().add(lblConnTitle, gbcLblConnTitle);
 
+		JLabel lblCfgIp = new JLabel("IP address: ");
+		GridBagConstraints gbcLblFfgIp = new GridBagConstraints();
+		gbcLblFfgIp.anchor = GridBagConstraints.WEST;
+		gbcLblFfgIp.insets = new Insets(0, 10, 5, 5);
+		gbcLblFfgIp.gridx = 0;
+		gbcLblFfgIp.gridy = 1;
+		frame.getContentPane().add(lblCfgIp, gbcLblFfgIp);
+
+		JTextField txtCfgIp = new JTextField(HOST_IP);
+		txtCfgIp.setEditable(false);
+		GridBagConstraints gbcTxtCfgIp = new GridBagConstraints();
+		gbcTxtCfgIp.insets = new Insets(0, 0, 5, 5);
+		gbcTxtCfgIp.fill = GridBagConstraints.HORIZONTAL;
+		gbcTxtCfgIp.gridx = 1;
+		gbcTxtCfgIp.gridy = 1;
+		frame.getContentPane().add(txtCfgIp, gbcTxtCfgIp);
+		txtCfgIp.setColumns(10);
+
+		JLabel lblCfgPort = new JLabel("Port: ");
+		GridBagConstraints gbcLblCfgPort = new GridBagConstraints();
+		gbcLblCfgPort.anchor = GridBagConstraints.WEST;
+		gbcLblCfgPort.insets = new Insets(0, 10, 5, 5);
+		gbcLblCfgPort.gridx = 0;
+		gbcLblCfgPort.gridy = 2;
+		frame.getContentPane().add(lblCfgPort, gbcLblCfgPort);
+
+		JTextField txtCfgPort = new JTextField(Integer.toString(HOST_PORT));
+		txtCfgPort.setEditable(false);
+		GridBagConstraints gbcTxtCfgPort = new GridBagConstraints();
+		gbcTxtCfgPort.insets = new Insets(0, 0, 5, 5);
+		gbcTxtCfgPort.fill = GridBagConstraints.HORIZONTAL;
+		gbcTxtCfgPort.gridx = 1;
+		gbcTxtCfgPort.gridy = 2;
+		frame.getContentPane().add(txtCfgPort, gbcTxtCfgPort);
+		txtCfgPort.setColumns(10);
+
 		JLabel lblPlayerTitle = new JLabel("Players");
 		lblPlayerTitle.setFont(DEFAULT_FONT_BOLD);
 		GridBagConstraints gbcLblPlayerTitle = new GridBagConstraints();
@@ -100,7 +137,7 @@ public class ServerGUI extends AbstractGUI {
 		gbcLblPlayerTitle.gridx = 2;
 		gbcLblPlayerTitle.gridy = 0;
 		frame.getContentPane().add(lblPlayerTitle, gbcLblPlayerTitle);
-		
+
 		txtPlayers = new JTextArea("Waiting for players...");
 		txtPlayers.setFont(DEFAULT_FONT);
 		txtPlayers.setOpaque(false);
@@ -109,7 +146,7 @@ public class ServerGUI extends AbstractGUI {
 		GridBagConstraints gbcTxtPlayers = new GridBagConstraints();
 		gbcTxtPlayers.gridheight = 4;
 		gbcTxtPlayers.gridwidth = 2;
-		gbcTxtPlayers.insets = new Insets(5, 5, 5, 0);
+		gbcTxtPlayers.insets = new Insets(5, 5, 5, 5);
 		gbcTxtPlayers.fill = GridBagConstraints.BOTH;
 		gbcTxtPlayers.gridx = 2;
 		gbcTxtPlayers.gridy = 1;
@@ -124,7 +161,7 @@ public class ServerGUI extends AbstractGUI {
 		gbcLblConfigTitle.gridx = 0;
 		gbcLblConfigTitle.gridy = 3;
 		frame.getContentPane().add(lblConfigTitle, gbcLblConfigTitle);
-		
+
 		JLabel lblCfgAlgo = new JLabel("Algorithm: ");
 		GridBagConstraints gbcLblCfgAlgo = new GridBagConstraints();
 		gbcLblCfgAlgo.fill = GridBagConstraints.HORIZONTAL;
@@ -132,15 +169,16 @@ public class ServerGUI extends AbstractGUI {
 		gbcLblCfgAlgo.gridx = 0;
 		gbcLblCfgAlgo.gridy = 4;
 		frame.getContentPane().add(lblCfgAlgo, gbcLblCfgAlgo);
-		
-		JComboBox<Object> cbxCfgAlgo = new JComboBox<>(cards.sort.getAll().toArray());
+
+		JComboBox<Object> cbxCfgAlgo = new JComboBox<>(cards.sort.getAll()
+				.toArray());
 		GridBagConstraints gbcCbxCfgAlgo = new GridBagConstraints();
 		gbcCbxCfgAlgo.insets = new Insets(0, 0, 5, 5);
 		gbcCbxCfgAlgo.fill = GridBagConstraints.HORIZONTAL;
 		gbcCbxCfgAlgo.gridx = 1;
 		gbcCbxCfgAlgo.gridy = 4;
 		frame.getContentPane().add(cbxCfgAlgo, gbcCbxCfgAlgo);
-		
+
 		JLabel lblCfgType = new JLabel("Type: ");
 		GridBagConstraints gbcLblCfgType = new GridBagConstraints();
 		gbcLblCfgType.fill = GridBagConstraints.HORIZONTAL;
@@ -148,15 +186,15 @@ public class ServerGUI extends AbstractGUI {
 		gbcLblCfgType.gridx = 0;
 		gbcLblCfgType.gridy = 5;
 		frame.getContentPane().add(lblCfgType, gbcLblCfgType);
-		
-		JComboBox<Type> cbxCfgType = new JComboBox<>(); //Type.values());
+
+		JComboBox<Type> cbxCfgType = new JComboBox<>(Type.values());
 		GridBagConstraints gbcCbxCfgType = new GridBagConstraints();
 		gbcCbxCfgType.insets = new Insets(0, 0, 5, 5);
 		gbcCbxCfgType.fill = GridBagConstraints.HORIZONTAL;
 		gbcCbxCfgType.gridx = 1;
 		gbcCbxCfgType.gridy = 5;
 		frame.getContentPane().add(cbxCfgType, gbcCbxCfgType);
-		
+
 		JLabel lblCfgMode = new JLabel("Mode: ");
 		GridBagConstraints gbcLblCfgMode = new GridBagConstraints();
 		gbcLblCfgMode.fill = GridBagConstraints.HORIZONTAL;
@@ -164,15 +202,14 @@ public class ServerGUI extends AbstractGUI {
 		gbcLblCfgMode.gridx = 0;
 		gbcLblCfgMode.gridy = 6;
 		frame.getContentPane().add(lblCfgMode, gbcLblCfgMode);
-		
-		JComboBox<Mode> cbxCfgMode = new JComboBox<>(); //Mode.values());
+
+		JComboBox<Mode> cbxCfgMode = new JComboBox<>(Mode.values());
 		GridBagConstraints gbcCbxCfgMode = new GridBagConstraints();
 		gbcCbxCfgMode.insets = new Insets(0, 0, 5, 5);
 		gbcCbxCfgMode.fill = GridBagConstraints.HORIZONTAL;
 		gbcCbxCfgMode.gridx = 1;
 		gbcCbxCfgMode.gridy = 6;
 		frame.getContentPane().add(cbxCfgMode, gbcCbxCfgMode);
-		
 
 		JLabel lblCfgSize = new JLabel("Size: ");
 		GridBagConstraints gbcLblCfgSize = new GridBagConstraints();
@@ -181,7 +218,7 @@ public class ServerGUI extends AbstractGUI {
 		gbcLblCfgSize.gridx = 0;
 		gbcLblCfgSize.gridy = 7;
 		frame.getContentPane().add(lblCfgSize, gbcLblCfgSize);
-		
+
 		JSlider sldrCfgSize = new JSlider();
 		sldrCfgSize.setMajorTickSpacing(1);
 		sldrCfgSize.setSnapToTicks(true);
@@ -204,18 +241,8 @@ public class ServerGUI extends AbstractGUI {
 		gbcBtnPlay.gridx = 2;
 		gbcBtnPlay.gridy = 5;
 		frame.getContentPane().add(btnPlay, gbcBtnPlay);
-		
-		initMenuBar();
-	}
 
-	private String printIpConfig() {
-		final StringBuilder sb = new StringBuilder();
-		sb.append("Host IP: ");
-		sb.append(HOST_IP);
-		sb.append(System.lineSeparator());
-		sb.append("Host Port: ");
-		sb.append(HOST_PORT);
-		return sb.toString();
+		initMenuBar();
 	}
 
 	private void initMenuBar() {
@@ -239,25 +266,25 @@ public class ServerGUI extends AbstractGUI {
 	@Override
 	protected void checkComponents() {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	protected void clearErrors() {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	protected void reportError(SelectionException ex) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	protected void updateStats() {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	/**
