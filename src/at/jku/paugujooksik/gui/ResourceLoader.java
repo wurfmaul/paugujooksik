@@ -26,6 +26,7 @@ public class ResourceLoader {
 	public static final String ROTATED_PIN_ICON = "pin-rot.png";
 	public static final String BLACK_CHECK_ICON = "check.png";
 	public static final String GRAY_CHECK_ICON = "check-gray.png";
+	public static final String PLAY_ICON = "play.png";
 	
 	public static final String SANS_FONT = "DejaVuSans";
 	public static final String BOLD_SANS_FONT = "DejaVuSans-Bold";
