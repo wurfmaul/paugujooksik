@@ -35,12 +35,12 @@ public class CardPanel extends AbstractPanel {
 	private final JLabel label;
 	private final JToggleButton pin;
 	private final JToggleButton fin;
-	private final AbstractGUI target;
+	private final ClientGUI target;
 	private MouseAdapter cardMouseAdapter;
 	private MouseAdapter pinMouseAdapter;
 	private MouseAdapter finMouseAdapter;
 
-	public CardPanel(final int index, AbstractGUI target) {
+	public CardPanel(final int index, ClientGUI target) {
 		super(new BorderLayout());
 		this.target = target;
 		initMouseListeners(index);

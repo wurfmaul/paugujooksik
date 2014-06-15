@@ -1,17 +1,25 @@
 package at.jku.paugujooksik.gui;
 
+import static at.jku.paugujooksik.gui.ResourceLoader.BOLD_SANS_FONT;
 import static at.jku.paugujooksik.gui.ResourceLoader.ERROR_SND;
+import static at.jku.paugujooksik.gui.ResourceLoader.SANS_FONT;
 import static at.jku.paugujooksik.gui.ResourceLoader.loadClip;
+import static at.jku.paugujooksik.gui.ResourceLoader.loadFonts;
 
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.EventQueue;
+import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.logging.Logger;
 
 import javax.sound.sampled.Clip;
 import javax.swing.ButtonGroup;
@@ -32,12 +40,36 @@ import at.jku.paugujooksik.logic.ValueGenerator.Mode;
 import at.jku.paugujooksik.logic.ValueGenerator.Type;
 import at.jku.paugujooksik.sort.SortAlgorithm;
 
-public class ClientGUI extends AbstractGUI {
+public class ClientGUI {
+	private static final Logger DEBUGLOG = Logger.getLogger("DEBUG");
+	private static final boolean GROW_CARDS = false;
+	private static final int MIN_SIZE = 7;
+	private static final int MAX_SIZE = 15;
+	private static final int DEFAULT_SIZE = 7;
+	public static final Font DEFAULT_FONT;
+	public static final Font DEFAULT_FONT_BOLD;
+	
+	private final JFrame frame = new JFrame();
+	private final ValueGenerator values = new ValueGenerator();
+	private final List<CardPanel> cardBtns = new LinkedList<>();
 	private SwapPanel pnlSwap;
 	private JTextPane txtStats;
 	private JLabel lblTitle;
 	private JTextPane txtHint;
 
+	private int n = DEFAULT_SIZE;
+	private Cards<?> cards;
+
+	static {
+		if (loadFonts()) {
+			DEFAULT_FONT = new Font(SANS_FONT, Font.PLAIN, 16);
+			DEFAULT_FONT_BOLD = new Font(BOLD_SANS_FONT, Font.BOLD, 16);
+		} else {
+			DEFAULT_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 16);
+			DEFAULT_FONT_BOLD = new Font(Font.SANS_SERIF, Font.BOLD, 16);
+		}
+	}
+	
 	private ClientGUI() {
 		setCards();
 		initFrame();
@@ -48,26 +80,6 @@ public class ClientGUI extends AbstractGUI {
 		cards.reset();
 		checkComponents();
 		updateStats();
-	}
-
-	protected void clearErrors() {
-		txtHint.setText("");
-	}
-
-	protected void reportError(SelectionException ex) {
-		txtHint.setForeground(Color.RED);
-		txtHint.setText(ex.getMessage());
-
-		Clip clip = loadClip(ERROR_SND);
-		if (clip != null)
-			clip.start();
-
-		updateStats();
-	}
-
-	protected void checkComponents() {
-		updateComponents();
-		checkFinish();
 	}
 
 	private void checkFinish() {
@@ -109,19 +121,6 @@ public class ClientGUI extends AbstractGUI {
 		sb.append(values.type);
 		sb.append(")");
 		return sb.toString();
-	}
-
-	protected void updateStats() {
-		final StringBuilder sb = new StringBuilder();
-		sb.append("Errors: ");
-		sb.append(cards.getErrorCount());
-		sb.append(System.lineSeparator());
-		sb.append("Swaps: ");
-		sb.append(cards.getSwapCount());
-		sb.append(System.lineSeparator());
-		sb.append("Compares: ");
-		sb.append(cards.getCompareCount());
-		txtStats.setText(sb.toString());
 	}
 
 	/**
@@ -203,6 +202,50 @@ public class ClientGUI extends AbstractGUI {
 			gblFrame.rowWeights = new double[] { 0.0, 0.0, 0.0, 1.0, 0.0,
 					Double.MIN_VALUE };
 		frame.getContentPane().setLayout(gblFrame);
+	}
+
+	private void initCardPanel() {
+		final JPanel pnlCards = new JPanel();
+		final GridBagConstraints gbcPnLCards = new GridBagConstraints();
+		{
+			gbcPnLCards.gridwidth = 2;
+			gbcPnLCards.insets = new Insets(0, 0, 5, 0);
+			gbcPnLCards.fill = GridBagConstraints.BOTH;
+			gbcPnLCards.gridx = 0;
+			gbcPnLCards.gridy = 1;
+		}
+		frame.getContentPane().add(pnlCards, gbcPnLCards);
+	
+		final GridBagLayout gblPnlCards = new GridBagLayout();
+		{
+			gblPnlCards.columnWidths = new int[n + 1];
+			gblPnlCards.rowHeights = new int[] { 0 };
+			double[] weights = new double[n + 1];
+			{
+				Arrays.fill(weights, 1.0);
+				weights[weights.length - 1] = Double.MIN_VALUE;
+			}
+			gblPnlCards.columnWeights = weights;
+			gblPnlCards.rowWeights = new double[] { 1.0 };
+		}
+		pnlCards.setLayout(gblPnlCards);
+	
+		cardBtns.clear();
+		for (int i = 0; i < n; i++) {
+			final CardSlotPanel slot = new CardSlotPanel(i);
+			final GridBagConstraints gbc = new GridBagConstraints();
+			{
+				gbc.fill = GridBagConstraints.BOTH;
+				gbc.insets = new Insets(0, 2, 0, 2);
+				gbc.gridx = i;
+				gbc.gridy = 0;
+			}
+			pnlCards.add(slot, gbc);
+	
+			final CardPanel card = new CardPanel(i, this);
+			slot.add(card);
+			cardBtns.add(card);
+		}
 	}
 
 	private void initMenuBar() {
@@ -360,6 +403,83 @@ public class ClientGUI extends AbstractGUI {
 			break;
 		}
 		DEBUGLOG.severe("Unknown mode: '" + mode + "' or type: '" + type + "'");
+	}
+
+	private void checkComponents() {
+		updateComponents();
+		checkFinish();
+	}
+
+	private void clearErrors() {
+		txtHint.setText("");
+	}
+
+	private void reportError(SelectionException ex) {
+		txtHint.setForeground(Color.RED);
+		txtHint.setText(ex.getMessage());
+	
+		Clip clip = loadClip(ERROR_SND);
+		if (clip != null)
+			clip.start();
+	
+		updateStats();
+	}
+
+	private void updateStats() {
+		final StringBuilder sb = new StringBuilder();
+		sb.append("Errors: ");
+		sb.append(cards.getErrorCount());
+		sb.append(System.lineSeparator());
+		sb.append("Swaps: ");
+		sb.append(cards.getSwapCount());
+		sb.append(System.lineSeparator());
+		sb.append("Compares: ");
+		sb.append(cards.getCompareCount());
+		txtStats.setText(sb.toString());
+	}
+
+	public void performPin(int index) {
+		if (cards.getCard(index).selected) {
+			try {
+				cards.togglePin(index);
+				clearErrors();
+			} catch (SelectionException ex) {
+				reportError(ex);
+			}
+			checkComponents();
+		}
+	}
+
+	public void performMark(int index) {
+		try {
+			cards.toggleMark(index);
+			clearErrors();
+		} catch (SelectionException ex) {
+			reportError(ex);
+		}
+		checkComponents();
+	}
+
+	public void performSelect(int index) {
+		try {
+			cards.select(index);
+			updateStats();
+			clearErrors();
+		} catch (SelectionException ex) {
+			reportError(ex);
+		}
+		checkComponents();
+	}
+
+	public void performSwap() {
+		try {
+			cards.swapSelection();
+			clearErrors();
+			updateStats();
+		} catch (SelectionException ex) {
+			reportError(ex);
+		}
+		checkComponents();
 	}
 
 	public int getLeftReference() {

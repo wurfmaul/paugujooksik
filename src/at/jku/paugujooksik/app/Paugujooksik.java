@@ -7,7 +7,7 @@ import java.util.logging.Logger;
 
 import at.jku.paugujooksik.gui.ClientGUI;
 
-public class Client {
+public class Paugujooksik {
 	private static final Logger DEBUGLOG = Logger.getLogger("DEBUG");
 	private static final Level LOGLEVEL = Level.CONFIG;
 
