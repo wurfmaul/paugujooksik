@@ -1,12 +1,12 @@
-package at.jku.paugujooksik.client.logic;
+package at.jku.paugujooksik.logic;
 
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
 
-import at.jku.paugujooksik.client.gui.SelectionException;
-import at.jku.paugujooksik.client.sort.Action;
+import at.jku.paugujooksik.gui.SelectionException;
+import at.jku.paugujooksik.sort.Action;
 
 public class Cards<T extends Comparable<T>> {
 	private static final Logger DEBUGLOG = Logger.getLogger("DEBUG");

@@ -1,4 +1,4 @@
-package at.jku.paugujooksik.client.sort;
+package at.jku.paugujooksik.sort;
 
 public abstract class Action {
 	public Type type;

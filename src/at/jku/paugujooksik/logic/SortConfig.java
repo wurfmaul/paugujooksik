@@ -1,14 +1,14 @@
-package at.jku.paugujooksik.client.logic;
+package at.jku.paugujooksik.logic;
 
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import at.jku.paugujooksik.client.sort.BubbleSort;
-import at.jku.paugujooksik.client.sort.InsertionSort;
-import at.jku.paugujooksik.client.sort.PlayMode;
-import at.jku.paugujooksik.client.sort.SelectionSort;
-import at.jku.paugujooksik.client.sort.SortAlgorithm;
+import at.jku.paugujooksik.sort.BubbleSort;
+import at.jku.paugujooksik.sort.InsertionSort;
+import at.jku.paugujooksik.sort.PlayMode;
+import at.jku.paugujooksik.sort.SelectionSort;
+import at.jku.paugujooksik.sort.SortAlgorithm;
 
 public class SortConfig<T extends Comparable<T>> {
 	private final List<SortAlgorithm<T>> algorithms = new LinkedList<>();

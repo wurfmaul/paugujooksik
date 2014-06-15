@@ -1,11 +1,11 @@
-package at.jku.paugujooksik.client;
+package at.jku.paugujooksik.app;
 
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import at.jku.paugujooksik.client.gui.ClientGUI;
+import at.jku.paugujooksik.gui.ClientGUI;
 
 public class Client {
 	private static final Logger DEBUGLOG = Logger.getLogger("DEBUG");

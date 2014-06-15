@@ -1,4 +1,4 @@
-package at.jku.paugujooksik.client.logic;
+package at.jku.paugujooksik.logic;
 
 import java.util.LinkedList;
 import java.util.List;

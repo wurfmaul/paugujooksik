@@ -1,28 +1,19 @@
-package at.jku.paugujooksik.client.gui;
+package at.jku.paugujooksik.gui;
+
+import static at.jku.paugujooksik.gui.ResourceLoader.ERROR_SND;
+import static at.jku.paugujooksik.gui.ResourceLoader.loadClip;
 
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.EventQueue;
-import java.awt.Font;
-import java.awt.FontFormatException;
-import java.awt.GraphicsEnvironment;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
-import java.net.URL;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.logging.Logger;
 
-import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
-import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.ButtonGroup;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -35,45 +26,17 @@ import javax.swing.JSeparator;
 import javax.swing.JTextPane;
 import javax.swing.UIManager;
 
-import at.jku.paugujooksik.client.logic.Cards;
-import at.jku.paugujooksik.client.logic.ValueGenerator;
-import at.jku.paugujooksik.client.logic.ValueGenerator.Mode;
-import at.jku.paugujooksik.client.logic.ValueGenerator.Type;
-import at.jku.paugujooksik.client.sort.SortAlgorithm;
+import at.jku.paugujooksik.logic.Cards;
+import at.jku.paugujooksik.logic.ValueGenerator;
+import at.jku.paugujooksik.logic.ValueGenerator.Mode;
+import at.jku.paugujooksik.logic.ValueGenerator.Type;
+import at.jku.paugujooksik.sort.SortAlgorithm;
 
-public class ClientGUI {
-	private static final Logger DEBUGLOG = Logger.getLogger("DEBUG");
-	private static final boolean GROW_CARDS = false;
-	private static final int MIN_SIZE = 7;
-	private static final int MAX_SIZE = 15;
-	private static final int DEFAULT_SIZE = 7;
-
-	public static final Font DEFAULT_FONT;
-	public static final Font DEFAULT_FONT_BOLD;
-	public static final Font DEFAULT_FONT_SERIF;
-
-	private final JFrame frame = new JFrame();
-	private final ValueGenerator values = new ValueGenerator();
-	private final List<CardPanel> cardBtns = new LinkedList<>();
-
-	private int n = DEFAULT_SIZE;
+public class ClientGUI extends AbstractGUI {
 	private SwapPanel pnlSwap;
 	private JTextPane txtStats;
 	private JLabel lblTitle;
 	private JTextPane txtHint;
-	private Cards<?> cards;
-
-	static {
-		if (loadFonts()) {
-			DEFAULT_FONT = new Font("DejaVuSans", Font.PLAIN, 16);
-			DEFAULT_FONT_BOLD = new Font("DejaVuSans-Bold", Font.BOLD, 16);
-			DEFAULT_FONT_SERIF = new Font("DejaVuSerif", Font.PLAIN, 16);
-		} else {
-			DEFAULT_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 16);
-			DEFAULT_FONT_BOLD = new Font(Font.SANS_SERIF, Font.BOLD, 16);
-			DEFAULT_FONT_SERIF = new Font(Font.SERIF, Font.PLAIN, 16);
-		}
-	}
 
 	private ClientGUI() {
 		setCards();
@@ -87,41 +50,22 @@ public class ClientGUI {
 		updateStats();
 	}
 
-	private void clearErrorHint() {
+	protected void clearErrors() {
 		txtHint.setText("");
 	}
 
-	private void reportError(SelectionException ex) {
+	protected void reportError(SelectionException ex) {
 		txtHint.setForeground(Color.RED);
 		txtHint.setText(ex.getMessage());
 
-		{
-			// TODO play sound
-			URL url = ClientGUI.class.getResource("/snd/beep.wav");
-			// way 1
-			try {
-				Clip clip = AudioSystem.getClip();
-				clip.open(AudioSystem.getAudioInputStream(url));
-				clip.start();
-			} catch (LineUnavailableException | UnsupportedAudioFileException
-					| IOException e) {
-				e.printStackTrace();
-			}
-
-			// way 2
-			// try {
-			// AudioClip clip = Applet.newAudioClip(url);
-			// clip.play();
-			// Thread.sleep(2000);
-			// } catch (InterruptedException e) {
-			// e.printStackTrace();
-			// }
-		}
+		Clip clip = loadClip(ERROR_SND);
+		if (clip != null)
+			clip.start();
 
 		updateStats();
 	}
 
-	private void checkComponents() {
+	protected void checkComponents() {
 		updateComponents();
 		checkFinish();
 	}
@@ -167,7 +111,7 @@ public class ClientGUI {
 		return sb.toString();
 	}
 
-	private void updateStats() {
+	protected void updateStats() {
 		final StringBuilder sb = new StringBuilder();
 		sb.append("Errors: ");
 		sb.append(cards.getErrorCount());
@@ -259,50 +203,6 @@ public class ClientGUI {
 			gblFrame.rowWeights = new double[] { 0.0, 0.0, 0.0, 1.0, 0.0,
 					Double.MIN_VALUE };
 		frame.getContentPane().setLayout(gblFrame);
-	}
-
-	private void initCardPanel() {
-		final JPanel pnlCards = new JPanel();
-		final GridBagConstraints gbcPnLCards = new GridBagConstraints();
-		{
-			gbcPnLCards.gridwidth = 2;
-			gbcPnLCards.insets = new Insets(0, 0, 5, 0);
-			gbcPnLCards.fill = GridBagConstraints.BOTH;
-			gbcPnLCards.gridx = 0;
-			gbcPnLCards.gridy = 1;
-		}
-		frame.getContentPane().add(pnlCards, gbcPnLCards);
-
-		final GridBagLayout gblPnlCards = new GridBagLayout();
-		{
-			gblPnlCards.columnWidths = new int[n + 1];
-			gblPnlCards.rowHeights = new int[] { 0 };
-			double[] weights = new double[n + 1];
-			{
-				Arrays.fill(weights, 1.0);
-				weights[weights.length - 1] = Double.MIN_VALUE;
-			}
-			gblPnlCards.columnWeights = weights;
-			gblPnlCards.rowWeights = new double[] { 1.0 };
-		}
-		pnlCards.setLayout(gblPnlCards);
-
-		cardBtns.clear();
-		for (int i = 0; i < n; i++) {
-			final CardSlotPanel slot = new CardSlotPanel(i);
-			final GridBagConstraints gbc = new GridBagConstraints();
-			{
-				gbc.fill = GridBagConstraints.BOTH;
-				gbc.insets = new Insets(0, 2, 0, 2);
-				gbc.gridx = i;
-				gbc.gridy = 0;
-			}
-			pnlCards.add(slot, gbc);
-
-			final CardPanel card = new CardPanel(i, this);
-			slot.add(card);
-			cardBtns.add(card);
-		}
 	}
 
 	private void initMenuBar() {
@@ -474,70 +374,8 @@ public class ClientGUI {
 		return comp.getLocation().x + comp.getWidth() / 2;
 	}
 
-	public void performPin(int index) {
-		if (cards.getCard(index).selected) {
-			try {
-				cards.togglePin(index);
-				clearErrorHint();
-			} catch (SelectionException ex) {
-				reportError(ex);
-			}
-			checkComponents();
-		}
-	}
-
-	public void performMark(int index) {
-		try {
-			cards.toggleMark(index);
-			clearErrorHint();
-		} catch (SelectionException ex) {
-			reportError(ex);
-		}
-		checkComponents();
-	}
-
-	public void performSelect(int index) {
-		try {
-			cards.select(index);
-			updateStats();
-			clearErrorHint();
-		} catch (SelectionException ex) {
-			reportError(ex);
-		}
-		checkComponents();
-	}
-
-	public void performSwap() {
-		try {
-			cards.swapSelection();
-			clearErrorHint();
-			updateStats();
-		} catch (SelectionException ex) {
-			reportError(ex);
-		}
-		checkComponents();
-	}
-
 	public boolean showSwapButton() {
 		return cards.twoSelected();
-	}
-
-	private static boolean loadFonts() {
-		final String[] fonts = new String[] { "DejaVuSans", "DejaVuSans-Bold" };
-		final GraphicsEnvironment ge = GraphicsEnvironment
-				.getLocalGraphicsEnvironment();
-
-		for (String s : fonts) {
-			try {
-				URL res = ClientGUI.class.getResource("/font/" + s + ".ttf");
-				ge.registerFont(Font.createFont(Font.TRUETYPE_FONT,
-						res.openStream()));
-			} catch (FontFormatException | IOException e) {
-				DEBUGLOG.severe("Could not load font '" + s + "'!");
-				return false;
-			}
-		}
-		return true;
 	}
 
 	/**

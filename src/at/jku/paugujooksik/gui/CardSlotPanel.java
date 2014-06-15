@@ -1,4 +1,4 @@
-package at.jku.paugujooksik.client.gui;
+package at.jku.paugujooksik.gui;
 
 import java.awt.BorderLayout;
 

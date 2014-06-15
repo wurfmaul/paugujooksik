@@ -1,4 +1,4 @@
-package at.jku.paugujooksik.client.sort;
+package at.jku.paugujooksik.sort;
 
 import java.util.LinkedList;
 import java.util.List;

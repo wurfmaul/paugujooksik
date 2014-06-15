@@ -1,4 +1,11 @@
-package at.jku.paugujooksik.client.gui;
+package at.jku.paugujooksik.gui;
+
+import static at.jku.paugujooksik.gui.ResourceLoader.BLACK_CHECK_ICON;
+import static at.jku.paugujooksik.gui.ResourceLoader.BLACK_PIN_ICON;
+import static at.jku.paugujooksik.gui.ResourceLoader.GRAY_CHECK_ICON;
+import static at.jku.paugujooksik.gui.ResourceLoader.GRAY_PIN_ICON;
+import static at.jku.paugujooksik.gui.ResourceLoader.ROTATED_PIN_ICON;
+import static at.jku.paugujooksik.gui.ResourceLoader.loadIcon;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -11,7 +18,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JToggleButton;
 
-import at.jku.paugujooksik.client.logic.Card;
+import at.jku.paugujooksik.logic.Card;
 
 public class CardPanel extends AbstractPanel {
 	private static final long serialVersionUID = 68959464664105468L;
@@ -28,12 +35,12 @@ public class CardPanel extends AbstractPanel {
 	private final JLabel label;
 	private final JToggleButton pin;
 	private final JToggleButton fin;
-	private final ClientGUI target;
+	private final AbstractGUI target;
 	private MouseAdapter cardMouseAdapter;
 	private MouseAdapter pinMouseAdapter;
 	private MouseAdapter finMouseAdapter;
 
-	public CardPanel(final int index, ClientGUI target) {
+	public CardPanel(final int index, AbstractGUI target) {
 		super(new BorderLayout());
 		this.target = target;
 		initMouseListeners(index);
@@ -55,9 +62,9 @@ public class CardPanel extends AbstractPanel {
 			pin.setFocusable(false);
 			pin.setVisible(false);
 			pin.setOpaque(false);
-			pin.setIcon(icon(GRAY_PIN_ICON));
-			pin.setRolloverIcon(icon(BLACK_PIN_ICON));
-			pin.setSelectedIcon(icon(ROTATED_PIN_ICON));
+			pin.setIcon(loadIcon(GRAY_PIN_ICON));
+			pin.setRolloverIcon(loadIcon(BLACK_PIN_ICON));
+			pin.setSelectedIcon(loadIcon(ROTATED_PIN_ICON));
 			pin.setPreferredSize(new Dimension(DEFAULT_BUTTON_SIZE,
 					DEFAULT_BUTTON_SIZE));
 			pin.addMouseListener(pinMouseAdapter);
@@ -71,9 +78,9 @@ public class CardPanel extends AbstractPanel {
 			fin.setBorderPainted(false);
 			fin.setFocusable(false);
 			fin.setOpaque(false);
-			fin.setIcon(icon(GRAY_CHECK_ICON));
-			fin.setSelectedIcon(icon(BLACK_CHECK_ICON));
-			fin.setRolloverIcon(icon(BLACK_CHECK_ICON));
+			fin.setIcon(loadIcon(GRAY_CHECK_ICON));
+			fin.setSelectedIcon(loadIcon(BLACK_CHECK_ICON));
+			fin.setRolloverIcon(loadIcon(BLACK_CHECK_ICON));
 			fin.setPreferredSize(new Dimension(DEFAULT_BUTTON_SIZE,
 					DEFAULT_BUTTON_SIZE));
 			fin.addMouseListener(finMouseAdapter);
