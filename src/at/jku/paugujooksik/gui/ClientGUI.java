@@ -33,12 +33,15 @@ import at.jku.paugujooksik.logic.ValueGenerator.Type;
 import at.jku.paugujooksik.sort.SortAlgorithm;
 
 public class ClientGUI extends AbstractGUI {
+	private final boolean remoteConfig;
+
 	private SwapPanel pnlSwap;
 	private JTextPane txtStats;
 	private JLabel lblTitle;
 	private JTextPane txtHint;
 
-	private ClientGUI() {
+	private ClientGUI(boolean remoteConfig) {
+		this.remoteConfig = remoteConfig;
 		setCards();
 		initFrame();
 		initialize();
@@ -48,26 +51,6 @@ public class ClientGUI extends AbstractGUI {
 		cards.reset();
 		checkComponents();
 		updateStats();
-	}
-
-	protected void clearErrors() {
-		txtHint.setText("");
-	}
-
-	protected void reportError(SelectionException ex) {
-		txtHint.setForeground(Color.RED);
-		txtHint.setText(ex.getMessage());
-
-		Clip clip = loadClip(ERROR_SND);
-		if (clip != null)
-			clip.start();
-
-		updateStats();
-	}
-
-	protected void checkComponents() {
-		updateComponents();
-		checkFinish();
 	}
 
 	private void checkFinish() {
@@ -111,19 +94,6 @@ public class ClientGUI extends AbstractGUI {
 		return sb.toString();
 	}
 
-	protected void updateStats() {
-		final StringBuilder sb = new StringBuilder();
-		sb.append("Errors: ");
-		sb.append(cards.getErrorCount());
-		sb.append(System.lineSeparator());
-		sb.append("Swaps: ");
-		sb.append(cards.getSwapCount());
-		sb.append(System.lineSeparator());
-		sb.append("Compares: ");
-		sb.append(cards.getCompareCount());
-		txtStats.setText(sb.toString());
-	}
-
 	/**
 	 * Initialize the contents of the frame.
 	 */
@@ -164,11 +134,11 @@ public class ClientGUI extends AbstractGUI {
 		JPanel pnlPlaceholder = new JPanel();
 		pnlPlaceholder.setLayout(null);
 		GridBagConstraints gbcPnlPlaceholder = new GridBagConstraints();
-		gbcPnlLines.gridwidth = 2;
-		gbcPnlLines.insets = new Insets(0, 0, 0, 0);
-		gbcPnlLines.fill = GridBagConstraints.BOTH;
-		gbcPnlLines.gridx = 0;
-		gbcPnlLines.gridy = 3;
+		gbcPnlPlaceholder.gridwidth = 2;
+		gbcPnlPlaceholder.insets = new Insets(0, 0, 0, 0);
+		gbcPnlPlaceholder.fill = GridBagConstraints.BOTH;
+		gbcPnlPlaceholder.gridx = 0;
+		gbcPnlPlaceholder.gridy = 3;
 		frame.getContentPane().add(pnlPlaceholder, gbcPnlPlaceholder);
 
 		txtHint = new JTextPane();
@@ -217,6 +187,7 @@ public class ClientGUI extends AbstractGUI {
 					DEBUGLOG.fine("Restarting game");
 					initialize();
 					reset();
+					// FIXME don't shuffle cards!
 				}
 			});
 			mnFile.add(mntmRestart);
@@ -233,101 +204,106 @@ public class ClientGUI extends AbstractGUI {
 		}
 		menuBar.add(mnFile);
 
-		JMenu mnConfig = new JMenu("Config");
-		{
-			ButtonGroup algorithmGroup = new ButtonGroup();
-			int idx = 0;
-			for (SortAlgorithm<?> sort : cards.sort.getAll()) {
-				final int index = idx++;
-				final JMenuItem item = new JRadioButtonMenuItem(sort.toString());
-				item.setSelected(cards.sort.getCurrent().equals(sort));
-				item.addActionListener(new ActionListener() {
-					@Override
-					public void actionPerformed(ActionEvent e) {
-						DEBUGLOG.config("Set algorithm to "
-								+ cards.sort.getAll().get(index));
-						cards.sort.setCurrent(index);
-						reset();
+		if (!remoteConfig) {
+			JMenu mnConfig = new JMenu("Config");
+			{
+				ButtonGroup algorithmGroup = new ButtonGroup();
+				int idx = 0;
+				for (SortAlgorithm<?> sort : cards.sort.getAll()) {
+					final int index = idx++;
+					final JMenuItem item = new JRadioButtonMenuItem(
+							sort.toString());
+					item.setSelected(cards.sort.getCurrent().equals(sort));
+					item.addActionListener(new ActionListener() {
+						@Override
+						public void actionPerformed(ActionEvent e) {
+							DEBUGLOG.config("Set algorithm to "
+									+ cards.sort.getAll().get(index));
+							cards.sort.setCurrent(index);
+							reset();
+						}
+					});
+					mnConfig.add(item);
+					algorithmGroup.add(item);
+				}
+
+				mnConfig.add(new JSeparator());
+
+				JMenu mnSize = new JMenu("Size");
+				{
+					ButtonGroup sizeGroup = new ButtonGroup();
+					for (int i = MIN_SIZE; i <= MAX_SIZE; i++) {
+						final int size = i;
+						JMenuItem item = new JRadioButtonMenuItem(
+								Integer.toString(size));
+						item.setSelected(i == n);
+						item.addActionListener(new ActionListener() {
+							@Override
+							public void actionPerformed(ActionEvent e) {
+								DEBUGLOG.config("Changed size to " + size);
+								n = size;
+								setCards();
+								initialize();
+							}
+						});
+						sizeGroup.add(item);
+						mnSize.add(item);
 					}
-				});
-				mnConfig.add(item);
-				algorithmGroup.add(item);
-			}
-
-			mnConfig.add(new JSeparator());
-
-			JMenu mnSize = new JMenu("Size");
-			{
-				ButtonGroup sizeGroup = new ButtonGroup();
-				for (int i = MIN_SIZE; i <= MAX_SIZE; i++) {
-					final int size = i;
-					JMenuItem item = new JRadioButtonMenuItem(
-							Integer.toString(size));
-					item.setSelected(i == n);
-					item.addActionListener(new ActionListener() {
-						@Override
-						public void actionPerformed(ActionEvent e) {
-							DEBUGLOG.config("Changed size to " + size);
-							n = size;
-							setCards();
-							initialize();
-						}
-					});
-					sizeGroup.add(item);
-					mnSize.add(item);
 				}
-			}
-			mnConfig.add(mnSize);
+				mnConfig.add(mnSize);
 
-			JMenu mnType = new JMenu("Type");
-			{
-				final ButtonGroup typeGroup = new ButtonGroup();
-				final Type[] types = Type.values();
+				JMenu mnType = new JMenu("Type");
+				{
+					final ButtonGroup typeGroup = new ButtonGroup();
+					final Type[] types = Type.values();
 
-				for (int i = 0; i < types.length; i++) {
-					final Type type = types[i];
-					JMenuItem item = new JRadioButtonMenuItem(type.toString());
-					item.setSelected(type == values.type);
-					item.addActionListener(new ActionListener() {
-						@Override
-						public void actionPerformed(ActionEvent e) {
-							DEBUGLOG.config("Changed type to " + type);
-							values.type = type;
-							setCards();
-							initialize();
-						}
-					});
-					typeGroup.add(item);
-					mnType.add(item);
+					for (int i = 0; i < types.length; i++) {
+						final Type type = types[i];
+						JMenuItem item = new JRadioButtonMenuItem(
+								type.toString());
+						item.setSelected(type == values.type);
+						item.addActionListener(new ActionListener() {
+							@Override
+							public void actionPerformed(ActionEvent e) {
+								DEBUGLOG.config("Changed type to " + type);
+								values.type = type;
+								setCards();
+								initialize();
+							}
+						});
+						typeGroup.add(item);
+						mnType.add(item);
+					}
 				}
-			}
-			mnConfig.add(mnType);
+				mnConfig.add(mnType);
 
-			JMenu mnMode = new JMenu("Mode");
-			{
-				final ButtonGroup kindGroup = new ButtonGroup();
-				final Mode[] modes = Mode.values();
+				JMenu mnMode = new JMenu("Mode");
+				{
+					final ButtonGroup kindGroup = new ButtonGroup();
+					final Mode[] modes = Mode.values();
 
-				for (int i = 0; i < modes.length; i++) {
-					final Mode mode = modes[i];
-					JMenuItem item = new JRadioButtonMenuItem(mode.toString());
-					item.setSelected(mode == values.mode);
-					item.addActionListener(new ActionListener() {
-						@Override
-						public void actionPerformed(ActionEvent e) {
-							DEBUGLOG.config("Changed mode to " + mode);
-							values.mode = mode;
-							setCards();
-							initialize();
-						}
-					});
-					kindGroup.add(item);
-					mnMode.add(item);
+					for (int i = 0; i < modes.length; i++) {
+						final Mode mode = modes[i];
+						JMenuItem item = new JRadioButtonMenuItem(
+								mode.toString());
+						item.setSelected(mode == values.mode);
+						item.addActionListener(new ActionListener() {
+							@Override
+							public void actionPerformed(ActionEvent e) {
+								DEBUGLOG.config("Changed mode to " + mode);
+								values.mode = mode;
+								setCards();
+								initialize();
+							}
+						});
+						kindGroup.add(item);
+						mnMode.add(item);
+					}
 				}
+				mnConfig.add(mnMode);
 			}
-			mnConfig.add(mnMode);
+			menuBar.add(mnConfig);
 		}
-		menuBar.add(mnConfig);
 		frame.setJMenuBar(menuBar);
 	}
 
@@ -362,6 +338,39 @@ public class ClientGUI extends AbstractGUI {
 		DEBUGLOG.severe("Unknown mode: '" + mode + "' or type: '" + type + "'");
 	}
 
+	protected void checkComponents() {
+		updateComponents();
+		checkFinish();
+	}
+
+	protected void clearErrors() {
+		txtHint.setText("");
+	}
+
+	protected void reportError(SelectionException ex) {
+		txtHint.setForeground(Color.RED);
+		txtHint.setText(ex.getMessage());
+
+		Clip clip = loadClip(ERROR_SND);
+		if (clip != null)
+			clip.start();
+
+		updateStats();
+	}
+
+	protected void updateStats() {
+		final StringBuilder sb = new StringBuilder();
+		sb.append("Errors: ");
+		sb.append(cards.getErrorCount());
+		sb.append(System.lineSeparator());
+		sb.append("Swaps: ");
+		sb.append(cards.getSwapCount());
+		sb.append(System.lineSeparator());
+		sb.append("Compares: ");
+		sb.append(cards.getCompareCount());
+		txtStats.setText(sb.toString());
+	}
+
 	public int getLeftReference() {
 		final Component comp = cardBtns.get(cards.getFirstSelectedIndex())
 				.getParent();
@@ -381,7 +390,7 @@ public class ClientGUI extends AbstractGUI {
 	/**
 	 * Launch the application.
 	 */
-	public static void initAndRun() {
+	public static void initAndRun(final boolean remoteConfig) {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
@@ -390,7 +399,7 @@ public class ClientGUI extends AbstractGUI {
 				} catch (Exception e) {
 				}
 				try {
-					ClientGUI window = new ClientGUI();
+					ClientGUI window = new ClientGUI(remoteConfig);
 					window.frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();

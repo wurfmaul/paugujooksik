@@ -6,6 +6,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import at.jku.paugujooksik.gui.ClientGUI;
+import at.jku.paugujooksik.gui.ServerGUI;
 
 public class Paugujooksik {
 	private static final Logger DEBUGLOG = Logger.getLogger("DEBUG");
@@ -13,7 +14,18 @@ public class Paugujooksik {
 
 	public static void main(String[] args) {
 		configureLoggers();
-		ClientGUI.initAndRun();
+		if (args.length > 0) {
+			if (args[0].equalsIgnoreCase("--server")) {
+				DEBUGLOG.config("Loading Server mode...");
+				ServerGUI.initAndRun();
+			} else if (args[0].equalsIgnoreCase("--client")) {
+				DEBUGLOG.config("Loading Client mode...");
+				ClientGUI.initAndRun(true);
+			}
+		} else {
+			DEBUGLOG.config("Loading Standalone mode...");
+			ClientGUI.initAndRun(false);
+		}
 	}
 
 	private static void configureLoggers() {
