@@ -18,6 +18,8 @@ import javax.swing.JPanel;
 
 import at.jku.paugujooksik.logic.Cards;
 import at.jku.paugujooksik.logic.ValueGenerator;
+import at.jku.paugujooksik.logic.ValueGenerator.Mode;
+import at.jku.paugujooksik.logic.ValueGenerator.Type;
 
 public abstract class AbstractGUI {
 	protected static final Logger DEBUGLOG = Logger.getLogger("DEBUG");
@@ -43,6 +45,10 @@ public abstract class AbstractGUI {
 			DEFAULT_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 16);
 			DEFAULT_FONT_BOLD = new Font(Font.SANS_SERIF, Font.BOLD, 16);
 		}
+	}
+	
+	protected AbstractGUI() {
+		setCards();
 	}
 	
 	protected void initCardPanel() {
@@ -87,6 +93,37 @@ public abstract class AbstractGUI {
 			slot.add(card);
 			cardBtns.add(card);
 		}
+	}
+	
+	protected void setCards() {
+		final Mode mode = values.mode;
+		final Type type = values.type;
+
+		int sort = 0;
+		if (cards != null)
+			sort = cards.sort.getCurrentIndex();
+
+		switch (mode) {
+		case SMALL:
+			if (type == Type.INTEGER) {
+				cards = new Cards<>(ValueGenerator.smallIntValues(n), sort);
+				return;
+			} else if (type == Type.STRING) {
+				cards = new Cards<>(ValueGenerator.smallStringValues(n), sort);
+				return;
+			}
+			break;
+		case RANDOM:
+			if (type == Type.INTEGER) {
+				cards = new Cards<>(ValueGenerator.randomIntValues(n), sort);
+				return;
+			} else if (type == Type.STRING) {
+				cards = new Cards<>(ValueGenerator.randomStringValues(n), sort);
+				return;
+			}
+			break;
+		}
+		DEBUGLOG.severe("Unknown mode: '" + mode + "' or type: '" + type + "'");
 	}
 	
 	public void performPin(int index) {

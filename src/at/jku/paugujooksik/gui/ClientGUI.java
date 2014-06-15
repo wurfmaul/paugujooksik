@@ -26,8 +26,6 @@ import javax.swing.JSeparator;
 import javax.swing.JTextPane;
 import javax.swing.UIManager;
 
-import at.jku.paugujooksik.logic.Cards;
-import at.jku.paugujooksik.logic.ValueGenerator;
 import at.jku.paugujooksik.logic.ValueGenerator.Mode;
 import at.jku.paugujooksik.logic.ValueGenerator.Type;
 import at.jku.paugujooksik.sort.SortAlgorithm;
@@ -42,7 +40,6 @@ public class ClientGUI extends AbstractGUI {
 
 	private ClientGUI(boolean remoteConfig) {
 		this.remoteConfig = remoteConfig;
-		setCards();
 		initFrame();
 		initialize();
 	}
@@ -305,37 +302,6 @@ public class ClientGUI extends AbstractGUI {
 			menuBar.add(mnConfig);
 		}
 		frame.setJMenuBar(menuBar);
-	}
-
-	private void setCards() {
-		final Mode mode = values.mode;
-		final Type type = values.type;
-
-		int sort = 0;
-		if (cards != null)
-			sort = cards.sort.getCurrentIndex();
-
-		switch (mode) {
-		case SMALL:
-			if (type == Type.INTEGER) {
-				cards = new Cards<>(ValueGenerator.smallIntValues(n), sort);
-				return;
-			} else if (type == Type.STRING) {
-				cards = new Cards<>(ValueGenerator.smallStringValues(n), sort);
-				return;
-			}
-			break;
-		case RANDOM:
-			if (type == Type.INTEGER) {
-				cards = new Cards<>(ValueGenerator.randomIntValues(n), sort);
-				return;
-			} else if (type == Type.STRING) {
-				cards = new Cards<>(ValueGenerator.randomStringValues(n), sort);
-				return;
-			}
-			break;
-		}
-		DEBUGLOG.severe("Unknown mode: '" + mode + "' or type: '" + type + "'");
 	}
 
 	protected void checkComponents() {

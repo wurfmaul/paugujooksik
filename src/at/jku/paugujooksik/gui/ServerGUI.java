@@ -17,21 +17,28 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JSlider;
+import javax.swing.JTextArea;
 import javax.swing.JTextPane;
 import javax.swing.UIManager;
-import javax.swing.JSpinner;
-import javax.swing.JSlider;
+import javax.swing.border.BevelBorder;
+
+import at.jku.paugujooksik.logic.ValueGenerator.Mode;
+import at.jku.paugujooksik.logic.ValueGenerator.Type;
 
 public class ServerGUI extends AbstractGUI {
 	private static final String HOST_IP;
 	private static final int HOST_PORT = 1099;
-	private JTextPane txtConnection;
+	private JTextArea txtPlayers;
+	
+	private JFrame frame; // FIXME use super.frame
 	
 	static {
 		String ip = "unknown";
@@ -43,9 +50,6 @@ public class ServerGUI extends AbstractGUI {
 			HOST_IP = ip;
 		}
 	}
-
-	private JFrame frame;
-	private JList<String> playerList;
 
 	/**
 	 * Create the application.
@@ -66,15 +70,15 @@ public class ServerGUI extends AbstractGUI {
 	
 	private void initialize() {
 		frame = new JFrame();
-		frame.setBounds(100, 100, 700, 500);
-		frame.setMinimumSize(new Dimension(500, 450));
+		frame.setBounds(100, 100, 700, 420);
+		frame.setMinimumSize(new Dimension(500, 420));
 		frame.setTitle("Paugujooksik - Presenter Mode");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		GridBagLayout gblFrame = new GridBagLayout();
 		gblFrame.columnWidths = new int[] { 175, 175, 175, 175, 0 };
-		gblFrame.rowHeights = new int[] { 50, 150, 50, 40, 40, 40, 40, 0 };
-		gblFrame.columnWeights = new double[] { 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE };
-		gblFrame.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE };
+		gblFrame.rowHeights = new int[] { 50, 80, 0, 50, 40, 40, 40, 40, 0 };
+		gblFrame.columnWeights = new double[] { 1.0, 1.0, 1.0, 1.0, Double.MIN_VALUE };
+		gblFrame.rowWeights = new double[] { 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, Double.MIN_VALUE };
 		frame.getContentPane().setLayout(gblFrame);
 
 		JLabel lblConnTitle = new JLabel("Connection");
@@ -97,50 +101,85 @@ public class ServerGUI extends AbstractGUI {
 		gbcLblPlayerTitle.gridy = 0;
 		frame.getContentPane().add(lblPlayerTitle, gbcLblPlayerTitle);
 		
-		txtConnection = new JTextPane();
-		txtConnection.setFont(DEFAULT_FONT);
-		txtConnection.setOpaque(false);
-		txtConnection.setText(printIpConfig());
-		GridBagConstraints gbcTxtConnection = new GridBagConstraints();
-		gbcTxtConnection.gridwidth = 2;
-		gbcTxtConnection.insets = new Insets(0, 0, 5, 5);
-		gbcTxtConnection.fill = GridBagConstraints.BOTH;
-		gbcTxtConnection.gridx = 0;
-		gbcTxtConnection.gridy = 1;
-		frame.getContentPane().add(txtConnection, gbcTxtConnection);
-		
-		playerList = new JList<>();
-		playerList.setFont(DEFAULT_FONT);
-		playerList.setOpaque(false);
-		GridBagConstraints gbcPlayerList = new GridBagConstraints();
-		gbcPlayerList.gridwidth = 2;
-		gbcPlayerList.insets = new Insets(0, 0, 5, 0);
-		gbcPlayerList.fill = GridBagConstraints.BOTH;
-		gbcPlayerList.gridx = 2;
-		gbcPlayerList.gridy = 1;
-		frame.getContentPane().add(playerList, gbcPlayerList);
+		txtPlayers = new JTextArea("Waiting for players...");
+		txtPlayers.setFont(DEFAULT_FONT);
+		txtPlayers.setOpaque(false);
+		txtPlayers.setFocusable(false);
+		txtPlayers.setBorder(new BevelBorder(BevelBorder.LOWERED));
+		GridBagConstraints gbcTxtPlayers = new GridBagConstraints();
+		gbcTxtPlayers.gridheight = 4;
+		gbcTxtPlayers.gridwidth = 2;
+		gbcTxtPlayers.insets = new Insets(5, 5, 5, 0);
+		gbcTxtPlayers.fill = GridBagConstraints.BOTH;
+		gbcTxtPlayers.gridx = 2;
+		gbcTxtPlayers.gridy = 1;
+		frame.getContentPane().add(txtPlayers, gbcTxtPlayers);
 
 		JLabel lblConfigTitle = new JLabel("Configuration");
 		lblConfigTitle.setFont(DEFAULT_FONT_BOLD);
 		GridBagConstraints gbcLblConfigTitle = new GridBagConstraints();
+		gbcLblConfigTitle.gridwidth = 2;
 		gbcLblConfigTitle.fill = GridBagConstraints.BOTH;
 		gbcLblConfigTitle.insets = new Insets(0, 5, 5, 5);
 		gbcLblConfigTitle.gridx = 0;
-		gbcLblConfigTitle.gridy = 2;
+		gbcLblConfigTitle.gridy = 3;
 		frame.getContentPane().add(lblConfigTitle, gbcLblConfigTitle);
 		
 		JLabel lblCfgAlgo = new JLabel("Algorithm: ");
 		GridBagConstraints gbcLblCfgAlgo = new GridBagConstraints();
-		gbcLblCfgAlgo.insets = new Insets(0, 0, 5, 5);
+		gbcLblCfgAlgo.fill = GridBagConstraints.HORIZONTAL;
+		gbcLblCfgAlgo.insets = new Insets(0, 10, 5, 5);
 		gbcLblCfgAlgo.gridx = 0;
-		gbcLblCfgAlgo.gridy = 3;
+		gbcLblCfgAlgo.gridy = 4;
 		frame.getContentPane().add(lblCfgAlgo, gbcLblCfgAlgo);
 		
+		JComboBox<Object> cbxCfgAlgo = new JComboBox<>(cards.sort.getAll().toArray());
+		GridBagConstraints gbcCbxCfgAlgo = new GridBagConstraints();
+		gbcCbxCfgAlgo.insets = new Insets(0, 0, 5, 5);
+		gbcCbxCfgAlgo.fill = GridBagConstraints.HORIZONTAL;
+		gbcCbxCfgAlgo.gridx = 1;
+		gbcCbxCfgAlgo.gridy = 4;
+		frame.getContentPane().add(cbxCfgAlgo, gbcCbxCfgAlgo);
+		
+		JLabel lblCfgType = new JLabel("Type: ");
+		GridBagConstraints gbcLblCfgType = new GridBagConstraints();
+		gbcLblCfgType.fill = GridBagConstraints.HORIZONTAL;
+		gbcLblCfgType.insets = new Insets(0, 10, 5, 5);
+		gbcLblCfgType.gridx = 0;
+		gbcLblCfgType.gridy = 5;
+		frame.getContentPane().add(lblCfgType, gbcLblCfgType);
+		
+		JComboBox<Type> cbxCfgType = new JComboBox<>(); //Type.values());
+		GridBagConstraints gbcCbxCfgType = new GridBagConstraints();
+		gbcCbxCfgType.insets = new Insets(0, 0, 5, 5);
+		gbcCbxCfgType.fill = GridBagConstraints.HORIZONTAL;
+		gbcCbxCfgType.gridx = 1;
+		gbcCbxCfgType.gridy = 5;
+		frame.getContentPane().add(cbxCfgType, gbcCbxCfgType);
+		
+		JLabel lblCfgMode = new JLabel("Mode: ");
+		GridBagConstraints gbcLblCfgMode = new GridBagConstraints();
+		gbcLblCfgMode.fill = GridBagConstraints.HORIZONTAL;
+		gbcLblCfgMode.insets = new Insets(0, 10, 5, 5);
+		gbcLblCfgMode.gridx = 0;
+		gbcLblCfgMode.gridy = 6;
+		frame.getContentPane().add(lblCfgMode, gbcLblCfgMode);
+		
+		JComboBox<Mode> cbxCfgMode = new JComboBox<>(); //Mode.values());
+		GridBagConstraints gbcCbxCfgMode = new GridBagConstraints();
+		gbcCbxCfgMode.insets = new Insets(0, 0, 5, 5);
+		gbcCbxCfgMode.fill = GridBagConstraints.HORIZONTAL;
+		gbcCbxCfgMode.gridx = 1;
+		gbcCbxCfgMode.gridy = 6;
+		frame.getContentPane().add(cbxCfgMode, gbcCbxCfgMode);
+		
+
 		JLabel lblCfgSize = new JLabel("Size: ");
 		GridBagConstraints gbcLblCfgSize = new GridBagConstraints();
-		gbcLblCfgSize.insets = new Insets(0, 0, 5, 5);
+		gbcLblCfgSize.fill = GridBagConstraints.HORIZONTAL;
+		gbcLblCfgSize.insets = new Insets(0, 10, 0, 5);
 		gbcLblCfgSize.gridx = 0;
-		gbcLblCfgSize.gridy = 4;
+		gbcLblCfgSize.gridy = 7;
 		frame.getContentPane().add(lblCfgSize, gbcLblCfgSize);
 		
 		JSlider sldrCfgSize = new JSlider();
@@ -152,31 +191,18 @@ public class ServerGUI extends AbstractGUI {
 		sldrCfgSize.setMaximum(MAX_SIZE);
 		GridBagConstraints gbcSldrSize = new GridBagConstraints();
 		gbcSldrSize.fill = GridBagConstraints.HORIZONTAL;
-		gbcSldrSize.insets = new Insets(0, 0, 5, 5);
+		gbcSldrSize.insets = new Insets(0, 0, 0, 5);
 		gbcSldrSize.gridx = 1;
-		gbcSldrSize.gridy = 4;
+		gbcSldrSize.gridy = 7;
 		frame.getContentPane().add(sldrCfgSize, gbcSldrSize);
-		
-		JLabel lblCfgType = new JLabel("Type: ");
-		GridBagConstraints gbcLblCfgType = new GridBagConstraints();
-		gbcLblCfgType.insets = new Insets(0, 0, 5, 5);
-		gbcLblCfgType.gridx = 0;
-		gbcLblCfgType.gridy = 5;
-		frame.getContentPane().add(lblCfgType, gbcLblCfgType);
-		
-		JLabel lblCfgMode = new JLabel("Mode: ");
-		GridBagConstraints gbcLblCfgMode = new GridBagConstraints();
-		gbcLblCfgMode.insets = new Insets(0, 0, 0, 5);
-		gbcLblCfgMode.gridx = 0;
-		gbcLblCfgMode.gridy = 6;
-		frame.getContentPane().add(lblCfgMode, gbcLblCfgMode);
 
 		JButton btnPlay = new JButton(loadIcon(PLAY_ICON));
 		btnPlay.setEnabled(false);
 		GridBagConstraints gbcBtnPlay = new GridBagConstraints();
-		gbcBtnPlay.gridheight = 4;
-		gbcBtnPlay.gridx = 3;
-		gbcBtnPlay.gridy = 3;
+		gbcBtnPlay.gridwidth = 2;
+		gbcBtnPlay.gridheight = 3;
+		gbcBtnPlay.gridx = 2;
+		gbcBtnPlay.gridy = 5;
 		frame.getContentPane().add(btnPlay, gbcBtnPlay);
 		
 		initMenuBar();
