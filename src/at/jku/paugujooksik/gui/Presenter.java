@@ -3,7 +3,6 @@ package at.jku.paugujooksik.gui;
 import static at.jku.paugujooksik.logic.Toolkit.DEFAULT_FONT_BOLD;
 
 import java.awt.Color;
-import java.awt.EventQueue;
 import java.awt.Frame;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
@@ -57,6 +56,7 @@ public class Presenter extends Window implements CardSetHandler {
 		frame.getContentPane().add(lblConfig, gbcLblConfig);
 
 		// NEW LINE
+		final String name = "Fritz";
 
 		JPanel pnlRow = new JPanel();
 		pnlRow.setBorder(new LineBorder(Color.LIGHT_GRAY, 3, true));
@@ -74,7 +74,7 @@ public class Presenter extends Window implements CardSetHandler {
 		gblPnlRow.rowWeights = new double[] { 0.0, 0.0, 1.0, Double.MIN_VALUE };
 		pnlRow.setLayout(gblPnlRow);
 
-		JLabel lblName = new JLabel("Team 'Fritz'");
+		JLabel lblName = new JLabel("Team '" + name + "'");
 		GridBagConstraints gbc_lblName = new GridBagConstraints();
 		gbc_lblName.gridheight = 2;
 		gbc_lblName.insets = new Insets(0, 0, 5, 5);
@@ -136,7 +136,7 @@ public class Presenter extends Window implements CardSetHandler {
 		pnlRow.add(lblSwapCount, gbc_lblSwapCount);
 		lblSwapCount.setFont(DEFAULT_FONT_BOLD.deriveFont(32f));
 
-		JPanel pnlCardSet = new CardSet(target.config.size, this);
+		JPanel pnlCardSet = new CardSet(target.config.size, this, name);
 		GridBagConstraints gbc_panel = new GridBagConstraints();
 		gbc_panel.gridwidth = 5;
 		gbc_panel.insets = new Insets(0, 0, 0, 5);
@@ -159,42 +159,25 @@ public class Presenter extends Window implements CardSetHandler {
 	}
 
 	@Override
-	public void performPin(int index) {
+	public void performPin(String originId, int index) {
+		// XXX Auto-generated method stub
+	}
+
+	@Override
+	public void performMark(String originId, int index) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void performMark(int index) {
+	public void performSelect(String originId, int index) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void performSelect(int index) {
+	public void performSwap(String originId) {
 		// TODO Auto-generated method stub
 
-	}
-
-	@Override
-	public void performSwap() {
-		// TODO Auto-generated method stub
-
-	}
-
-	/**
-	 * Launch the application.
-	 */
-	public static void initAndShow(final Frame owner, final ServerGUI target) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					Presenter window = new Presenter(owner, target);
-					window.frame.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
 	}
 }

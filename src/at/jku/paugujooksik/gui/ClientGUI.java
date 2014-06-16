@@ -33,12 +33,14 @@ import javax.swing.JTextPane;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 
+import at.jku.paugujooksik.action.Action;
+import at.jku.paugujooksik.action.BinaryAction;
+import at.jku.paugujooksik.action.UnaryAction;
 import at.jku.paugujooksik.logic.Cards;
 import at.jku.paugujooksik.logic.Configuration;
 import at.jku.paugujooksik.logic.ValueGenerator.Mode;
 import at.jku.paugujooksik.logic.ValueGenerator.Type;
 import at.jku.paugujooksik.server.ServerControl;
-import at.jku.paugujooksik.sort.Action;
 import at.jku.paugujooksik.sort.SortAlgorithm;
 
 public class ClientGUI extends AbstractGUI implements CardSetHandler {
@@ -49,8 +51,8 @@ public class ClientGUI extends AbstractGUI implements CardSetHandler {
 	private JLabel lblTitle;
 	private JTextPane txtHint;
 
-	private ServerControl controler;
 	private String name;
+	private ServerControl controler;
 	private CardSet cardSet;
 	private int size;
 
@@ -152,7 +154,7 @@ public class ClientGUI extends AbstractGUI implements CardSetHandler {
 		gbcPnLCards.gridy = 1;
 		frame.getContentPane().add(cardSet, gbcPnLCards);
 
-		pnlSwap = new SwapPanel(this);
+		pnlSwap = new SwapPanel(this, name);
 		GridBagConstraints gbcPnlLines = new GridBagConstraints();
 		gbcPnlLines.gridwidth = 2;
 		gbcPnlLines.insets = new Insets(0, 0, 5, 0);
@@ -384,20 +386,24 @@ public class ClientGUI extends AbstractGUI implements CardSetHandler {
 	private void setupCards() {
 		size = config.size;
 		cards = new Cards<>(config.values, config.algorithmIndex);
-		cardSet = new CardSet(size, this);
+		cardSet = new CardSet(size, this, name);
 	}
 
 	private void reportPresenter(Action action) {
 		if (clientMode) {
-			try {
-				controler.performAction(action);
+			try { // TODO bad style
+				if (action instanceof UnaryAction)
+					controler.performAction(name, (UnaryAction) action);
+				else if (action instanceof BinaryAction)
+					controler.performAction(name, (BinaryAction) action);
 			} catch (RemoteException e) {
 				e.printStackTrace();
 			}
 		}
 	}
 
-	public void performPin(int index) {
+	@Override
+	public void performPin(String originId, int index) {
 		if (cards.getCard(index).selected) {
 			try {
 				Action action = cards.togglePin(index);
@@ -410,7 +416,8 @@ public class ClientGUI extends AbstractGUI implements CardSetHandler {
 		}
 	}
 
-	public void performMark(int index) {
+	@Override
+	public void performMark(String originId, int index) {
 		try {
 			Action action = cards.toggleMark(index);
 			clearErrors();
@@ -421,7 +428,8 @@ public class ClientGUI extends AbstractGUI implements CardSetHandler {
 		checkComponents();
 	}
 
-	public void performSelect(int index) {
+	@Override
+	public void performSelect(String originId, int index) {
 		try {
 			Action action = cards.select(index);
 			updateStats();
@@ -433,7 +441,8 @@ public class ClientGUI extends AbstractGUI implements CardSetHandler {
 		checkComponents();
 	}
 
-	public void performSwap() {
+	@Override
+	public void performSwap(String originId) {
 		try {
 			Action action = cards.swapSelection();
 			clearErrors();

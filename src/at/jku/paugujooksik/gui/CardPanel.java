@@ -33,6 +33,7 @@ public class CardPanel extends AbstractPanel {
 	private final Color markColor = Color.GREEN;
 	private final Color errorColor = Color.RED;
 	private final Color defaultBackground = Color.LIGHT_GRAY;
+	private final String originId;
 	private final JLabel label;
 	private final JToggleButton pin;
 	private final JToggleButton fin;
@@ -41,9 +42,10 @@ public class CardPanel extends AbstractPanel {
 	private MouseAdapter pinMouseAdapter;
 	private MouseAdapter finMouseAdapter;
 
-	public CardPanel(final int index, CardSetHandler target) {
+	public CardPanel(final int index, CardSetHandler target, String originId) {
 		super(new BorderLayout());
 		this.target = target;
+		this.originId = originId;
 		initMouseListeners(index);
 		{
 			setBackground(defaultBackground);
@@ -112,21 +114,21 @@ public class CardPanel extends AbstractPanel {
 			@Override
 			public void mouseReleased(MouseEvent e) {
 				if (staysInsideComponent(e))
-					target.performSelect(index);
+					target.performSelect(originId, index);
 			}
 		};
 		pinMouseAdapter = new MouseAdapter() {
 			@Override
 			public void mouseReleased(MouseEvent e) {
 				if (staysInsideComponent(e))
-					target.performPin(index);
+					target.performPin(originId, index);
 			}
 		};
 		finMouseAdapter = new MouseAdapter() {
 			@Override
 			public void mouseReleased(MouseEvent e) {
 				if (staysInsideComponent(e))
-					target.performMark(index);
+					target.performMark(originId, index);
 			}
 		};
 	}

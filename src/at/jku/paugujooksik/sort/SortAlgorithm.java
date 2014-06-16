@@ -5,6 +5,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import at.jku.paugujooksik.action.Action;
+
 public abstract class SortAlgorithm<T extends Comparable<T>> implements
 		Serializable {
 	private static final long serialVersionUID = -7013695126248089403L;

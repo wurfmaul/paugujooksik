@@ -14,7 +14,7 @@ public class CardSet extends JPanel {
 
 	private final List<CardPanel> cardBtns = new LinkedList<>();
 	
-	public CardSet(int size, CardSetHandler target) {
+	public CardSet(int size, CardSetHandler target, String originId) {
 		final GridBagLayout gblPnlCards = new GridBagLayout();
 		{
 			gblPnlCards.columnWidths = new int[size + 1];
@@ -41,7 +41,7 @@ public class CardSet extends JPanel {
 			}
 			add(slot, gbc);
 
-			final CardPanel card = new CardPanel(i, target);
+			final CardPanel card = new CardPanel(i, target, originId);
 			slot.add(card);
 			cardBtns.add(card);
 		}

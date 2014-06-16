@@ -2,6 +2,9 @@ package at.jku.paugujooksik.sort;
 
 import java.util.List;
 
+import at.jku.paugujooksik.action.Action;
+import at.jku.paugujooksik.action.BinaryAction;
+
 public class SelectionSort<T extends Comparable<T>> extends SortAlgorithm<T> {
 	private static final long serialVersionUID = -7852418811785446942L;
 	int pinned;

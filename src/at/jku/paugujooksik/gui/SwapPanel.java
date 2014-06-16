@@ -13,10 +13,12 @@ import javax.swing.JButton;
 public class SwapPanel extends AbstractPanel {
 	private static final long serialVersionUID = -7863948686242926432L;
 	private final ClientGUI target;
+	private String originId;
 
-	public SwapPanel(ClientGUI target) {
+	public SwapPanel(ClientGUI target, String originId) {
 		super(null);
 		this.target = target;
+		this.originId = originId;
 	}
 
 	@Override
@@ -60,7 +62,7 @@ public class SwapPanel extends AbstractPanel {
 				@Override
 				public void mouseReleased(MouseEvent e) {
 					if (staysInsideComponent(e))
-						target.performSwap();
+						target.performSwap(originId);
 				}
 			});
 		}

@@ -3,14 +3,16 @@ package at.jku.paugujooksik.server;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
+import at.jku.paugujooksik.action.BinaryAction;
+import at.jku.paugujooksik.action.UnaryAction;
 import at.jku.paugujooksik.gui.ServerGUI;
 import at.jku.paugujooksik.logic.Configuration;
-import at.jku.paugujooksik.sort.Action;
 
-public class ServerControlImpl extends UnicastRemoteObject implements ServerControl {
+public class ServerControlImpl extends UnicastRemoteObject implements
+		ServerControl {
 	private static final long serialVersionUID = -53275326117633745L;
 	private ServerGUI server;
-	
+
 	public ServerControlImpl(ServerGUI server) throws RemoteException {
 		super();
 		this.server = server;
@@ -27,14 +29,20 @@ public class ServerControlImpl extends UnicastRemoteObject implements ServerCont
 	}
 
 	@Override
-	public void performAction(Action action) throws RemoteException {
-		// TODO Auto-generated method stub
-		System.out.println("action: " + action);
+	public boolean isRunning() throws RemoteException {
+		return server.isRunning();
 	}
 
 	@Override
-	public boolean isRunning() throws RemoteException {
-		return server.isRunning();
+	public void performAction(String originId, UnaryAction action)
+			throws RemoteException {
+		server.performAction(originId, action);
+	}
+
+	@Override
+	public void performAction(String originId, BinaryAction action)
+			throws RemoteException {
+		server.performAction(originId, action);
 	}
 
 	@Override

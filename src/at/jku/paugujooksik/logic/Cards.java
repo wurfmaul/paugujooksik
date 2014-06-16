@@ -6,8 +6,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import at.jku.paugujooksik.action.Action;
 import at.jku.paugujooksik.gui.SelectionException;
-import at.jku.paugujooksik.sort.Action;
 import at.jku.paugujooksik.sort.SortConfig;
 
 public class Cards<T extends Comparable<T>> {

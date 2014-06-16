@@ -37,6 +37,8 @@ import javax.swing.JTextField;
 import javax.swing.UIManager;
 import javax.swing.border.BevelBorder;
 
+import at.jku.paugujooksik.action.BinaryAction;
+import at.jku.paugujooksik.action.UnaryAction;
 import at.jku.paugujooksik.logic.Configuration;
 import at.jku.paugujooksik.logic.ValueGenerator.Mode;
 import at.jku.paugujooksik.logic.ValueGenerator.Type;
@@ -50,6 +52,7 @@ public class ServerGUI extends AbstractGUI {
 	private final Set<String> registeredClients = new LinkedHashSet<>();
 
 	private boolean running = false;
+	private Presenter presenter;
 	private JButton btnPlay;
 	private JTextArea txtPlayers;
 	private JComboBox<Object> cbxCfgAlgo;
@@ -266,9 +269,16 @@ public class ServerGUI extends AbstractGUI {
 				final int size = sldrCfgSize.getValue();
 				config = Configuration.generate(mode, type, sortIdx, size);
 				running = true;
-				
-				//XXX presenter frame
-				Presenter.initAndShow(frame, ServerGUI.this);
+
+				EventQueue.invokeLater(new Runnable() {
+					public void run() {
+						try {
+							presenter = new Presenter(frame, ServerGUI.this);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+				});
 			}
 		});
 		frame.getContentPane().add(btnPlay, gbcBtnPlay);
@@ -301,7 +311,7 @@ public class ServerGUI extends AbstractGUI {
 			sb.append(c);
 			sb.append(System.lineSeparator());
 		}
-		
+
 		if (registeredClients.size() == 0) {
 			sb.append("Waiting for players...");
 			running = false;
@@ -318,6 +328,32 @@ public class ServerGUI extends AbstractGUI {
 
 	public boolean isRunning() {
 		return running;
+	}
+
+	public void performAction(String originId, UnaryAction action) {
+		switch (action.type) {
+		case COMPARE:
+			presenter.performSelect(originId, action.index);
+			break;
+		case MARK:
+			presenter.performMark(originId, action.index);
+			break;
+		case PIN:
+			presenter.performPin(originId, action.index);
+			break;
+		default:
+			DEBUGLOG.severe("Cannot perform unary action: '" + action + "'");
+		}
+	}
+
+	public void performAction(String originId, BinaryAction action) {
+		switch (action.type) {
+		case SWAP:
+			presenter.performSwap(originId);
+			break;
+		default:
+			DEBUGLOG.severe("Cannot perform binary action: '" + action + "'");
+		}
 	}
 
 	public boolean register(String name) {
