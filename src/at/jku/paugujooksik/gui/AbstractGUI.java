@@ -18,18 +18,14 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import at.jku.paugujooksik.logic.Cards;
+import at.jku.paugujooksik.logic.Configuration;
 import at.jku.paugujooksik.logic.ValueGenerator;
-import at.jku.paugujooksik.logic.ValueGenerator.Mode;
-import at.jku.paugujooksik.logic.ValueGenerator.Type;
 
 public abstract class AbstractGUI implements Serializable {
 	private static final long serialVersionUID = -4330835763782334124L;
 	
 	protected static final Logger DEBUGLOG = Logger.getLogger("DEBUG");
 	protected static final boolean GROW_CARDS = false;
-	protected static final int MIN_SIZE = 7;
-	protected static final int MAX_SIZE = 15;
-	protected static final int DEFAULT_SIZE = 7;
 	protected static final Font DEFAULT_FONT;
 	protected static final Font DEFAULT_FONT_BOLD;
 	
@@ -37,7 +33,7 @@ public abstract class AbstractGUI implements Serializable {
 	protected final ValueGenerator values = new ValueGenerator();
 	protected final List<CardPanel> cardBtns = new LinkedList<>();
 	
-	protected int n = DEFAULT_SIZE;
+	protected Configuration<?> config;
 	protected Cards<?> cards;
 
 	static {
@@ -51,26 +47,17 @@ public abstract class AbstractGUI implements Serializable {
 	}
 	
 	protected AbstractGUI() {
-		setCards();
+		config = Configuration.generateDefault();
+		cards = new Cards<>(config.values, config.algorithmIndex);
 	}
-	
-	protected void initCardPanel() {
-		final JPanel pnlCards = new JPanel();
-		final GridBagConstraints gbcPnLCards = new GridBagConstraints();
-		{
-			gbcPnLCards.gridwidth = 2;
-			gbcPnLCards.insets = new Insets(0, 0, 5, 0);
-			gbcPnLCards.fill = GridBagConstraints.BOTH;
-			gbcPnLCards.gridx = 0;
-			gbcPnLCards.gridy = 1;
-		}
-		frame.getContentPane().add(pnlCards, gbcPnLCards);
 
+	protected JPanel initAndGetCardPanel(int size) {
+		final JPanel pnlCards = new JPanel();
 		final GridBagLayout gblPnlCards = new GridBagLayout();
 		{
-			gblPnlCards.columnWidths = new int[n + 1];
+			gblPnlCards.columnWidths = new int[size + 1];
 			gblPnlCards.rowHeights = new int[] { 0 };
-			double[] weights = new double[n + 1];
+			double[] weights = new double[size + 1];
 			{
 				Arrays.fill(weights, 1.0);
 				weights[weights.length - 1] = Double.MIN_VALUE;
@@ -81,7 +68,7 @@ public abstract class AbstractGUI implements Serializable {
 		pnlCards.setLayout(gblPnlCards);
 
 		cardBtns.clear();
-		for (int i = 0; i < n; i++) {
+		for (int i = 0; i < size; i++) {
 			final CardSlotPanel slot = new CardSlotPanel(i);
 			final GridBagConstraints gbc = new GridBagConstraints();
 			{
@@ -96,37 +83,7 @@ public abstract class AbstractGUI implements Serializable {
 			slot.add(card);
 			cardBtns.add(card);
 		}
-	}
-	
-	protected void setCards() {
-		final Mode mode = values.mode;
-		final Type type = values.type;
-
-		int sort = 0;
-		if (cards != null)
-			sort = cards.sort.getCurrentIndex();
-
-		switch (mode) {
-		case SMALL:
-			if (type == Type.INTEGER) {
-				cards = new Cards<>(ValueGenerator.smallIntValues(n), sort);
-				return;
-			} else if (type == Type.STRING) {
-				cards = new Cards<>(ValueGenerator.smallStringValues(n), sort);
-				return;
-			}
-			break;
-		case RANDOM:
-			if (type == Type.INTEGER) {
-				cards = new Cards<>(ValueGenerator.randomIntValues(n), sort);
-				return;
-			} else if (type == Type.STRING) {
-				cards = new Cards<>(ValueGenerator.randomStringValues(n), sort);
-				return;
-			}
-			break;
-		}
-		DEBUGLOG.severe("Unknown mode: '" + mode + "' or type: '" + type + "'");
+		return pnlCards;
 	}
 	
 	public abstract void performPin(int index);

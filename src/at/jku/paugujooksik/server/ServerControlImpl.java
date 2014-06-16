@@ -1,8 +1,10 @@
-package at.jku.paugujooksik.gui;
+package at.jku.paugujooksik.server;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
+import at.jku.paugujooksik.gui.ServerGUI;
+import at.jku.paugujooksik.logic.Configuration;
 import at.jku.paugujooksik.sort.Action;
 
 public class ServerControlImpl extends UnicastRemoteObject implements ServerControl {
@@ -20,9 +22,8 @@ public class ServerControlImpl extends UnicastRemoteObject implements ServerCont
 	}
 
 	@Override
-	public void getConfig() throws RemoteException {
-		// TODO Auto-generated method stub
-		System.out.println("config");
+	public Configuration<?> getConfig() throws RemoteException {
+		return server.getConfig();
 	}
 
 	@Override

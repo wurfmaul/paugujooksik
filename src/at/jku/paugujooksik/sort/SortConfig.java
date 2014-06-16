@@ -1,23 +1,18 @@
-package at.jku.paugujooksik.logic;
+package at.jku.paugujooksik.sort;
 
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import at.jku.paugujooksik.sort.BubbleSort;
-import at.jku.paugujooksik.sort.InsertionSort;
-import at.jku.paugujooksik.sort.PlayMode;
-import at.jku.paugujooksik.sort.SelectionSort;
-import at.jku.paugujooksik.sort.SortAlgorithm;
-
 public class SortConfig<T extends Comparable<T>> implements Serializable {
-	private static final long serialVersionUID = 7479212333255437194L;
-
+	private static final long serialVersionUID = -3009123587215411268L;
+	
 	private final List<SortAlgorithm<T>> algorithms = new LinkedList<>();
 	private int curAlgo;
 
-	SortConfig(int defaultIndex) {
+	public SortConfig(int defaultIndex) {
+		// TODO reflect?
 		algorithms.add(new BubbleSort<T>());
 		algorithms.add(new InsertionSort<T>());
 		algorithms.add(new SelectionSort<T>());

@@ -9,8 +9,6 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -25,6 +23,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.UIManager;
+
+import at.jku.paugujooksik.server.ServerControl;
 
 public class ConnectionDialog extends JDialog {
 	private static final long serialVersionUID = 1513880741540102732L;
@@ -43,12 +43,14 @@ public class ConnectionDialog extends JDialog {
 		super(parent, true);
 		this.target = target;
 		setBounds(100, 100, 400, 200);
-		addWindowListener(new WindowAdapter() {
-			@Override
-			public void windowClosed(WindowEvent e) {
-				target.quit();
-			}
-		});
+		// TODO unregister on closing dialog
+//		addWindowListener(new WindowAdapter() {
+//			@Override
+//			public void windowClosed(WindowEvent e) {
+//				target.quit();
+//			}
+//		});
+		
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWidths = new int[] { 120, 120, 60, 0 };
 		gridBagLayout.rowHeights = new int[] { 50, 40, 40, 40, 0 };
@@ -187,7 +189,7 @@ public class ConnectionDialog extends JDialog {
 				@Override
 				public void run() {
 					try {
-						p.register(name);
+						p.register(name); // FIXME forbid same name!
 						while (!p.isRunning()) {
 							Thread.sleep(500);
 						}

@@ -8,9 +8,9 @@ import java.util.logging.Logger;
 
 import at.jku.paugujooksik.gui.SelectionException;
 import at.jku.paugujooksik.sort.Action;
+import at.jku.paugujooksik.sort.SortConfig;
 
-public class Cards<T extends Comparable<T>> implements Serializable {
-	private static final long serialVersionUID = -1840302845005970051L;
+public class Cards<T extends Comparable<T>> {
 	private static final Logger DEBUGLOG = Logger.getLogger("DEBUG");
 	private static final boolean MOVE_PIN = false;
 	private static final boolean MOVE_MARK = false;

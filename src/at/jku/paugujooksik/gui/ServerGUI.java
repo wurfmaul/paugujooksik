@@ -2,6 +2,9 @@ package at.jku.paugujooksik.gui;
 
 import static at.jku.paugujooksik.gui.ResourceLoader.PLAY_ICON;
 import static at.jku.paugujooksik.gui.ResourceLoader.loadIcon;
+import static at.jku.paugujooksik.logic.Configuration.DEFAULT_SIZE;
+import static at.jku.paugujooksik.logic.Configuration.MAX_SIZE;
+import static at.jku.paugujooksik.logic.Configuration.MIN_SIZE;
 
 import java.awt.Dimension;
 import java.awt.EventQueue;
@@ -32,8 +35,11 @@ import javax.swing.JTextField;
 import javax.swing.UIManager;
 import javax.swing.border.BevelBorder;
 
+import at.jku.paugujooksik.logic.Configuration;
 import at.jku.paugujooksik.logic.ValueGenerator.Mode;
 import at.jku.paugujooksik.logic.ValueGenerator.Type;
+import at.jku.paugujooksik.server.ServerControl;
+import at.jku.paugujooksik.server.ServerControlImpl;
 
 public class ServerGUI extends AbstractGUI {
 	private static final long serialVersionUID = 4574412527923406385L;
@@ -42,9 +48,13 @@ public class ServerGUI extends AbstractGUI {
 
 	private final Set<String> registeredClients = new LinkedHashSet<>();
 
+	private boolean running = false;
 	private JButton btnPlay;
 	private JTextArea txtPlayers;
-	private boolean running = false;
+	private JComboBox<Object> cbxCfgAlgo;
+	private JComboBox<Type> cbxCfgType;
+	private JComboBox<Mode> cbxCfgMode;
+	private JSlider sldrCfgSize;
 
 	static {
 		String ip = "unknown";
@@ -177,8 +187,7 @@ public class ServerGUI extends AbstractGUI {
 		gbcLblCfgAlgo.gridy = 4;
 		frame.getContentPane().add(lblCfgAlgo, gbcLblCfgAlgo);
 
-		JComboBox<Object> cbxCfgAlgo = new JComboBox<>(cards.sort.getAll()
-				.toArray());
+		cbxCfgAlgo = new JComboBox<>(cards.sort.getAll().toArray());
 		GridBagConstraints gbcCbxCfgAlgo = new GridBagConstraints();
 		gbcCbxCfgAlgo.insets = new Insets(0, 0, 5, 5);
 		gbcCbxCfgAlgo.fill = GridBagConstraints.HORIZONTAL;
@@ -194,7 +203,7 @@ public class ServerGUI extends AbstractGUI {
 		gbcLblCfgType.gridy = 5;
 		frame.getContentPane().add(lblCfgType, gbcLblCfgType);
 
-		JComboBox<Type> cbxCfgType = new JComboBox<>(Type.values());
+		cbxCfgType = new JComboBox<>(Type.values());
 		GridBagConstraints gbcCbxCfgType = new GridBagConstraints();
 		gbcCbxCfgType.insets = new Insets(0, 0, 5, 5);
 		gbcCbxCfgType.fill = GridBagConstraints.HORIZONTAL;
@@ -210,7 +219,7 @@ public class ServerGUI extends AbstractGUI {
 		gbcLblCfgMode.gridy = 6;
 		frame.getContentPane().add(lblCfgMode, gbcLblCfgMode);
 
-		JComboBox<Mode> cbxCfgMode = new JComboBox<>(Mode.values());
+		cbxCfgMode = new JComboBox<>(Mode.values());
 		GridBagConstraints gbcCbxCfgMode = new GridBagConstraints();
 		gbcCbxCfgMode.insets = new Insets(0, 0, 5, 5);
 		gbcCbxCfgMode.fill = GridBagConstraints.HORIZONTAL;
@@ -226,7 +235,7 @@ public class ServerGUI extends AbstractGUI {
 		gbcLblCfgSize.gridy = 7;
 		frame.getContentPane().add(lblCfgSize, gbcLblCfgSize);
 
-		JSlider sldrCfgSize = new JSlider();
+		sldrCfgSize = new JSlider();
 		sldrCfgSize.setMajorTickSpacing(1);
 		sldrCfgSize.setSnapToTicks(true);
 		sldrCfgSize.setPaintTicks(true);
@@ -250,6 +259,11 @@ public class ServerGUI extends AbstractGUI {
 		btnPlay.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				final Mode mode = (Mode) cbxCfgMode.getSelectedItem();
+				final Type type = (Type) cbxCfgType.getSelectedItem();
+				final int sortIdx = cbxCfgAlgo.getSelectedIndex();
+				final int size = sldrCfgSize.getValue();
+				config = Configuration.generate(mode, type, sortIdx, size);
 				running = true;
 				// TODO presenter frame
 			}
@@ -284,12 +298,19 @@ public class ServerGUI extends AbstractGUI {
 			sb.append(c);
 			sb.append(System.lineSeparator());
 		}
-		if (registeredClients.size() < 2) {
+		
+		if (registeredClients.size() == 0) {
 			sb.append("Waiting for players...");
+			running = false;
+			btnPlay.setEnabled(false);
 		} else {
 			btnPlay.setEnabled(true);
 		}
 		txtPlayers.setText(sb.toString());
+	}
+
+	public Configuration<?> getConfig() {
+		return config;
 	}
 
 	public boolean isRunning() {
