@@ -1,10 +1,12 @@
 package at.jku.paugujooksik.logic;
 
+import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
-public class ValueGenerator {
+public class ValueGenerator implements Serializable{
+	private static final long serialVersionUID = 78953624924664343L;
 	private static final int MAX_CHAR = 26;
 	public static final Type DEFAULT_TYPE = Type.INTEGER;
 	public static final Mode DEFAULT_MODE = Mode.SMALL;

@@ -8,6 +8,7 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -21,7 +22,9 @@ import at.jku.paugujooksik.logic.ValueGenerator;
 import at.jku.paugujooksik.logic.ValueGenerator.Mode;
 import at.jku.paugujooksik.logic.ValueGenerator.Type;
 
-public abstract class AbstractGUI {
+public abstract class AbstractGUI implements Serializable {
+	private static final long serialVersionUID = -4330835763782334124L;
+	
 	protected static final Logger DEBUGLOG = Logger.getLogger("DEBUG");
 	protected static final boolean GROW_CARDS = false;
 	protected static final int MIN_SIZE = 7;
@@ -126,55 +129,11 @@ public abstract class AbstractGUI {
 		DEBUGLOG.severe("Unknown mode: '" + mode + "' or type: '" + type + "'");
 	}
 	
-	public void performPin(int index) {
-		if (cards.getCard(index).selected) {
-			try {
-				cards.togglePin(index);
-				clearErrors();
-			} catch (SelectionException ex) {
-				reportError(ex);
-			}
-			checkComponents();
-		}
-	}
+	public abstract void performPin(int index);
 
-	public void performMark(int index) {
-		try {
-			cards.toggleMark(index);
-			clearErrors();
-		} catch (SelectionException ex) {
-			reportError(ex);
-		}
-		checkComponents();
-	}
+	public abstract void performMark(int index);
 
-	public void performSelect(int index) {
-		try {
-			cards.select(index);
-			updateStats();
-			clearErrors();
-		} catch (SelectionException ex) {
-			reportError(ex);
-		}
-		checkComponents();
-	}
+	public abstract void performSelect(int index);
 
-	public void performSwap() {
-		try {
-			cards.swapSelection();
-			clearErrors();
-			updateStats();
-		} catch (SelectionException ex) {
-			reportError(ex);
-		}
-		checkComponents();
-	}
-
-	protected abstract void checkComponents();
-
-	protected abstract void clearErrors();
-
-	protected abstract void reportError(SelectionException ex);
-
-	protected abstract void updateStats();
+	public abstract void performSwap();
 }

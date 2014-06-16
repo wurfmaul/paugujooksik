@@ -12,9 +12,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.rmi.AlreadyBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -33,18 +36,22 @@ import at.jku.paugujooksik.logic.ValueGenerator.Mode;
 import at.jku.paugujooksik.logic.ValueGenerator.Type;
 
 public class ServerGUI extends AbstractGUI {
+	private static final long serialVersionUID = 4574412527923406385L;
 	private static final String HOST_IP;
 	private static final int HOST_PORT = 1099;
-	private JTextArea txtPlayers;
 
-	private JFrame frame; // FIXME use super.frame
+	private final Set<String> registeredClients = new LinkedHashSet<>();
+
+	private JButton btnPlay;
+	private JTextArea txtPlayers;
+	private boolean running = false;
 
 	static {
 		String ip = "unknown";
 		try {
 			ip = InetAddress.getLocalHost().getHostAddress();
 		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
+			DEBUGLOG.severe("Could not retrieve IP address.");
 		} finally {
 			HOST_IP = ip;
 		}
@@ -60,15 +67,15 @@ public class ServerGUI extends AbstractGUI {
 
 	private void setupRegistry() {
 		try {
-			@SuppressWarnings("unused")
+			ServerControl p = new ServerControlImpl(this);
 			Registry reg = LocateRegistry.createRegistry(HOST_PORT);
-		} catch (RemoteException e) {
-			e.printStackTrace();
+			reg.bind("pres", p);
+		} catch (RemoteException | AlreadyBoundException e) {
+			DEBUGLOG.severe("Could not share object!");
 		}
 	}
 
 	private void initialize() {
-		frame = new JFrame();
 		frame.setBounds(100, 100, 700, 430);
 		frame.setMinimumSize(new Dimension(500, 430));
 		frame.setTitle("Paugujooksik - Presenter Mode");
@@ -138,7 +145,7 @@ public class ServerGUI extends AbstractGUI {
 		gbcLblPlayerTitle.gridy = 0;
 		frame.getContentPane().add(lblPlayerTitle, gbcLblPlayerTitle);
 
-		txtPlayers = new JTextArea("Waiting for players...");
+		txtPlayers = new JTextArea();
 		txtPlayers.setFont(DEFAULT_FONT);
 		txtPlayers.setOpaque(false);
 		txtPlayers.setFocusable(false);
@@ -233,16 +240,24 @@ public class ServerGUI extends AbstractGUI {
 		gbcSldrSize.gridy = 7;
 		frame.getContentPane().add(sldrCfgSize, gbcSldrSize);
 
-		JButton btnPlay = new JButton(loadIcon(PLAY_ICON));
+		btnPlay = new JButton(loadIcon(PLAY_ICON));
 		btnPlay.setEnabled(false);
 		GridBagConstraints gbcBtnPlay = new GridBagConstraints();
 		gbcBtnPlay.gridwidth = 2;
 		gbcBtnPlay.gridheight = 3;
 		gbcBtnPlay.gridx = 2;
 		gbcBtnPlay.gridy = 5;
+		btnPlay.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				running = true;
+				// TODO presenter frame
+			}
+		});
 		frame.getContentPane().add(btnPlay, gbcBtnPlay);
 
 		initMenuBar();
+		updatePlayerList();
 	}
 
 	private void initMenuBar() {
@@ -263,26 +278,55 @@ public class ServerGUI extends AbstractGUI {
 		frame.setJMenuBar(menuBar);
 	}
 
+	private void updatePlayerList() {
+		final StringBuilder sb = new StringBuilder();
+		for (String c : registeredClients) {
+			sb.append(c);
+			sb.append(System.lineSeparator());
+		}
+		if (registeredClients.size() < 2) {
+			sb.append("Waiting for players...");
+		} else {
+			btnPlay.setEnabled(true);
+		}
+		txtPlayers.setText(sb.toString());
+	}
+
+	public boolean isRunning() {
+		return running;
+	}
+
+	public boolean register(String name) {
+		final boolean ret = registeredClients.add(name);
+		updatePlayerList();
+		return ret;
+	}
+
+	public void unregister(String name) {
+		registeredClients.remove(name);
+		updatePlayerList();
+	}
+
 	@Override
-	protected void checkComponents() {
+	public void performPin(int index) {
+		// TODO Auto-generated method stub
+		System.out.println("server pin");
+	}
+
+	@Override
+	public void performMark(int index) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	protected void clearErrors() {
+	public void performSelect(int index) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	protected void reportError(SelectionException ex) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	protected void updateStats() {
+	public void performSwap() {
 		// TODO Auto-generated method stub
 
 	}

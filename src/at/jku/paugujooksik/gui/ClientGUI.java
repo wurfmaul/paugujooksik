@@ -12,10 +12,12 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.rmi.RemoteException;
 
 import javax.sound.sampled.Clip;
 import javax.swing.ButtonGroup;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -25,23 +27,34 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JSeparator;
 import javax.swing.JTextPane;
 import javax.swing.UIManager;
+import javax.swing.WindowConstants;
 
 import at.jku.paugujooksik.logic.ValueGenerator.Mode;
 import at.jku.paugujooksik.logic.ValueGenerator.Type;
+import at.jku.paugujooksik.sort.Action;
 import at.jku.paugujooksik.sort.SortAlgorithm;
 
 public class ClientGUI extends AbstractGUI {
-	private final boolean remoteConfig;
+	private static final long serialVersionUID = -4975119227591393961L;
+
+	private final boolean clientMode;
 
 	private SwapPanel pnlSwap;
 	private JTextPane txtStats;
 	private JLabel lblTitle;
 	private JTextPane txtHint;
+	
+	private ServerControl pres;
+	private String name;
 
-	private ClientGUI(boolean remoteConfig) {
-		this.remoteConfig = remoteConfig;
+	private ClientGUI(boolean clientMode) {
+		this.clientMode = clientMode;
+		
 		initFrame();
 		initialize();
+		if (clientMode) {
+			ConnectionDialog.init(frame, this);
+		}
 	}
 
 	private void reset() {
@@ -158,7 +171,7 @@ public class ClientGUI extends AbstractGUI {
 		frame.setBounds(100, 100, 700, 500);
 		frame.setMinimumSize(new Dimension(500, 450));
 		frame.setTitle("Sort the Cards!");
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		GridBagLayout gblFrame = new GridBagLayout();
 		gblFrame.columnWidths = new int[] { 508, 190, 0 };
 		gblFrame.rowHeights = new int[] { 90, 160, 90, 10, 90, 0 };
@@ -170,6 +183,12 @@ public class ClientGUI extends AbstractGUI {
 			gblFrame.rowWeights = new double[] { 0.0, 0.0, 0.0, 1.0, 0.0,
 					Double.MIN_VALUE };
 		frame.getContentPane().setLayout(gblFrame);
+		frame.addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosed(WindowEvent e) {
+				quit();
+			}
+		});
 	}
 
 	private void initMenuBar() {
@@ -193,15 +212,14 @@ public class ClientGUI extends AbstractGUI {
 			mntmExit.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					DEBUGLOG.info("Exiting game");
-					frame.dispose();
+					quit();
 				}
 			});
 			mnFile.add(mntmExit);
 		}
 		menuBar.add(mnFile);
 
-		if (!remoteConfig) {
+		if (!clientMode) {
 			JMenu mnConfig = new JMenu("Config");
 			{
 				ButtonGroup algorithmGroup = new ButtonGroup();
@@ -304,16 +322,16 @@ public class ClientGUI extends AbstractGUI {
 		frame.setJMenuBar(menuBar);
 	}
 
-	protected void checkComponents() {
+	private void checkComponents() {
 		updateComponents();
 		checkFinish();
 	}
 
-	protected void clearErrors() {
+	private void clearErrors() {
 		txtHint.setText("");
 	}
 
-	protected void reportError(SelectionException ex) {
+	private void reportError(SelectionException ex) {
 		txtHint.setForeground(Color.RED);
 		txtHint.setText(ex.getMessage());
 
@@ -324,7 +342,7 @@ public class ClientGUI extends AbstractGUI {
 		updateStats();
 	}
 
-	protected void updateStats() {
+	private void updateStats() {
 		final StringBuilder sb = new StringBuilder();
 		sb.append("Errors: ");
 		sb.append(cards.getErrorCount());
@@ -335,6 +353,58 @@ public class ClientGUI extends AbstractGUI {
 		sb.append("Compares: ");
 		sb.append(cards.getCompareCount());
 		txtStats.setText(sb.toString());
+	}
+	
+	public void performPin(int index) {
+		if (cards.getCard(index).selected) {
+			try {
+				Action action = cards.togglePin(index);
+				clearErrors();
+				pres.performAction(action);
+			} catch (SelectionException e) {
+				reportError(e);
+			} catch (RemoteException e) {
+				// TODO error message
+				e.printStackTrace();
+			}
+			checkComponents();
+		}
+	}
+
+	public void performMark(int index) {
+		try {
+			cards.toggleMark(index);
+			clearErrors();
+		} catch (SelectionException ex) {
+			reportError(ex);
+		}
+		checkComponents();
+	}
+
+	public void performSelect(int index) {
+		try {
+			cards.select(index);
+			updateStats();
+			clearErrors();
+		} catch (SelectionException ex) {
+			reportError(ex);
+		}
+		checkComponents();
+	}
+
+	public void performSwap() {
+		try {
+			Action action = cards.swapSelection();
+			clearErrors();
+			updateStats();
+			pres.performAction(action);
+		} catch (SelectionException ex) {
+			reportError(ex);
+		} catch (RemoteException e) {
+			// TODO error msg
+			e.printStackTrace();
+		}
+		checkComponents();
 	}
 
 	public int getLeftReference() {
@@ -349,8 +419,30 @@ public class ClientGUI extends AbstractGUI {
 		return comp.getLocation().x + comp.getWidth() / 2;
 	}
 
+	public String getName() {
+		return name;
+	}
+
 	public boolean showSwapButton() {
 		return cards.twoSelected();
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public void setPres(ServerControl pres) {
+		this.pres = pres;
+	}
+	
+	public void quit() {
+		DEBUGLOG.info("Exiting game...");
+		try {
+			pres.unregister(name);
+		} catch (RemoteException | NullPointerException e) {
+		}
+		frame.dispose();
+		System.exit(0);
 	}
 
 	/**

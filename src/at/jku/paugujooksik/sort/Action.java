@@ -1,6 +1,9 @@
 package at.jku.paugujooksik.sort;
 
-public abstract class Action {
+import java.io.Serializable;
+
+public abstract class Action implements Serializable {
+	private static final long serialVersionUID = 9168826858554586354L;
 	public Type type;
 
 	public static UnaryAction open(int index) {
@@ -38,6 +41,7 @@ public abstract class Action {
 }
 
 final class UnaryAction extends Action {
+	private static final long serialVersionUID = 2482948068529637542L;
 	public final int index;
 
 	public UnaryAction(Type type, int index) {
@@ -70,6 +74,7 @@ final class UnaryAction extends Action {
 }
 
 final class BinaryAction extends Action {
+	private static final long serialVersionUID = -4425358663271600895L;
 	public final int indexLeft;
 	public final int indexRight;
 

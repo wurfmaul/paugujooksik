@@ -1,5 +1,6 @@
 package at.jku.paugujooksik.logic;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -8,7 +9,8 @@ import java.util.logging.Logger;
 import at.jku.paugujooksik.gui.SelectionException;
 import at.jku.paugujooksik.sort.Action;
 
-public class Cards<T extends Comparable<T>> {
+public class Cards<T extends Comparable<T>> implements Serializable {
+	private static final long serialVersionUID = -1840302845005970051L;
 	private static final Logger DEBUGLOG = Logger.getLogger("DEBUG");
 	private static final boolean MOVE_PIN = false;
 	private static final boolean MOVE_MARK = false;
@@ -79,7 +81,7 @@ public class Cards<T extends Comparable<T>> {
 			cards.get(index).selected = false;
 			return;
 		}
-		
+
 		checkAction(Action.open(index));
 
 		if (twoSelected()) {
@@ -104,12 +106,13 @@ public class Cards<T extends Comparable<T>> {
 		}
 	}
 
-	public void swapSelection() {
+	public Action swapSelection() {
 		if (!twoSelected())
 			throw new SelectionException("Two cards need to be open.");
 
-		checkAction(Action.swap(getFirstSelectedIndex(),
-				getSecondSelectedIndex()));
+		final Action action = Action.swap(getFirstSelectedIndex(),
+				getSecondSelectedIndex());
+		checkAction(action);
 		final Card<T> left = cards.get(getFirstSelectedIndex());
 		final Card<T> right = cards.get(getSecondSelectedIndex());
 		cards.set(getFirstSelectedIndex(), right);
@@ -127,19 +130,23 @@ public class Cards<T extends Comparable<T>> {
 			right.marked = leftMarked;
 		}
 		stat.swapCount++;
+		return action;
 	}
 
-	public void togglePin(int index) {
+	public Action togglePin(int index) {
 		if (pinIndex == -1 || pinIndex != index) {
-			checkAction(Action.pin(index));
+			final Action action = Action.pin(index);
+			checkAction(action);
 			if (pinIndex != -1)
 				cards.get(pinIndex).pinned = false;
 			cards.get(index).pinned = true;
 			pinIndex = index;
+			return action;
 		} else {
 			cards.get(pinIndex).pinned = false;
 			pinIndex = -1;
 		}
+		return null;
 	}
 
 	public void toggleMark(int index) {
@@ -199,7 +206,7 @@ public class Cards<T extends Comparable<T>> {
 
 	public void reset() {
 		Collections.shuffle(values);
-		DEBUGLOG.info("Generated values: " + values);
+		DEBUGLOG.fine("Generated values: " + values);
 		cards.clear();
 		for (T value : values) {
 			cards.add(new Card<>(value));
@@ -242,14 +249,17 @@ public class Cards<T extends Comparable<T>> {
 			} else {
 				stat.errorCount++;
 				throw new SelectionException(
-						"Algorithm would do the following instead: " + exp + "!");
+						"Algorithm would do the following instead: " + exp
+								+ "!");
 			}
 		} else if (!sort.getCurrent().allowsMoreActions()) {
 			throw new SelectionException("No more actions necessary!");
 		}
 	}
 
-	private class Statistics {
+	private class Statistics implements Serializable {
+		private static final long serialVersionUID = 1077686492906771786L;
+		
 		public int errorCount = 0;
 		public int swapCount = 0;
 		public int compareCount = 0;

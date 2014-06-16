@@ -3,6 +3,7 @@ package at.jku.paugujooksik.sort;
 import java.util.List;
 
 public class BubbleSort<T extends Comparable<T>> extends SortAlgorithm<T> {
+	private static final long serialVersionUID = -7956968455697337445L;
 
 	@Override
 	public List<Action> getActions(List<T> values) {
@@ -31,7 +32,7 @@ public class BubbleSort<T extends Comparable<T>> extends SortAlgorithm<T> {
 			actions.add(Action.mark(max--));
 		}
 		
-		DEBUGLOG.info("BubbleSort sorted the values " + values);
+		DEBUGLOG.fine("BubbleSort sorted the values " + values);
 		assert isListSorted(a);
 		return actions;
 	}
