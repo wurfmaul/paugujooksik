@@ -6,6 +6,7 @@ import static at.jku.paugujooksik.gui.ResourceLoader.GRAY_CHECK_ICON;
 import static at.jku.paugujooksik.gui.ResourceLoader.GRAY_PIN_ICON;
 import static at.jku.paugujooksik.gui.ResourceLoader.ROTATED_PIN_ICON;
 import static at.jku.paugujooksik.gui.ResourceLoader.loadIcon;
+import static at.jku.paugujooksik.logic.Toolkit.DEFAULT_FONT_BOLD;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -51,8 +52,7 @@ public class CardPanel extends AbstractPanel {
 		}
 		label = new JLabel(DEFAULT_CARD_TEXT, JLabel.CENTER);
 		{
-			label.setFont(ClientGUI.DEFAULT_FONT_BOLD
-					.deriveFont(FONT_SIZE_ONECHAR));
+			label.setFont(DEFAULT_FONT_BOLD.deriveFont(FONT_SIZE_ONECHAR));
 			add(label, BorderLayout.CENTER);
 		}
 		pin = new JToggleButton();
@@ -142,7 +142,7 @@ public class CardPanel extends AbstractPanel {
 				size = FONT_SIZE_THREECHAR;
 
 		}
-		label.setFont(ClientGUI.DEFAULT_FONT_BOLD.deriveFont(size));
+		label.setFont(DEFAULT_FONT_BOLD.deriveFont(size));
 		label.setText(text);
 	}
 }

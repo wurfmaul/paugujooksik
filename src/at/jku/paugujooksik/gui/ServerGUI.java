@@ -5,6 +5,8 @@ import static at.jku.paugujooksik.gui.ResourceLoader.loadIcon;
 import static at.jku.paugujooksik.logic.Configuration.DEFAULT_SIZE;
 import static at.jku.paugujooksik.logic.Configuration.MAX_SIZE;
 import static at.jku.paugujooksik.logic.Configuration.MIN_SIZE;
+import static at.jku.paugujooksik.logic.Toolkit.DEFAULT_FONT;
+import static at.jku.paugujooksik.logic.Toolkit.DEFAULT_FONT_BOLD;
 
 import java.awt.Dimension;
 import java.awt.EventQueue;

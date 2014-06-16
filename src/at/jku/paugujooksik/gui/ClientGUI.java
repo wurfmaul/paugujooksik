@@ -4,6 +4,8 @@ import static at.jku.paugujooksik.gui.ResourceLoader.ERROR_SND;
 import static at.jku.paugujooksik.gui.ResourceLoader.loadClip;
 import static at.jku.paugujooksik.logic.Configuration.MAX_SIZE;
 import static at.jku.paugujooksik.logic.Configuration.MIN_SIZE;
+import static at.jku.paugujooksik.logic.Toolkit.DEFAULT_FONT;
+import static at.jku.paugujooksik.logic.Toolkit.DEFAULT_FONT_BOLD;
 
 import java.awt.Color;
 import java.awt.Component;
