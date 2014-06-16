@@ -42,7 +42,6 @@ import at.jku.paugujooksik.server.ServerControl;
 import at.jku.paugujooksik.server.ServerControlImpl;
 
 public class ServerGUI extends AbstractGUI {
-	private static final long serialVersionUID = 4574412527923406385L;
 	private static final String HOST_IP;
 	private static final int HOST_PORT = 1099;
 
@@ -265,7 +264,9 @@ public class ServerGUI extends AbstractGUI {
 				final int size = sldrCfgSize.getValue();
 				config = Configuration.generate(mode, type, sortIdx, size);
 				running = true;
-				// TODO presenter frame
+				
+				//XXX presenter frame
+				Presenter.initAndShow(frame, ServerGUI.this);
 			}
 		});
 		frame.getContentPane().add(btnPlay, gbcBtnPlay);
@@ -326,30 +327,6 @@ public class ServerGUI extends AbstractGUI {
 	public void unregister(String name) {
 		registeredClients.remove(name);
 		updatePlayerList();
-	}
-
-	@Override
-	public void performPin(int index) {
-		// TODO Auto-generated method stub
-		System.out.println("server pin");
-	}
-
-	@Override
-	public void performMark(int index) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void performSelect(int index) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void performSwap() {
-		// TODO Auto-generated method stub
-
 	}
 
 	/**

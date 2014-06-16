@@ -3,6 +3,8 @@ package at.jku.paugujooksik.gui;
 import java.awt.Font;
 import java.awt.FontFormatException;
 import java.awt.GraphicsEnvironment;
+import java.awt.Image;
+import java.awt.Toolkit;
 import java.io.IOException;
 import java.net.URL;
 import java.util.logging.Logger;
@@ -21,6 +23,7 @@ public class ResourceLoader {
 	private static final String SNDDIR = "/snd/";
 
 	public static final String SWAP_ICON = "swap.png";
+	public static final String SWAP_ICON_SMALL = "swap_small.png";
 	public static final String GRAY_PIN_ICON = "pin-grey.png";
 	public static final String BLACK_PIN_ICON = "pin.png";
 	public static final String ROTATED_PIN_ICON = "pin-rot.png";
@@ -29,6 +32,8 @@ public class ResourceLoader {
 	public static final String PLAY_ICON = "play.png";
 	public static final String PLAY_ICON_SMALL = "play_small.png";
 	public static final String STOP_ICON_SMALL = "stop_small.png";
+	public static final String COMPARE_ICON = "compare.png";
+	public static final String ERROR_ICON = "error.png";
 	
 	public static final String SANS_FONT = "DejaVuSans";
 	public static final String BOLD_SANS_FONT = "DejaVuSans-Bold";
@@ -49,6 +54,11 @@ public class ResourceLoader {
 			DEBUGLOG.severe("Could not load icon '" + filename + "'!");
 		}
 		return new ImageIcon(res);
+	}
+	
+	public static Image loadImage(String filename) {
+		final URL res = AbstractPanel.class.getResource(ICONDIR + filename);
+		return Toolkit.getDefaultToolkit().createImage(res);
 	}
 	
 	public static Clip loadClip(String filename) {

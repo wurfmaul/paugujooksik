@@ -1,6 +1,6 @@
 package at.jku.paugujooksik.gui;
 
-import static at.jku.paugujooksik.gui.ResourceLoader.SWAP_ICON;
+import static at.jku.paugujooksik.gui.ResourceLoader.SWAP_ICON_SMALL;
 import static at.jku.paugujooksik.gui.ResourceLoader.loadIcon;
 
 import java.awt.Graphics;
@@ -54,7 +54,7 @@ public class SwapPanel extends AbstractPanel {
 		private static final long serialVersionUID = -6368213501613529319L;
 
 		public SwapButton() {
-			super(loadIcon(SWAP_ICON));
+			super(loadIcon(SWAP_ICON_SMALL));
 
 			addMouseListener(new MouseAdapter() {
 				@Override

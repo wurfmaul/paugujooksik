@@ -39,27 +39,26 @@ import at.jku.paugujooksik.server.ServerControl;
 import at.jku.paugujooksik.sort.Action;
 import at.jku.paugujooksik.sort.SortAlgorithm;
 
-public class ClientGUI extends AbstractGUI {
-	private static final long serialVersionUID = -4975119227591393961L;
-
+public class ClientGUI extends AbstractGUI implements CardSetHandler {
 	private final boolean clientMode;
 
 	private SwapPanel pnlSwap;
 	private JTextPane txtStats;
 	private JLabel lblTitle;
 	private JTextPane txtHint;
-	
-	private ServerControl pres;
+
+	private ServerControl controler;
 	private String name;
+	private CardSet cardSet;
 	private int size;
 
 	private ClientGUI(boolean clientMode) {
 		this.clientMode = clientMode;
-		
+
 		if (clientMode) {
 			ConnectionDialog.init(frame, this);
 			try {
-				config = pres.getConfig();
+				config = controler.getConfig();
 			} catch (RemoteException e) {
 				// TODO error msg
 				e.printStackTrace();
@@ -89,14 +88,14 @@ public class ClientGUI extends AbstractGUI {
 			cards.selectAll();
 			updateComponents();
 			for (int i = 0; i < size; i++) {
-				cardBtns.get(i).finish(!cards.isOnRightPosition(i));
+				cardSet.get(i).finish(!cards.isOnRightPosition(i));
 			}
 		}
 	}
 
 	private void updateComponents() {
 		for (int i = 0; i < size; i++) {
-			cardBtns.get(i).updateCard(cards.getCard(i));
+			cardSet.get(i).updateCard(cards.getCard(i));
 		}
 
 		pnlSwap.showButton(cards.twoSelected());
@@ -149,7 +148,7 @@ public class ClientGUI extends AbstractGUI {
 		gbcPnLCards.fill = GridBagConstraints.BOTH;
 		gbcPnLCards.gridx = 0;
 		gbcPnLCards.gridy = 1;
-		frame.getContentPane().add(initAndGetCardPanel(size), gbcPnLCards);
+		frame.getContentPane().add(cardSet, gbcPnLCards);
 
 		pnlSwap = new SwapPanel(this);
 		GridBagConstraints gbcPnlLines = new GridBagConstraints();
@@ -253,7 +252,8 @@ public class ClientGUI extends AbstractGUI {
 						public void actionPerformed(ActionEvent e) {
 							DEBUGLOG.config("Set algorithm to "
 									+ cards.sort.getAll().get(index));
-							config = Configuration.deriveWithNewSortIdx(config, index);
+							config = Configuration.deriveWithNewSortIdx(config,
+									index);
 							setupCards();
 							reset();
 						}
@@ -276,7 +276,8 @@ public class ClientGUI extends AbstractGUI {
 							@Override
 							public void actionPerformed(ActionEvent e) {
 								DEBUGLOG.config("Changed size to " + newSize);
-								config = Configuration.deriveWithNewSize(config, newSize);
+								config = Configuration.deriveWithNewSize(
+										config, newSize);
 								setupCards();
 								initialize();
 							}
@@ -301,7 +302,8 @@ public class ClientGUI extends AbstractGUI {
 							@Override
 							public void actionPerformed(ActionEvent e) {
 								DEBUGLOG.config("Changed type to " + type);
-								config = Configuration.deriveWithNewType(config, type);
+								config = Configuration.deriveWithNewType(
+										config, type);
 								setupCards();
 								initialize();
 							}
@@ -326,7 +328,8 @@ public class ClientGUI extends AbstractGUI {
 							@Override
 							public void actionPerformed(ActionEvent e) {
 								DEBUGLOG.config("Changed mode to " + mode);
-								config = Configuration.deriveWithNewMode(config, mode);
+								config = Configuration.deriveWithNewMode(
+										config, mode);
 								setupCards();
 								initialize();
 							}
@@ -342,7 +345,7 @@ public class ClientGUI extends AbstractGUI {
 		}
 		frame.setJMenuBar(menuBar);
 	}
-	
+
 	private void checkComponents() {
 		updateComponents();
 		checkFinish();
@@ -375,10 +378,21 @@ public class ClientGUI extends AbstractGUI {
 		sb.append(cards.getCompareCount());
 		txtStats.setText(sb.toString());
 	}
-	
+
 	private void setupCards() {
 		size = config.size;
 		cards = new Cards<>(config.values, config.algorithmIndex);
+		cardSet = new CardSet(size, this);
+	}
+
+	private void reportPresenter(Action action) {
+		if (clientMode) {
+			try {
+				controler.performAction(action);
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	public void performPin(int index) {
@@ -386,12 +400,9 @@ public class ClientGUI extends AbstractGUI {
 			try {
 				Action action = cards.togglePin(index);
 				clearErrors();
-				pres.performAction(action);
+				reportPresenter(action);
 			} catch (SelectionException e) {
 				reportError(e);
-			} catch (RemoteException e) {
-				// TODO error message
-				e.printStackTrace();
 			}
 			checkComponents();
 		}
@@ -399,8 +410,9 @@ public class ClientGUI extends AbstractGUI {
 
 	public void performMark(int index) {
 		try {
-			cards.toggleMark(index);
+			Action action = cards.toggleMark(index);
 			clearErrors();
+			reportPresenter(action);
 		} catch (SelectionException ex) {
 			reportError(ex);
 		}
@@ -409,9 +421,10 @@ public class ClientGUI extends AbstractGUI {
 
 	public void performSelect(int index) {
 		try {
-			cards.select(index);
+			Action action = cards.select(index);
 			updateStats();
 			clearErrors();
+			reportPresenter(action);
 		} catch (SelectionException ex) {
 			reportError(ex);
 		}
@@ -423,24 +436,21 @@ public class ClientGUI extends AbstractGUI {
 			Action action = cards.swapSelection();
 			clearErrors();
 			updateStats();
-			pres.performAction(action);
+			reportPresenter(action);
 		} catch (SelectionException ex) {
 			reportError(ex);
-		} catch (RemoteException e) {
-			// TODO error msg
-			e.printStackTrace();
 		}
 		checkComponents();
 	}
 
 	public int getLeftReference() {
-		final Component comp = cardBtns.get(cards.getFirstSelectedIndex())
+		final Component comp = cardSet.get(cards.getFirstSelectedIndex())
 				.getParent();
 		return comp.getLocation().x + comp.getWidth() / 2;
 	}
 
 	public int getRightReference() {
-		final Component comp = cardBtns.get(cards.getSecondSelectedIndex())
+		final Component comp = cardSet.get(cards.getSecondSelectedIndex())
 				.getParent();
 		return comp.getLocation().x + comp.getWidth() / 2;
 	}
@@ -458,13 +468,13 @@ public class ClientGUI extends AbstractGUI {
 	}
 
 	public void setPres(ServerControl pres) {
-		this.pres = pres;
+		this.controler = pres;
 	}
-	
+
 	public void quit() {
 		DEBUGLOG.info("Exiting game...");
 		try {
-			pres.unregister(name);
+			controler.unregister(name);
 		} catch (RemoteException | NullPointerException e) {
 		}
 		frame.dispose();

@@ -75,14 +75,15 @@ public class Cards<T extends Comparable<T>> {
 		return stat.compareCount;
 	}
 
-	public void select(int index) {
+	public Action select(int index) {
 		if (isSelected(index) && oneSelected()) {
 			// click twice at same card
 			cards.get(index).selected = false;
-			return;
+			return null; // TODO noAction ??
 		}
 
-		checkAction(Action.open(index));
+		Action action = Action.open(index);
+		checkAction(action);
 
 		if (twoSelected()) {
 			Card<T> left = cards.get(getFirstSelectedIndex());
@@ -95,7 +96,8 @@ public class Cards<T extends Comparable<T>> {
 
 		switch (getSelection().size()) {
 		case 1:
-			checkAction(Action.open(index, getSelectedIndex()));
+			action = Action.open(index, getSelectedIndex());
+			checkAction(action);
 			stat.compareCount++;
 		case 0:
 			cards.get(index).selected = true;
@@ -104,6 +106,7 @@ public class Cards<T extends Comparable<T>> {
 		default:
 			throw new SelectionException("Invalid index: " + index);
 		}
+		return action;
 	}
 
 	public Action swapSelection() {
@@ -149,15 +152,19 @@ public class Cards<T extends Comparable<T>> {
 		return null;
 	}
 
-	public void toggleMark(int index) {
+	public Action toggleMark(int index) {
 		final Card<T> card = cards.get(index);
+		Action action;
 		if (card.marked) {
-			checkAction(Action.unmark(index));
+			action = Action.unmark(index);
+			checkAction(action);
 			card.marked = false;
 		} else {
-			checkAction(Action.mark(index));
+			action = Action.mark(index);
+			checkAction(action);
 			card.marked = true;
 		}
+		return action;
 	}
 
 	public boolean isMarked(int index) {
