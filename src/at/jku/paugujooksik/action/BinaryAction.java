@@ -23,13 +23,7 @@ public final class BinaryAction extends Action {
 
 	@Override
 	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		sb.append(type);
-		sb.append(" of cards ");
-		sb.append(indexLeft + 1);
-		sb.append(" and ");
-		sb.append(indexRight + 1);
-		return sb.toString();
+		return String.format("%s cards %d and %d", type, indexLeft + 1, indexRight + 1);
 	}
 
 	@Override

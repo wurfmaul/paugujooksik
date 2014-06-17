@@ -16,6 +16,8 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
+import at.jku.paugujooksik.gui.client.ClientGUI;
+
 public class ResourceLoader {
 	private static final Logger DEBUGLOG = Logger.getLogger("DEBUG");
 	private static final String ICONDIR = "/img/";

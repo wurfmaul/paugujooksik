@@ -5,8 +5,8 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import at.jku.paugujooksik.gui.ClientGUI;
-import at.jku.paugujooksik.gui.ServerGUI;
+import at.jku.paugujooksik.gui.client.ClientGUI;
+import at.jku.paugujooksik.gui.server.ServerGUI;
 
 public class Paugujooksik {
 	private static final Logger DEBUGLOG = Logger.getLogger("DEBUG");

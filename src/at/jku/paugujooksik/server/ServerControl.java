@@ -12,6 +12,8 @@ public interface ServerControl extends Remote {
 
 	public Configuration<?> getConfig() throws RemoteException;
 
+	public void incErrorCount(String originId) throws RemoteException;
+
 	public boolean isRunning() throws RemoteException;
 
 	public void performAction(String originId, BinaryAction action) throws RemoteException;

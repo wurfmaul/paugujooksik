@@ -1,4 +1,4 @@
-package at.jku.paugujooksik.gui;
+package at.jku.paugujooksik.gui.server;
 
 import static at.jku.paugujooksik.gui.ResourceLoader.PLAY_ICON;
 import static at.jku.paugujooksik.gui.ResourceLoader.loadIcon;
@@ -23,6 +23,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -37,27 +38,26 @@ import javax.swing.JTextField;
 import javax.swing.UIManager;
 import javax.swing.border.BevelBorder;
 
-import at.jku.paugujooksik.action.BinaryAction;
-import at.jku.paugujooksik.action.UnaryAction;
 import at.jku.paugujooksik.logic.Configuration;
-import at.jku.paugujooksik.logic.ValueGenerator.Mode;
-import at.jku.paugujooksik.logic.ValueGenerator.Type;
+import at.jku.paugujooksik.logic.ValueGenerator.ValueMode;
+import at.jku.paugujooksik.logic.ValueGenerator.ValueType;
 import at.jku.paugujooksik.server.ServerControl;
 import at.jku.paugujooksik.server.ServerControlImpl;
 
-public class ServerGUI extends AbstractGUI {
+public class ServerGUI {
+	private static final Logger DEBUGLOG = Logger.getLogger("DEBUG");
 	private static final String HOST_IP;
 	private static final int HOST_PORT = 1099;
 
+	private final JFrame frame = new JFrame();
 	private final Set<String> registeredClients = new LinkedHashSet<>();
 
-	private boolean running = false;
-	private Presenter presenter;
+	private Presenter presenter = null;
 	private JButton btnPlay;
 	private JTextArea txtPlayers;
 	private JComboBox<Object> cbxCfgAlgo;
-	private JComboBox<Type> cbxCfgType;
-	private JComboBox<Mode> cbxCfgMode;
+	private JComboBox<ValueType> cbxCfgType;
+	private JComboBox<ValueMode> cbxCfgMode;
 	private JSlider sldrCfgSize;
 
 	static {
@@ -77,16 +77,6 @@ public class ServerGUI extends AbstractGUI {
 	public ServerGUI() {
 		setupRegistry();
 		initialize();
-	}
-
-	private void setupRegistry() {
-		try {
-			ServerControl p = new ServerControlImpl(this);
-			Registry reg = LocateRegistry.createRegistry(HOST_PORT);
-			reg.bind("pres", p);
-		} catch (RemoteException | AlreadyBoundException e) {
-			DEBUGLOG.severe("Could not share object!");
-		}
 	}
 
 	private void initialize() {
@@ -191,7 +181,7 @@ public class ServerGUI extends AbstractGUI {
 		gbcLblCfgAlgo.gridy = 4;
 		frame.getContentPane().add(lblCfgAlgo, gbcLblCfgAlgo);
 
-		cbxCfgAlgo = new JComboBox<>(cards.sort.getAll().toArray());
+		cbxCfgAlgo = new JComboBox<>(Configuration.getAlgorithmList());
 		GridBagConstraints gbcCbxCfgAlgo = new GridBagConstraints();
 		gbcCbxCfgAlgo.insets = new Insets(0, 0, 5, 5);
 		gbcCbxCfgAlgo.fill = GridBagConstraints.HORIZONTAL;
@@ -207,7 +197,7 @@ public class ServerGUI extends AbstractGUI {
 		gbcLblCfgType.gridy = 5;
 		frame.getContentPane().add(lblCfgType, gbcLblCfgType);
 
-		cbxCfgType = new JComboBox<>(Type.values());
+		cbxCfgType = new JComboBox<>(ValueType.values());
 		GridBagConstraints gbcCbxCfgType = new GridBagConstraints();
 		gbcCbxCfgType.insets = new Insets(0, 0, 5, 5);
 		gbcCbxCfgType.fill = GridBagConstraints.HORIZONTAL;
@@ -223,7 +213,7 @@ public class ServerGUI extends AbstractGUI {
 		gbcLblCfgMode.gridy = 6;
 		frame.getContentPane().add(lblCfgMode, gbcLblCfgMode);
 
-		cbxCfgMode = new JComboBox<>(Mode.values());
+		cbxCfgMode = new JComboBox<>(ValueMode.values());
 		GridBagConstraints gbcCbxCfgMode = new GridBagConstraints();
 		gbcCbxCfgMode.insets = new Insets(0, 0, 5, 5);
 		gbcCbxCfgMode.fill = GridBagConstraints.HORIZONTAL;
@@ -253,6 +243,7 @@ public class ServerGUI extends AbstractGUI {
 		gbcSldrSize.gridy = 7;
 		frame.getContentPane().add(sldrCfgSize, gbcSldrSize);
 
+		// TODO option to close the presenter on stop buttons
 		btnPlay = new JButton(loadIcon(PLAY_ICON));
 		btnPlay.setEnabled(false);
 		GridBagConstraints gbcBtnPlay = new GridBagConstraints();
@@ -263,17 +254,18 @@ public class ServerGUI extends AbstractGUI {
 		btnPlay.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				final Mode mode = (Mode) cbxCfgMode.getSelectedItem();
-				final Type type = (Type) cbxCfgType.getSelectedItem();
+				final ValueMode mode = (ValueMode) cbxCfgMode.getSelectedItem();
+				final ValueType type = (ValueType) cbxCfgType.getSelectedItem();
 				final int sortIdx = cbxCfgAlgo.getSelectedIndex();
 				final int size = sldrCfgSize.getValue();
-				config = Configuration.generate(mode, type, sortIdx, size);
-				running = true;
+				final Configuration<?> config = Configuration.generate(mode,
+						type, sortIdx, size);
 
 				EventQueue.invokeLater(new Runnable() {
 					public void run() {
 						try {
-							presenter = new Presenter(frame, ServerGUI.this);
+							presenter = new Presenter(frame, config,
+									registeredClients);
 						} catch (Exception e) {
 							e.printStackTrace();
 						}
@@ -314,7 +306,6 @@ public class ServerGUI extends AbstractGUI {
 
 		if (registeredClients.size() == 0) {
 			sb.append("Waiting for players...");
-			running = false;
 			btnPlay.setEnabled(false);
 		} else {
 			btnPlay.setEnabled(true);
@@ -322,38 +313,18 @@ public class ServerGUI extends AbstractGUI {
 		txtPlayers.setText(sb.toString());
 	}
 
-	public Configuration<?> getConfig() {
-		return config;
-	}
-
-	public boolean isRunning() {
-		return running;
-	}
-
-	public void performAction(String originId, UnaryAction action) {
-		switch (action.type) {
-		case COMPARE:
-			presenter.performSelect(originId, action.index);
-			break;
-		case MARK:
-			presenter.performMark(originId, action.index);
-			break;
-		case PIN:
-			presenter.performPin(originId, action.index);
-			break;
-		default:
-			DEBUGLOG.severe("Cannot perform unary action: '" + action + "'");
+	private void setupRegistry() {
+		try {
+			ServerControl p = new ServerControlImpl(this);
+			Registry reg = LocateRegistry.createRegistry(HOST_PORT);
+			reg.bind("pres", p);
+		} catch (RemoteException | AlreadyBoundException e) {
+			DEBUGLOG.severe("Could not share object!");
 		}
 	}
 
-	public void performAction(String originId, BinaryAction action) {
-		switch (action.type) {
-		case SWAP:
-			presenter.performSwap(originId);
-			break;
-		default:
-			DEBUGLOG.severe("Cannot perform binary action: '" + action + "'");
-		}
+	public Presenter getPresenter() {
+		return presenter;
 	}
 
 	public boolean register(String name) {
@@ -365,6 +336,7 @@ public class ServerGUI extends AbstractGUI {
 	public void unregister(String name) {
 		registeredClients.remove(name);
 		updatePlayerList();
+		// TODO notify presenter!
 	}
 
 	/**

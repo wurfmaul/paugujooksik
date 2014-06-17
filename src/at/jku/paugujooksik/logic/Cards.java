@@ -1,6 +1,5 @@
 package at.jku.paugujooksik.logic;
 
-import java.io.Serializable;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -8,7 +7,6 @@ import java.util.logging.Logger;
 
 import at.jku.paugujooksik.action.Action;
 import at.jku.paugujooksik.gui.SelectionException;
-import at.jku.paugujooksik.sort.SortConfig;
 
 public class Cards<T extends Comparable<T>> {
 	private static final Logger DEBUGLOG = Logger.getLogger("DEBUG");
@@ -16,7 +14,8 @@ public class Cards<T extends Comparable<T>> {
 	private static final boolean MOVE_MARK = false;
 
 	private final Statistics stat = new Statistics();
-	private final List<Card<T>> cards = new LinkedList<>();
+	private final List<Card<T>> cardList = new LinkedList<>();
+	private final Configuration<T> config;
 	private final List<T> values;
 	private final List<T> sortedValues;
 
@@ -24,17 +23,15 @@ public class Cards<T extends Comparable<T>> {
 	private int curAction;
 	private int pinIndex = -1;
 
-	public final SortConfig<T> sort;
-
-	public Cards(List<T> values, int sortAlgoIndex) {
-		this.values = values;
+	public Cards(Configuration<T> config) {
+		this.config = config;
+		this.values = config.values;
 		this.sortedValues = getSortedCopy(values);
-		this.sort = new SortConfig<>(sortAlgoIndex);
-		reset();
+		reset(false);
 	}
 
 	public boolean allMarked() {
-		for (Card<T> card : cards) {
+		for (Card<T> card : cardList) {
 			if (!card.marked)
 				return false;
 		}
@@ -42,7 +39,7 @@ public class Cards<T extends Comparable<T>> {
 	}
 
 	public Card<T> getCard(int index) {
-		return cards.get(index);
+		return cardList.get(index);
 	}
 
 	public int getSelectedIndex() {
@@ -63,6 +60,10 @@ public class Cards<T extends Comparable<T>> {
 		return getSelection().get(1);
 	}
 
+	public void incErrorCount() {
+		stat.errorCount++;
+	}
+
 	public int getErrorCount() {
 		return stat.errorCount;
 	}
@@ -78,16 +79,16 @@ public class Cards<T extends Comparable<T>> {
 	public Action select(int index) {
 		if (isSelected(index) && oneSelected()) {
 			// click twice at same card
-			cards.get(index).selected = false;
-			return null; // TODO noAction ??
+			cardList.get(index).selected = false;
+			return null;
 		}
 
 		Action action = Action.open(index);
 		checkAction(action);
 
 		if (twoSelected()) {
-			Card<T> left = cards.get(getFirstSelectedIndex());
-			Card<T> right = cards.get(getSecondSelectedIndex());
+			Card<T> left = cardList.get(getFirstSelectedIndex());
+			Card<T> right = cardList.get(getSecondSelectedIndex());
 			if (!left.pinned)
 				left.selected = false;
 			if (!right.pinned)
@@ -100,7 +101,7 @@ public class Cards<T extends Comparable<T>> {
 			checkAction(action);
 			stat.compareCount++;
 		case 0:
-			cards.get(index).selected = true;
+			cardList.get(index).selected = true;
 			break;
 
 		default:
@@ -116,10 +117,10 @@ public class Cards<T extends Comparable<T>> {
 		final Action action = Action.swap(getFirstSelectedIndex(),
 				getSecondSelectedIndex());
 		checkAction(action);
-		final Card<T> left = cards.get(getFirstSelectedIndex());
-		final Card<T> right = cards.get(getSecondSelectedIndex());
-		cards.set(getFirstSelectedIndex(), right);
-		cards.set(getSecondSelectedIndex(), left);
+		final Card<T> left = cardList.get(getFirstSelectedIndex());
+		final Card<T> right = cardList.get(getSecondSelectedIndex());
+		cardList.set(getFirstSelectedIndex(), right);
+		cardList.set(getSecondSelectedIndex(), left);
 		if (!MOVE_PIN) {
 			boolean leftPinned = left.pinned;
 			boolean rightPinned = right.pinned;
@@ -141,19 +142,19 @@ public class Cards<T extends Comparable<T>> {
 			final Action action = Action.pin(index);
 			checkAction(action);
 			if (pinIndex != -1)
-				cards.get(pinIndex).pinned = false;
-			cards.get(index).pinned = true;
+				cardList.get(pinIndex).pinned = false;
+			cardList.get(index).pinned = true;
 			pinIndex = index;
 			return action;
 		} else {
-			cards.get(pinIndex).pinned = false;
+			cardList.get(pinIndex).pinned = false;
 			pinIndex = -1;
 		}
 		return null;
 	}
 
 	public Action toggleMark(int index) {
-		final Card<T> card = cards.get(index);
+		final Card<T> card = cardList.get(index);
 		Action action;
 		if (card.marked) {
 			action = Action.unmark(index);
@@ -168,19 +169,19 @@ public class Cards<T extends Comparable<T>> {
 	}
 
 	public boolean isMarked(int index) {
-		return cards.get(index).marked;
+		return cardList.get(index).marked;
 	}
 
 	public boolean isOnRightPosition(int index) {
-		return cards.get(index).value.equals(sortedValues.get(index));
+		return cardList.get(index).value.equals(sortedValues.get(index));
 	}
 
 	public boolean isPinned(int index) {
-		return cards.get(index).pinned;
+		return cardList.get(index).pinned;
 	}
 
 	public boolean isSelected(int index) {
-		return cards.get(index).selected;
+		return cardList.get(index).selected;
 	}
 
 	public boolean isSorted() {
@@ -206,19 +207,20 @@ public class Cards<T extends Comparable<T>> {
 	public void selectAll() {
 		assert allMarked();
 
-		for (Card<T> c : cards) {
+		for (Card<T> c : cardList) {
 			c.selected = true;
 		}
 	}
 
-	public void reset() {
-		Collections.shuffle(values);
+	public void reset(boolean shuffle) {
+		if (shuffle)
+			Collections.shuffle(values);
 		DEBUGLOG.fine("Generated values: " + values);
-		cards.clear();
+		cardList.clear();
 		for (T value : values) {
-			cards.add(new Card<>(value));
+			cardList.add(new Card<>(value));
 		}
-		expectedActions = sort.getCurrent().getActions(values);
+		expectedActions = config.getAlgorithm().getActions(values);
 		curAction = 0;
 		stat.reset();
 	}
@@ -234,8 +236,8 @@ public class Cards<T extends Comparable<T>> {
 
 	private List<Integer> getSelection() {
 		final List<Integer> sel = new LinkedList<>();
-		for (int i = 0; i < cards.size(); i++) {
-			if (cards.get(i).selected) {
+		for (int i = 0; i < cardList.size(); i++) {
+			if (cardList.get(i).selected) {
 				sel.add(i);
 			}
 		}
@@ -255,18 +257,14 @@ public class Cards<T extends Comparable<T>> {
 				}
 			} else {
 				stat.errorCount++;
-				throw new SelectionException(
-						"Algorithm would do the following instead: " + exp
-								+ "!");
+				throw new SelectionException("You should " + exp + " instead!");
 			}
-		} else if (!sort.getCurrent().allowsMoreActions()) {
+		} else if (!config.getAlgorithm().allowsMoreActions()) {
 			throw new SelectionException("No more actions necessary!");
 		}
 	}
 
-	private class Statistics implements Serializable {
-		private static final long serialVersionUID = 1077686492906771786L;
-		
+	private class Statistics {
 		public int errorCount = 0;
 		public int swapCount = 0;
 		public int compareCount = 0;

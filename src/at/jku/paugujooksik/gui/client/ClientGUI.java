@@ -1,4 +1,4 @@
-package at.jku.paugujooksik.gui;
+package at.jku.paugujooksik.gui.client;
 
 import static at.jku.paugujooksik.gui.ResourceLoader.ERROR_SND;
 import static at.jku.paugujooksik.gui.ResourceLoader.loadClip;
@@ -19,9 +19,11 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.rmi.RemoteException;
+import java.util.logging.Logger;
 
 import javax.sound.sampled.Clip;
 import javax.swing.ButtonGroup;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -36,21 +38,29 @@ import javax.swing.WindowConstants;
 import at.jku.paugujooksik.action.Action;
 import at.jku.paugujooksik.action.BinaryAction;
 import at.jku.paugujooksik.action.UnaryAction;
+import at.jku.paugujooksik.gui.CardSet;
+import at.jku.paugujooksik.gui.CardSetHandler;
+import at.jku.paugujooksik.gui.SelectionException;
 import at.jku.paugujooksik.logic.Cards;
 import at.jku.paugujooksik.logic.Configuration;
-import at.jku.paugujooksik.logic.ValueGenerator.Mode;
-import at.jku.paugujooksik.logic.ValueGenerator.Type;
+import at.jku.paugujooksik.logic.ValueGenerator.ValueMode;
+import at.jku.paugujooksik.logic.ValueGenerator.ValueType;
 import at.jku.paugujooksik.server.ServerControl;
 import at.jku.paugujooksik.sort.SortAlgorithm;
 
-public class ClientGUI extends AbstractGUI implements CardSetHandler {
+public class ClientGUI implements CardSetHandler {
+	private static final Logger DEBUGLOG = Logger.getLogger("DEBUG");
+
 	private final boolean clientMode;
+	private final JFrame frame = new JFrame();
 
 	private SwapPanel pnlSwap;
 	private JTextPane txtStats;
 	private JLabel lblTitle;
 	private JTextPane txtHint;
 
+	private Configuration<?> config;
+	private Cards<?> cards;
 	private String name;
 	private ServerControl controler;
 	private CardSet cardSet;
@@ -74,50 +84,9 @@ public class ClientGUI extends AbstractGUI implements CardSetHandler {
 	}
 
 	private void reset() {
-		cards.reset();
+		cards.reset(clientMode);
 		checkComponents();
 		updateStats();
-	}
-
-	private void checkFinish() {
-		if (cards.allMarked()) {
-			if (cards.isSorted()) {
-				txtHint.setForeground(Color.GREEN);
-				txtHint.setText("Congratulations!");
-			} else {
-				txtHint.setForeground(Color.RED);
-				txtHint.setText("There is something wrong!");
-			}
-			pnlSwap.removeAll();
-			cards.selectAll();
-			updateComponents();
-			for (int i = 0; i < size; i++) {
-				cardSet.get(i).finish(!cards.isOnRightPosition(i));
-			}
-		}
-	}
-
-	private void updateComponents() {
-		for (int i = 0; i < size; i++) {
-			cardSet.get(i).updateCard(cards.getCard(i));
-		}
-
-		pnlSwap.showButton(cards.twoSelected());
-		lblTitle.setText(printConfig());
-		frame.repaint();
-	}
-
-	private String printConfig() {
-		final StringBuilder sb = new StringBuilder();
-		sb.append(cards.sort.getCurrent().toString());
-		sb.append(" (");
-		sb.append(size);
-		sb.append(" ");
-		sb.append(config.mode);
-		sb.append(" ");
-		sb.append(config.type);
-		sb.append(")");
-		return sb.toString();
 	}
 
 	/**
@@ -126,7 +95,7 @@ public class ClientGUI extends AbstractGUI implements CardSetHandler {
 	private void initialize() {
 		frame.getContentPane().removeAll();
 
-		lblTitle = new JLabel(printConfig());
+		lblTitle = new JLabel(config.toString());
 		lblTitle.setFont(DEFAULT_FONT.deriveFont(30f));
 		GridBagConstraints gbcLblTitle = new GridBagConstraints();
 		gbcLblTitle.fill = GridBagConstraints.BOTH;
@@ -198,12 +167,8 @@ public class ClientGUI extends AbstractGUI implements CardSetHandler {
 		gblFrame.columnWidths = new int[] { 508, 190, 0 };
 		gblFrame.rowHeights = new int[] { 90, 160, 90, 10, 90, 0 };
 		gblFrame.columnWeights = new double[] { 1.0, 0.0, Double.MIN_VALUE };
-		if (GROW_CARDS)
-			gblFrame.rowWeights = new double[] { 0.0, 1.0, 0.0, 0.0, 0.0,
-					Double.MIN_VALUE };
-		else
-			gblFrame.rowWeights = new double[] { 0.0, 0.0, 0.0, 1.0, 0.0,
-					Double.MIN_VALUE };
+		gblFrame.rowWeights = new double[] { 0.0, 0.0, 0.0, 1.0, 0.0,
+				Double.MIN_VALUE };
 		frame.getContentPane().setLayout(gblFrame);
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
@@ -246,20 +211,22 @@ public class ClientGUI extends AbstractGUI implements CardSetHandler {
 			{
 				ButtonGroup algorithmGroup = new ButtonGroup();
 				int idx = 0;
-				for (SortAlgorithm<?> sort : cards.sort.getAll()) {
+				for (SortAlgorithm<?> sort : config.getAllAlgorithms()) {
 					final int index = idx++;
 					final JMenuItem item = new JRadioButtonMenuItem(
 							sort.toString());
-					item.setSelected(cards.sort.getCurrent().equals(sort));
+					item.setSelected(config.getAlgorithm().equals(sort));
 					item.addActionListener(new ActionListener() {
 						@Override
 						public void actionPerformed(ActionEvent e) {
 							DEBUGLOG.config("Set algorithm to "
-									+ cards.sort.getAll().get(index));
+									+ config.getAllAlgorithms().get(index));
 							config = Configuration.deriveWithNewSortIdx(config,
 									index);
 							setupCards();
 							reset();
+							// FIXME when finished, reset fails (e.g. all stays
+							// green)
 						}
 					});
 					mnConfig.add(item);
@@ -295,10 +262,10 @@ public class ClientGUI extends AbstractGUI implements CardSetHandler {
 				JMenu mnType = new JMenu("Type");
 				{
 					final ButtonGroup typeGroup = new ButtonGroup();
-					final Type[] types = Type.values();
+					final ValueType[] types = ValueType.values();
 
 					for (int i = 0; i < types.length; i++) {
-						final Type type = types[i];
+						final ValueType type = types[i];
 						JMenuItem item = new JRadioButtonMenuItem(
 								type.toString());
 						item.setSelected(type == config.type);
@@ -321,10 +288,10 @@ public class ClientGUI extends AbstractGUI implements CardSetHandler {
 				JMenu mnMode = new JMenu("Mode");
 				{
 					final ButtonGroup kindGroup = new ButtonGroup();
-					final Mode[] modes = Mode.values();
+					final ValueMode[] modes = ValueMode.values();
 
 					for (int i = 0; i < modes.length; i++) {
-						final Mode mode = modes[i];
+						final ValueMode mode = modes[i];
 						JMenuItem item = new JRadioButtonMenuItem(
 								mode.toString());
 						item.setSelected(mode == config.mode);
@@ -350,6 +317,22 @@ public class ClientGUI extends AbstractGUI implements CardSetHandler {
 		frame.setJMenuBar(menuBar);
 	}
 
+	private void checkFinish() {
+		if (cards.allMarked()) {
+			if (cards.isSorted()) {
+				txtHint.setForeground(Color.GREEN);
+				txtHint.setText("Congratulations!");
+			} else {
+				txtHint.setForeground(Color.RED);
+				txtHint.setText("There is something wrong!");
+			}
+			pnlSwap.removeAll();
+			cards.selectAll();
+			updateComponents();
+			cardSet.finishCards(cards);
+		}
+	}
+
 	private void checkComponents() {
 		updateComponents();
 		checkFinish();
@@ -368,6 +351,15 @@ public class ClientGUI extends AbstractGUI implements CardSetHandler {
 			clip.start();
 
 		updateStats();
+		if (clientMode)
+			reportErrorToPresenter();
+	}
+
+	private void updateComponents() {
+		cardSet.updateCards(cards);
+		pnlSwap.showButton(cards.twoSelected());
+		lblTitle.setText(config.toString());
+		frame.repaint();
 	}
 
 	private void updateStats() {
@@ -385,11 +377,19 @@ public class ClientGUI extends AbstractGUI implements CardSetHandler {
 
 	private void setupCards() {
 		size = config.size;
-		cards = new Cards<>(config.values, config.algorithmIndex);
-		cardSet = new CardSet(size, this, name);
+		cards = new Cards<>(config);
+		cardSet = new CardSet(size, this, name, true);
 	}
 
-	private void reportPresenter(Action action) {
+	private void reportErrorToPresenter() {
+		try {
+			controler.incErrorCount(name);
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void reportActionToPresenter(Action action) {
 		if (clientMode) {
 			try { // TODO bad style
 				if (action instanceof UnaryAction)
@@ -408,7 +408,7 @@ public class ClientGUI extends AbstractGUI implements CardSetHandler {
 			try {
 				Action action = cards.togglePin(index);
 				clearErrors();
-				reportPresenter(action);
+				reportActionToPresenter(action);
 			} catch (SelectionException e) {
 				reportError(e);
 			}
@@ -421,7 +421,7 @@ public class ClientGUI extends AbstractGUI implements CardSetHandler {
 		try {
 			Action action = cards.toggleMark(index);
 			clearErrors();
-			reportPresenter(action);
+			reportActionToPresenter(action);
 		} catch (SelectionException ex) {
 			reportError(ex);
 		}
@@ -434,7 +434,7 @@ public class ClientGUI extends AbstractGUI implements CardSetHandler {
 			Action action = cards.select(index);
 			updateStats();
 			clearErrors();
-			reportPresenter(action);
+			reportActionToPresenter(action);
 		} catch (SelectionException ex) {
 			reportError(ex);
 		}
@@ -447,7 +447,7 @@ public class ClientGUI extends AbstractGUI implements CardSetHandler {
 			Action action = cards.swapSelection();
 			clearErrors();
 			updateStats();
-			reportPresenter(action);
+			reportActionToPresenter(action);
 		} catch (SelectionException ex) {
 			reportError(ex);
 		}

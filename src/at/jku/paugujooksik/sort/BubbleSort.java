@@ -31,7 +31,7 @@ public class BubbleSort<T extends Comparable<T>> extends SortAlgorithm<T> {
 			max--;
 		}
 		while (max >= 0) {
-			actions.add(Action.mark(max--));
+			actions.add(Action.mark(max--)); // FIXME mark last if the last two cards are swapped!
 		}
 		
 		DEBUGLOG.fine("BubbleSort sorted the values " + values);

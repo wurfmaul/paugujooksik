@@ -5,7 +5,7 @@ import java.rmi.server.UnicastRemoteObject;
 
 import at.jku.paugujooksik.action.BinaryAction;
 import at.jku.paugujooksik.action.UnaryAction;
-import at.jku.paugujooksik.gui.ServerGUI;
+import at.jku.paugujooksik.gui.server.ServerGUI;
 import at.jku.paugujooksik.logic.Configuration;
 
 public class ServerControlImpl extends UnicastRemoteObject implements
@@ -25,24 +25,29 @@ public class ServerControlImpl extends UnicastRemoteObject implements
 
 	@Override
 	public Configuration<?> getConfig() throws RemoteException {
-		return server.getConfig();
+		return server.getPresenter().getConfig();
+	}
+
+	@Override
+	public void incErrorCount(String originId) throws RemoteException {
+		server.getPresenter().incErrorCount(originId);
 	}
 
 	@Override
 	public boolean isRunning() throws RemoteException {
-		return server.isRunning();
+		return server.getPresenter() != null;
 	}
 
 	@Override
 	public void performAction(String originId, UnaryAction action)
 			throws RemoteException {
-		server.performAction(originId, action);
+		server.getPresenter().performAction(originId, action);
 	}
 
 	@Override
 	public void performAction(String originId, BinaryAction action)
 			throws RemoteException {
-		server.performAction(originId, action);
+		server.getPresenter().performAction(originId, action);
 	}
 
 	@Override

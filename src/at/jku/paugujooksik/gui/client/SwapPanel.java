@@ -1,4 +1,4 @@
-package at.jku.paugujooksik.gui;
+package at.jku.paugujooksik.gui.client;
 
 import static at.jku.paugujooksik.gui.ResourceLoader.SWAP_ICON_SMALL;
 import static at.jku.paugujooksik.gui.ResourceLoader.loadIcon;
@@ -9,6 +9,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 import javax.swing.JButton;
+
+import at.jku.paugujooksik.gui.AbstractPanel;
 
 public class SwapPanel extends AbstractPanel {
 	private static final long serialVersionUID = -7863948686242926432L;

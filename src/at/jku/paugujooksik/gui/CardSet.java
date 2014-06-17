@@ -9,12 +9,15 @@ import java.util.List;
 
 import javax.swing.JPanel;
 
+import at.jku.paugujooksik.logic.Cards;
+
 public class CardSet extends JPanel {
 	private static final long serialVersionUID = 8943110545308400878L;
 
 	private final List<CardPanel> cardBtns = new LinkedList<>();
-	
-	public CardSet(int size, CardSetHandler target, String originId) {
+
+	public CardSet(int size, CardSetHandler target, String originId,
+			boolean enableMouseActions) {
 		final GridBagLayout gblPnlCards = new GridBagLayout();
 		{
 			gblPnlCards.columnWidths = new int[size + 1];
@@ -41,13 +44,26 @@ public class CardSet extends JPanel {
 			}
 			add(slot, gbc);
 
-			final CardPanel card = new CardPanel(i, target, originId);
+			final CardPanel card = new CardPanel(i, target, originId,
+					enableMouseActions);
 			slot.add(card);
 			cardBtns.add(card);
 		}
 	}
-	
+
 	public CardPanel get(int index) {
 		return cardBtns.get(index);
+	}
+
+	public void updateCards(Cards<?> cards) {
+		for (int i = 0; i < cardBtns.size(); i++) {
+			cardBtns.get(i).updateCard(cards.getCard(i));
+		}
+	}
+
+	public void finishCards(Cards<?> cards) {
+		for (int i = 0; i < cardBtns.size(); i++) {
+			cardBtns.get(i).finish(!cards.isOnRightPosition(i));
+		}
 	}
 }

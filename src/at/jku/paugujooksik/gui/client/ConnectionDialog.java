@@ -1,4 +1,4 @@
-package at.jku.paugujooksik.gui;
+package at.jku.paugujooksik.gui.client;
 
 import static at.jku.paugujooksik.gui.ResourceLoader.PLAY_ICON_SMALL;
 import static at.jku.paugujooksik.gui.ResourceLoader.STOP_ICON_SMALL;

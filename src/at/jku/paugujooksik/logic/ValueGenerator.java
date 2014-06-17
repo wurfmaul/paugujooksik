@@ -43,7 +43,7 @@ public class ValueGenerator {
 		return values;
 	}
 
-	public enum Mode {
+	public enum ValueMode {
 		SMALL, RANDOM;
 
 		@Override
@@ -52,7 +52,7 @@ public class ValueGenerator {
 		};
 	}
 
-	public enum Type {
+	public enum ValueType {
 		INTEGER, STRING;
 
 		@Override

@@ -42,16 +42,17 @@ public class CardPanel extends AbstractPanel {
 	private MouseAdapter pinMouseAdapter;
 	private MouseAdapter finMouseAdapter;
 
-	public CardPanel(final int index, CardSetHandler target, String originId) {
+	public CardPanel(final int index, CardSetHandler target, String originId,
+			boolean enableMouseActions) {
 		super(new BorderLayout());
 		this.target = target;
 		this.originId = originId;
-		initMouseListeners(index);
-		{
-			setBackground(defaultBackground);
-			setBorder(new CardBorder(false));
-			addMouseListener(cardMouseAdapter);
-		}
+
+		if (enableMouseActions)
+			initMouseListeners(index);
+		setBackground(defaultBackground);
+		setBorder(new CardBorder(false));
+		addMouseListener(cardMouseAdapter);
 		label = new JLabel(DEFAULT_CARD_TEXT, JLabel.CENTER);
 		{
 			label.setFont(DEFAULT_FONT_BOLD.deriveFont(FONT_SIZE_ONECHAR));
