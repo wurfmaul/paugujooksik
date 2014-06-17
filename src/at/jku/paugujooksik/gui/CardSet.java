@@ -18,6 +18,26 @@ public class CardSet extends JPanel {
 
 	public CardSet(int size, CardSetHandler target, String originId,
 			boolean enableMouseActions) {
+		set(size, target, originId, enableMouseActions);
+	}
+
+	public CardPanel get(int index) {
+		return cardBtns.get(index);
+	}
+
+	public void updateCards(Cards<?> cards) {
+		for (int i = 0; i < cardBtns.size(); i++) {
+			cardBtns.get(i).updateCard(cards.getCard(i));
+		}
+	}
+
+	public void finishCards(Cards<?> cards) {
+		for (int i = 0; i < cardBtns.size(); i++) {
+			cardBtns.get(i).finish(!cards.isOnRightPosition(i));
+		}
+	}
+
+	public void set(int size, CardSetHandler target, String originId, boolean enableMouseActions) {
 		final GridBagLayout gblPnlCards = new GridBagLayout();
 		{
 			gblPnlCards.columnWidths = new int[size + 1];
@@ -32,6 +52,7 @@ public class CardSet extends JPanel {
 		}
 		setLayout(gblPnlCards);
 
+		removeAll();
 		cardBtns.clear();
 		for (int i = 0; i < size; i++) {
 			final CardSlotPanel slot = new CardSlotPanel(i);
@@ -48,22 +69,6 @@ public class CardSet extends JPanel {
 					enableMouseActions);
 			slot.add(card);
 			cardBtns.add(card);
-		}
-	}
-
-	public CardPanel get(int index) {
-		return cardBtns.get(index);
-	}
-
-	public void updateCards(Cards<?> cards) {
-		for (int i = 0; i < cardBtns.size(); i++) {
-			cardBtns.get(i).updateCard(cards.getCard(i));
-		}
-	}
-
-	public void finishCards(Cards<?> cards) {
-		for (int i = 0; i < cardBtns.size(); i++) {
-			cardBtns.get(i).finish(!cards.isOnRightPosition(i));
 		}
 	}
 }

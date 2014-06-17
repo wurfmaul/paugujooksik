@@ -206,16 +206,16 @@ public class Cards<T extends Comparable<T>> {
 
 	public void selectAll() {
 		assert allMarked();
-
 		for (Card<T> c : cardList) {
 			c.selected = true;
 		}
 	}
 
-	public void reset(boolean shuffle) {
-		if (shuffle)
+	public void reset(boolean shuffleValues) {
+		if (shuffleValues) {
 			Collections.shuffle(values);
-		DEBUGLOG.fine("Generated values: " + values);
+			DEBUGLOG.fine("Generated values: " + values);
+		}
 		cardList.clear();
 		for (T value : values) {
 			cardList.add(new Card<>(value));
