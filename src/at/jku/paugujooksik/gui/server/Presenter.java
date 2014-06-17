@@ -1,6 +1,6 @@
 package at.jku.paugujooksik.gui.server;
 
-import static at.jku.paugujooksik.logic.Toolkit.DEFAULT_FONT_BOLD;
+import static at.jku.paugujooksik.logic.Toolkit.TITLE_FONT;
 
 import java.awt.Frame;
 import java.awt.GraphicsDevice;
@@ -55,7 +55,7 @@ public class Presenter extends Window implements CardSetHandler {
 	private void initialize() {
 		final int rows = registeredClients.size();
 		int curRow = 1;
-		
+
 		frame = new JFrame();
 		frame.setBounds(100, 100, 600, 500);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -75,7 +75,7 @@ public class Presenter extends Window implements CardSetHandler {
 		frame.getContentPane().setLayout(gridBagLayout);
 
 		JLabel lblConfig = new JLabel(config.toString());
-		lblConfig.setFont(DEFAULT_FONT_BOLD.deriveFont(36f));
+		lblConfig.setFont(TITLE_FONT);
 		GridBagConstraints gbcLblConfig = new GridBagConstraints();
 		gbcLblConfig.insets = new Insets(10, 10, 10, 10);
 		gbcLblConfig.gridx = 0;
@@ -83,13 +83,14 @@ public class Presenter extends Window implements CardSetHandler {
 		frame.getContentPane().add(lblConfig, gbcLblConfig);
 
 		for (String name : registeredClients) {
+			final String title = "Team '" + name + "'";
 			GridBagConstraints gbcPnlRow = new GridBagConstraints();
 			gbcPnlRow.insets = new Insets(10, 10, 10, 10);
 			gbcPnlRow.fill = GridBagConstraints.BOTH;
 			gbcPnlRow.gridx = 0;
 			gbcPnlRow.gridy = curRow++;
 			CardSetPanel cardSetPanel = new CardSetPanel(this, config.size,
-					name, false);
+					name, title, true, false);
 			players.put(name, new Player(cardSetPanel));
 			frame.getContentPane().add(cardSetPanel, gbcPnlRow);
 		}
@@ -110,7 +111,7 @@ public class Presenter extends Window implements CardSetHandler {
 	public Configuration<?> getConfig() {
 		return config;
 	}
-	
+
 	public void incErrorCount(String originId) {
 		Player curPlayers = players.get(originId);
 		curPlayers.cards.incErrorCount();

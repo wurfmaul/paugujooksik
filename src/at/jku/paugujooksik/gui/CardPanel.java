@@ -6,33 +6,33 @@ import static at.jku.paugujooksik.gui.ResourceLoader.GRAY_CHECK_ICON;
 import static at.jku.paugujooksik.gui.ResourceLoader.GRAY_PIN_ICON;
 import static at.jku.paugujooksik.gui.ResourceLoader.ROTATED_PIN_ICON;
 import static at.jku.paugujooksik.gui.ResourceLoader.loadIcon;
-import static at.jku.paugujooksik.logic.Toolkit.DEFAULT_FONT_BOLD;
+import static at.jku.paugujooksik.logic.Toolkit.CARD_LABEL_FONT_ONECHAR;
+import static at.jku.paugujooksik.logic.Toolkit.CARD_LABEL_FONT_THREECHAR;
+import static at.jku.paugujooksik.logic.Toolkit.CARD_LABEL_FONT_TWOCHAR;
+import static at.jku.paugujooksik.logic.Toolkit.DEFAULT_BUTTON_SIZE;
+import static at.jku.paugujooksik.logic.Toolkit.DEFAULT_CARD_TEXT;
+import static at.jku.paugujooksik.logic.Toolkit.DEFAULT_COLOR;
+import static at.jku.paugujooksik.logic.Toolkit.ERROR_COLOR;
+import static at.jku.paugujooksik.logic.Toolkit.MARK_COLOR;
+import static at.jku.paugujooksik.logic.Toolkit.SELECTED_COLOR;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JToggleButton;
+import javax.swing.border.SoftBevelBorder;
 
 import at.jku.paugujooksik.logic.Card;
 
 public class CardPanel extends AbstractPanel {
 	private static final long serialVersionUID = 68959464664105468L;
 
-	private static final String DEFAULT_CARD_TEXT = "  ";
-	private static final int DEFAULT_BUTTON_SIZE = 25;
-	private static final float FONT_SIZE_ONECHAR = 36;
-	private static final float FONT_SIZE_TWOCHAR = 24;
-	private static final float FONT_SIZE_THREECHAR = 16;
-
-	private final Color markColor = Color.GREEN;
-	private final Color errorColor = Color.RED;
-	private final Color defaultBackground = Color.LIGHT_GRAY;
 	private final String originId;
 	private final JLabel label;
 	private final JToggleButton pin;
@@ -50,12 +50,12 @@ public class CardPanel extends AbstractPanel {
 
 		if (enableMouseActions)
 			initMouseListeners(index);
-		setBackground(defaultBackground);
+		setBackground(DEFAULT_COLOR);
 		setBorder(new CardBorder(false));
 		addMouseListener(cardMouseAdapter);
 		label = new JLabel(DEFAULT_CARD_TEXT, JLabel.CENTER);
 		{
-			label.setFont(DEFAULT_FONT_BOLD.deriveFont(FONT_SIZE_ONECHAR));
+			label.setFont(CARD_LABEL_FONT_ONECHAR);
 			add(label, BorderLayout.CENTER);
 		}
 		pin = new JToggleButton();
@@ -94,7 +94,7 @@ public class CardPanel extends AbstractPanel {
 	}
 
 	public void finish(boolean hasError) {
-		setBackground(hasError ? errorColor : markColor);
+		setBackground(hasError ? ERROR_COLOR : MARK_COLOR);
 		removeMouseListener(cardMouseAdapter);
 		pin.setVisible(false);
 		fin.setVisible(false);
@@ -107,7 +107,8 @@ public class CardPanel extends AbstractPanel {
 		pin.setSelected(c.pinned);
 		fin.setSelected(c.marked);
 		setOpaque(true);
-		setBackground(c.marked ? markColor : defaultBackground);
+		setBackground(c.marked ? MARK_COLOR : c.selected ? SELECTED_COLOR
+				: DEFAULT_COLOR);
 	}
 
 	private void initMouseListeners(final int index) {
@@ -135,17 +136,24 @@ public class CardPanel extends AbstractPanel {
 	}
 
 	private void updateText(Card<?> c) {
-		float size = FONT_SIZE_ONECHAR;
+		Font font = CARD_LABEL_FONT_ONECHAR;
 		String text = DEFAULT_CARD_TEXT;
 		if (c.selected) {
 			text = c.toString();
 			if (text.length() == 2)
-				size = FONT_SIZE_TWOCHAR;
+				font = CARD_LABEL_FONT_TWOCHAR;
 			else if (text.length() == 3)
-				size = FONT_SIZE_THREECHAR;
-
+				font = CARD_LABEL_FONT_THREECHAR;
 		}
-		label.setFont(DEFAULT_FONT_BOLD.deriveFont(size));
+		label.setFont(font);
 		label.setText(text);
+	}
+	
+	private class CardBorder extends SoftBevelBorder {
+		private static final long serialVersionUID = 822279921799807495L;
+
+		public CardBorder(boolean selected) {
+			super(selected ? LOWERED : RAISED);
+		}
 	}
 }

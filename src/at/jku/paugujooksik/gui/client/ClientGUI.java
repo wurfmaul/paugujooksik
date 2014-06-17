@@ -4,8 +4,7 @@ import static at.jku.paugujooksik.gui.ResourceLoader.ERROR_SND;
 import static at.jku.paugujooksik.gui.ResourceLoader.loadClip;
 import static at.jku.paugujooksik.logic.Configuration.MAX_SIZE;
 import static at.jku.paugujooksik.logic.Configuration.MIN_SIZE;
-import static at.jku.paugujooksik.logic.Toolkit.DEFAULT_FONT;
-import static at.jku.paugujooksik.logic.Toolkit.DEFAULT_FONT_BOLD;
+import static at.jku.paugujooksik.logic.Toolkit.*;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -74,8 +73,6 @@ public class ClientGUI implements CardSetHandler {
 			try {
 				config = controler.getConfig();
 			} catch (RemoteException e) {
-				// TODO error msg
-				e.printStackTrace();
 			}
 		} else {
 			config = Configuration.generateDefault();
@@ -100,10 +97,10 @@ public class ClientGUI implements CardSetHandler {
 		frame.getContentPane().removeAll();
 
 		lblTitle = new JLabel(config.toString());
-		lblTitle.setFont(DEFAULT_FONT.deriveFont(30f));
+		lblTitle.setFont(TITLE_FONT);
 		GridBagConstraints gbcLblTitle = new GridBagConstraints();
 		gbcLblTitle.fill = GridBagConstraints.BOTH;
-		gbcLblTitle.insets = new Insets(0, 5, 5, 5);
+		gbcLblTitle.insets = new Insets(5, 5, 5, 5);
 		gbcLblTitle.gridx = 0;
 		gbcLblTitle.gridy = 0;
 		frame.getContentPane().add(lblTitle, gbcLblTitle);

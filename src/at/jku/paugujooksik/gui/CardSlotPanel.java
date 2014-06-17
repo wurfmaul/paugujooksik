@@ -1,5 +1,8 @@
 package at.jku.paugujooksik.gui;
 
+import static at.jku.paugujooksik.logic.Toolkit.INDEX_COLOR;
+import static at.jku.paugujooksik.logic.Toolkit.INDEX_FONT;
+
 import java.awt.BorderLayout;
 
 import javax.swing.border.EtchedBorder;
@@ -17,6 +20,8 @@ public class CardSlotPanel extends AbstractPanel {
 			border.setTitle(Integer.toString(index + 1));
 			border.setTitlePosition(TitledBorder.TOP);
 			border.setTitleJustification(TitledBorder.CENTER);
+			border.setTitleColor(INDEX_COLOR);
+			border.setTitleFont(INDEX_FONT);
 		}
 		setBorder(border);
 	}
