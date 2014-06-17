@@ -258,11 +258,14 @@ public class Cards<T extends Comparable<T>> {
 					curAction++;
 				}
 			} else {
+				String message = "You should " + exp + " instead!";
+				// don't count if the same wrong action is performed twice!
 				if (lastAction == null || !lastAction.equals(action)) {
 					lastAction = action;
 					stat.errorCount++;
+					throw new SelectionException(message);
 				}
-				throw new SelectionException("You should " + exp + " instead!");
+				throw new SelectionException(message, true);
 			}
 		} else if (!config.getAlgorithm().allowsMoreActions()) {
 			throw new SelectionException("No more actions necessary!");

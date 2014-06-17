@@ -1,9 +1,9 @@
 package at.jku.paugujooksik.gui.client;
 
+import static at.jku.paugujooksik.tools.Constants.*;
 import static at.jku.paugujooksik.tools.ResourceLoader.PLAY_ICON_SMALL;
 import static at.jku.paugujooksik.tools.ResourceLoader.STOP_ICON_SMALL;
 import static at.jku.paugujooksik.tools.ResourceLoader.loadIcon;
-import static at.jku.paugujooksik.tools.Constants.DEFAULT_FONT_BOLD;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -42,6 +42,7 @@ public class ConnectionDialog extends JDialog {
 		super(parent, true);
 		setBounds(100, 100, 400, 200);
 		setTitle("Connection Assistant");
+		setResizable(false);
 
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWidths = new int[] { 120, 120, 60, 0 };
@@ -53,7 +54,7 @@ public class ConnectionDialog extends JDialog {
 		getContentPane().setLayout(gridBagLayout);
 		{
 			lblTitle = new JLabel("Connect to host...");
-			lblTitle.setFont(DEFAULT_FONT_BOLD);
+			lblTitle.setFont(TITLE_FONT);
 			GridBagConstraints gbc = new GridBagConstraints();
 			gbc.gridwidth = 3;
 			gbc.insets = new Insets(5, 5, 5, 5);
@@ -64,6 +65,7 @@ public class ConnectionDialog extends JDialog {
 		}
 		{
 			JLabel lblHost = new JLabel("Host: ");
+			lblHost.setFont(DEFAULT_FONT_BOLD);
 			GridBagConstraints gbc = new GridBagConstraints();
 			gbc.anchor = GridBagConstraints.WEST;
 			gbc.insets = new Insets(5, 5, 5, 5);
@@ -74,6 +76,7 @@ public class ConnectionDialog extends JDialog {
 		}
 		{
 			txtHost = new JTextField("localhost");
+			txtHost.setFont(DEFAULT_FONT);
 			GridBagConstraints gbc = new GridBagConstraints();
 			gbc.insets = new Insets(5, 5, 5, 5);
 			gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -83,6 +86,7 @@ public class ConnectionDialog extends JDialog {
 		}
 		{
 			JLabel lblPort = new JLabel("Port: ");
+			lblPort.setFont(DEFAULT_FONT_BOLD);
 			GridBagConstraints gbc = new GridBagConstraints();
 			gbc.anchor = GridBagConstraints.WEST;
 			gbc.insets = new Insets(5, 5, 5, 5);
@@ -93,6 +97,7 @@ public class ConnectionDialog extends JDialog {
 		}
 		{
 			txtPort = new JTextField("1099");
+			txtPort.setFont(DEFAULT_FONT);
 			GridBagConstraints gbc = new GridBagConstraints();
 			gbc.insets = new Insets(5, 5, 5, 5);
 			gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -102,6 +107,7 @@ public class ConnectionDialog extends JDialog {
 		}
 		{
 			JLabel lblName = new JLabel("Your name: ");
+			lblName.setFont(DEFAULT_FONT_BOLD);
 			GridBagConstraints gbc = new GridBagConstraints();
 			gbc.anchor = GridBagConstraints.WEST;
 			gbc.insets = new Insets(5, 5, 5, 5);
@@ -112,6 +118,7 @@ public class ConnectionDialog extends JDialog {
 		}
 		{
 			txtName = new JTextField();
+			txtName.setFont(DEFAULT_FONT);
 			GridBagConstraints gbc = new GridBagConstraints();
 			gbc.insets = new Insets(5, 5, 5, 5);
 			gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -140,6 +147,7 @@ public class ConnectionDialog extends JDialog {
 			gbc_cancelButton.gridx = 2;
 			gbc_cancelButton.gridy = 3;
 			getContentPane().add(cancelButton, gbc_cancelButton);
+			cancelButton.setFont(DEFAULT_FONT);
 			cancelButton.setActionCommand("Cancel");
 			cancelButton.addActionListener(new ActionListener() {
 				@Override

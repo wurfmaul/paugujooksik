@@ -1,6 +1,9 @@
 package at.jku.paugujooksik.gui.server;
 
+import static at.jku.paugujooksik.tools.Constants.PLAYER_COLORS;
 import static at.jku.paugujooksik.tools.Constants.TITLE_FONT;
+import static at.jku.paugujooksik.tools.ResourceLoader.ERROR_SND;
+import static at.jku.paugujooksik.tools.ResourceLoader.loadClip;
 
 import java.awt.Frame;
 import java.awt.GraphicsDevice;
@@ -15,6 +18,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import javax.sound.sampled.Clip;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 
@@ -88,12 +92,14 @@ public class Presenter extends Window implements CardSetHandler {
 			gbcPnlRow.insets = new Insets(10, 10, 10, 10);
 			gbcPnlRow.fill = GridBagConstraints.BOTH;
 			gbcPnlRow.gridx = 0;
-			gbcPnlRow.gridy = curRow++;
+			gbcPnlRow.gridy = curRow;
 			CardSetPanel cardSetPanel = new CardSetPanel(this, config.size,
 					name, true, false);
+			cardSetPanel.setBackground(PLAYER_COLORS[curRow - 1]);
 			cardSetPanel.setTitle("Team '" + name + "'");
 			players.put(name, new Player(cardSetPanel));
 			frame.getContentPane().add(cardSetPanel, gbcPnlRow);
+			curRow++;
 		}
 	}
 
@@ -117,6 +123,10 @@ public class Presenter extends Window implements CardSetHandler {
 		Player curPlayers = players.get(originId);
 		curPlayers.cards.incErrorCount();
 		curPlayers.updateStats();
+		
+		Clip clip = loadClip(ERROR_SND);
+		if (clip != null)
+			clip.start();
 	}
 
 	public void performAction(String originId, UnaryAction action) {

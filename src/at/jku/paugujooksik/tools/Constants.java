@@ -8,6 +8,8 @@ import java.awt.Color;
 import java.awt.Font;
 
 public class Constants {
+	public static final Color[] PLAYER_COLORS;
+
 	public static final Font DEFAULT_FONT;
 	public static final Font DEFAULT_FONT_BOLD;
 	public static final Font INDEX_FONT;
@@ -57,5 +59,11 @@ public class Constants {
 		TITLE_FONT = DEFAULT_FONT.deriveFont(30f);
 		STAT_FONT = DEFAULT_FONT_BOLD.deriveFont(28f);
 		HINT_FONT = DEFAULT_FONT_BOLD.deriveFont(24f);
+
+		PLAYER_COLORS = new Color[] { new Color(153, 204, 204),
+				new Color(204, 153, 204), new Color(204, 204, 153),
+				new Color(204, 153, 153), new Color(153, 204, 153),
+				new Color(153, 153, 204), new Color(255, 153, 153),
+				new Color(153, 255, 153), new Color(153, 153, 255) };
 	}
 }

@@ -2,9 +2,11 @@ package at.jku.paugujooksik.gui.client;
 
 import static at.jku.paugujooksik.model.Configuration.MAX_SIZE;
 import static at.jku.paugujooksik.model.Configuration.MIN_SIZE;
+import static at.jku.paugujooksik.tools.Constants.HINT_FONT;
+import static at.jku.paugujooksik.tools.Constants.NEGATIVE_HINT_COLOR;
+import static at.jku.paugujooksik.tools.Constants.POSITIVE_HINT_COLOR;
 import static at.jku.paugujooksik.tools.ResourceLoader.ERROR_SND;
 import static at.jku.paugujooksik.tools.ResourceLoader.loadClip;
-import static at.jku.paugujooksik.tools.Constants.*;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -69,7 +71,8 @@ public class ClientGUI implements CardSetHandler {
 			ConnectionDialog.init(frame, this);
 			try {
 				config = controler.getConfig();
-			} catch (RemoteException e) {
+			} catch (RemoteException | NullPointerException e) {
+				quit();
 			}
 		} else {
 			config = Configuration.generateDefault();
@@ -308,17 +311,21 @@ public class ClientGUI implements CardSetHandler {
 		lblHint.setText("");
 	}
 
-	private void reportError(SelectionException ex) {
+	private void reportError(SelectionException e) {
 		lblHint.setForeground(Color.RED);
-		lblHint.setText(ex.getMessage());
+		lblHint.setText(e.getMessage());
 
-		Clip clip = loadClip(ERROR_SND);
-		if (clip != null)
-			clip.start();
+		if (!e.isDuplicate()) {
+			if (!clientMode) {
+				Clip clip = loadClip(ERROR_SND);
+				if (clip != null)
+					clip.start();
+			}
 
-		updateStats();
-		if (clientMode)
-			reportErrorToPresenter();
+			updateStats();
+			if (clientMode)
+				reportErrorToPresenter();
+		}
 	}
 
 	private void updateComponents() {
@@ -403,6 +410,16 @@ public class ClientGUI implements CardSetHandler {
 	public void performSwap(String originId) {
 		try {
 			Action action = cards.swapSelection();
+
+			// FIXME animation
+			// int i = cards.getFirstSelectedIndex();
+			// int j = cards.getSecondSelectedIndex();
+			// CardPanel btnLeft = pnlCards.cardSet.get(i);
+			// CardPanel btnRight = pnlCards.cardSet.get(j);
+			// Timer timer = new Timer(15, new AnimationListener(btnLeft,
+			// btnRight));
+			// timer.start();
+
 			clearErrors();
 			updateStats();
 			reportActionToPresenter(action);

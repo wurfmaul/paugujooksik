@@ -19,6 +19,7 @@ public class CardSet extends JPanel {
 	public CardSet(int size, CardSetHandler target, String originId,
 			boolean enableMouseActions) {
 		set(size, target, originId, enableMouseActions);
+		setOpaque(false);
 	}
 
 	public CardPanel get(int index) {

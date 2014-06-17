@@ -14,17 +14,26 @@ public class Paugujooksik {
 
 	public static void main(String[] args) {
 		configureLoggers();
+		
 		if (args.length > 0) {
-			if (args[0].equalsIgnoreCase("--server")) {
+			switch (args[0]) {
+			case "--server":
 				DEBUGLOG.config("Loading Server mode...");
 				ServerGUI.initAndRun();
-			} else if (args[0].equalsIgnoreCase("--client")) {
+				break;
+			case "--client":
 				DEBUGLOG.config("Loading Client mode...");
 				ClientGUI.initAndRun(true);
+				break;
+			case "--alone":
+				DEBUGLOG.config("Loading Standalone mode...");
+				ClientGUI.initAndRun(false);
+				break;
+			default:
+				DEBUGLOG.severe("Unknown mode: " + args[0]);
 			}
 		} else {
-			DEBUGLOG.config("Loading Standalone mode...");
-			ClientGUI.initAndRun(false);
+			new StarterDialog();
 		}
 	}
 
