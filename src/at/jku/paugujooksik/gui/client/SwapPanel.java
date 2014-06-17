@@ -1,7 +1,7 @@
 package at.jku.paugujooksik.gui.client;
 
-import static at.jku.paugujooksik.gui.ResourceLoader.SWAP_ICON_SMALL;
-import static at.jku.paugujooksik.gui.ResourceLoader.loadIcon;
+import static at.jku.paugujooksik.tools.ResourceLoader.SWAP_ICON_SMALL;
+import static at.jku.paugujooksik.tools.ResourceLoader.loadIcon;
 
 import java.awt.Graphics;
 import java.awt.Graphics2D;

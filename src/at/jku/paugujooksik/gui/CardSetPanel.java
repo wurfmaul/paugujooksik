@@ -1,16 +1,16 @@
-package at.jku.paugujooksik.gui.server;
+package at.jku.paugujooksik.gui;
 
-import static at.jku.paugujooksik.logic.Toolkit.COMPARE_LABEL;
-import static at.jku.paugujooksik.logic.Toolkit.ERROR_BACKGROUND_COLOR;
-import static at.jku.paugujooksik.logic.Toolkit.ERROR_LABEL;
-import static at.jku.paugujooksik.logic.Toolkit.ERROR_LINE_COLOR;
-import static at.jku.paugujooksik.logic.Toolkit.PLAYER_BORDER_COLOR;
-import static at.jku.paugujooksik.logic.Toolkit.PLAYER_BORDER_ISROUNDED;
-import static at.jku.paugujooksik.logic.Toolkit.PLAYER_BORDER_THICKNESS;
-import static at.jku.paugujooksik.logic.Toolkit.STAT_BACKGROUND_COLOR;
-import static at.jku.paugujooksik.logic.Toolkit.STAT_FONT;
-import static at.jku.paugujooksik.logic.Toolkit.STAT_LINE_COLOR;
-import static at.jku.paugujooksik.logic.Toolkit.SWAP_LABEL;
+import static at.jku.paugujooksik.tools.Constants.COMPARE_LABEL;
+import static at.jku.paugujooksik.tools.Constants.ERROR_BACKGROUND_COLOR;
+import static at.jku.paugujooksik.tools.Constants.ERROR_LABEL;
+import static at.jku.paugujooksik.tools.Constants.ERROR_LINE_COLOR;
+import static at.jku.paugujooksik.tools.Constants.PLAYER_BORDER_COLOR;
+import static at.jku.paugujooksik.tools.Constants.PLAYER_BORDER_ISROUNDED;
+import static at.jku.paugujooksik.tools.Constants.PLAYER_BORDER_THICKNESS;
+import static at.jku.paugujooksik.tools.Constants.STAT_BACKGROUND_COLOR;
+import static at.jku.paugujooksik.tools.Constants.STAT_FONT;
+import static at.jku.paugujooksik.tools.Constants.STAT_LINE_COLOR;
+import static at.jku.paugujooksik.tools.Constants.SWAP_LABEL;
 
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
@@ -22,9 +22,6 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.border.LineBorder;
 
-import at.jku.paugujooksik.gui.CardSet;
-import at.jku.paugujooksik.gui.CardSetHandler;
-
 public class CardSetPanel extends JPanel {
 	public static final long serialVersionUID = 979482902923838043L;
 
@@ -34,8 +31,10 @@ public class CardSetPanel extends JPanel {
 	private final JLabel lblErrorCount;
 	private final JLabel lblSwapCount;
 
+	private JLabel lblTitle;
+
 	public CardSetPanel(CardSetHandler target, int size, String name,
-			String title, boolean border, boolean enableMouseActions) {
+			boolean border, boolean enableMouseActions) {
 
 		if (border)
 			setBorder(new LineBorder(PLAYER_BORDER_COLOR,
@@ -49,13 +48,13 @@ public class CardSetPanel extends JPanel {
 		gblPnlRow.rowWeights = new double[] { 0.0, 1.0, Double.MIN_VALUE };
 		setLayout(gblPnlRow);
 
-		JLabel lblName = new JLabel(title);
-		GridBagConstraints gbc_lblName = new GridBagConstraints();
-		gbc_lblName.insets = new Insets(5, 5, 5, 5);
-		gbc_lblName.gridx = 0;
-		gbc_lblName.gridy = 0;
-		add(lblName, gbc_lblName);
-		lblName.setFont(STAT_FONT);
+		lblTitle = new JLabel();
+		GridBagConstraints gbcLblTitle = new GridBagConstraints();
+		gbcLblTitle.insets = new Insets(5, 5, 5, 5);
+		gbcLblTitle.gridx = 0;
+		gbcLblTitle.gridy = 0;
+		add(lblTitle, gbcLblTitle);
+		lblTitle.setFont(STAT_FONT);
 
 		JPanel pnlCompare = new JPanel(new FlowLayout());
 		{
@@ -134,5 +133,9 @@ public class CardSetPanel extends JPanel {
 		lblCompareCount.setText(Integer.toString(compareCount));
 		lblErrorCount.setText(Integer.toString(errorCount));
 		lblSwapCount.setText(Integer.toString(swapCount));
+	}
+
+	public void setTitle(String title) {
+		lblTitle.setText(title);
 	}
 }

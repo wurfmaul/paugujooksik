@@ -1,4 +1,4 @@
-package at.jku.paugujooksik.logic;
+package at.jku.paugujooksik.model;
 
 import java.io.Serializable;
 import java.util.Collections;
@@ -6,8 +6,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
 
-import at.jku.paugujooksik.logic.ValueGenerator.ValueMode;
-import at.jku.paugujooksik.logic.ValueGenerator.ValueType;
+import at.jku.paugujooksik.model.ValueGenerator.ValueMode;
+import at.jku.paugujooksik.model.ValueGenerator.ValueType;
 import at.jku.paugujooksik.sort.BubbleSort;
 import at.jku.paugujooksik.sort.InsertionSort;
 import at.jku.paugujooksik.sort.PlayMode;

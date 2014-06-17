@@ -9,7 +9,7 @@ import java.util.List;
 
 import javax.swing.JPanel;
 
-import at.jku.paugujooksik.logic.Cards;
+import at.jku.paugujooksik.model.Cards;
 
 public class CardSet extends JPanel {
 	private static final long serialVersionUID = 8943110545308400878L;

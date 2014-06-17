@@ -1,7 +1,7 @@
 package at.jku.paugujooksik.gui;
 
-import static at.jku.paugujooksik.logic.Toolkit.INDEX_COLOR;
-import static at.jku.paugujooksik.logic.Toolkit.INDEX_FONT;
+import static at.jku.paugujooksik.tools.Constants.INDEX_COLOR;
+import static at.jku.paugujooksik.tools.Constants.INDEX_FONT;
 
 import java.awt.BorderLayout;
 

@@ -1,10 +1,10 @@
 package at.jku.paugujooksik.gui.client;
 
-import static at.jku.paugujooksik.gui.ResourceLoader.ERROR_SND;
-import static at.jku.paugujooksik.gui.ResourceLoader.loadClip;
-import static at.jku.paugujooksik.logic.Configuration.MAX_SIZE;
-import static at.jku.paugujooksik.logic.Configuration.MIN_SIZE;
-import static at.jku.paugujooksik.logic.Toolkit.*;
+import static at.jku.paugujooksik.model.Configuration.MAX_SIZE;
+import static at.jku.paugujooksik.model.Configuration.MIN_SIZE;
+import static at.jku.paugujooksik.tools.ResourceLoader.ERROR_SND;
+import static at.jku.paugujooksik.tools.ResourceLoader.loadClip;
+import static at.jku.paugujooksik.tools.Constants.*;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -27,23 +27,22 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JSeparator;
-import javax.swing.JTextPane;
+import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 
 import at.jku.paugujooksik.action.Action;
 import at.jku.paugujooksik.action.BinaryAction;
 import at.jku.paugujooksik.action.UnaryAction;
-import at.jku.paugujooksik.gui.CardSet;
 import at.jku.paugujooksik.gui.CardSetHandler;
+import at.jku.paugujooksik.gui.CardSetPanel;
 import at.jku.paugujooksik.gui.SelectionException;
-import at.jku.paugujooksik.logic.Cards;
-import at.jku.paugujooksik.logic.Configuration;
-import at.jku.paugujooksik.logic.ValueGenerator.ValueMode;
-import at.jku.paugujooksik.logic.ValueGenerator.ValueType;
+import at.jku.paugujooksik.model.Cards;
+import at.jku.paugujooksik.model.Configuration;
+import at.jku.paugujooksik.model.ValueGenerator.ValueMode;
+import at.jku.paugujooksik.model.ValueGenerator.ValueType;
 import at.jku.paugujooksik.server.ServerControl;
 import at.jku.paugujooksik.sort.SortAlgorithm;
 
@@ -52,12 +51,10 @@ public class ClientGUI implements CardSetHandler {
 
 	private final boolean clientMode;
 	private final JFrame frame = new JFrame();
-	private final CardSet cardSet;
 
+	private CardSetPanel pnlCards;
 	private SwapPanel pnlSwap;
-	private JTextPane txtStats;
-	private JLabel lblTitle;
-	private JTextPane txtHint;
+	private JLabel lblHint;
 
 	private Configuration<?> config;
 	private String name;
@@ -79,7 +76,6 @@ public class ClientGUI implements CardSetHandler {
 		}
 		size = config.size;
 		cards = new Cards<>(config);
-		cardSet = new CardSet(size, this, name, true);
 		initFrame();
 		initialize();
 	}
@@ -96,80 +92,53 @@ public class ClientGUI implements CardSetHandler {
 	private void initialize() {
 		frame.getContentPane().removeAll();
 
-		lblTitle = new JLabel(config.toString());
-		lblTitle.setFont(TITLE_FONT);
-		GridBagConstraints gbcLblTitle = new GridBagConstraints();
-		gbcLblTitle.fill = GridBagConstraints.BOTH;
-		gbcLblTitle.insets = new Insets(5, 5, 5, 5);
-		gbcLblTitle.gridx = 0;
-		gbcLblTitle.gridy = 0;
-		frame.getContentPane().add(lblTitle, gbcLblTitle);
-
-		txtStats = new JTextPane();
-		txtStats.setFont(DEFAULT_FONT.deriveFont(24f));
-		txtStats.setOpaque(false);
-		txtStats.setFocusable(false);
-		GridBagConstraints gbcLblCount = new GridBagConstraints();
-		gbcLblCount.insets = new Insets(0, 0, 5, 0);
-		gbcLblCount.fill = GridBagConstraints.BOTH;
-		gbcLblCount.gridx = 1;
-		gbcLblCount.gridy = 0;
-		frame.getContentPane().add(txtStats, gbcLblCount);
-
-		GridBagConstraints gbcPnLCards = new GridBagConstraints();
-		gbcPnLCards.gridwidth = 2;
-		gbcPnLCards.insets = new Insets(0, 0, 5, 0);
-		gbcPnLCards.fill = GridBagConstraints.BOTH;
-		gbcPnLCards.gridx = 0;
-		gbcPnLCards.gridy = 1;
-		frame.getContentPane().add(cardSet, gbcPnLCards);
+		pnlCards = new CardSetPanel(this, size, name, false, true);
+		{
+			pnlCards.setTitle(config.toString());
+			GridBagConstraints gbcPnlCards = new GridBagConstraints();
+			gbcPnlCards.fill = GridBagConstraints.BOTH;
+			gbcPnlCards.insets = new Insets(5, 5, 5, 5);
+			gbcPnlCards.gridx = 0;
+			gbcPnlCards.gridy = 0;
+			frame.getContentPane().add(pnlCards, gbcPnlCards);
+		}
 
 		pnlSwap = new SwapPanel(this, name);
-		GridBagConstraints gbcPnlLines = new GridBagConstraints();
-		gbcPnlLines.gridwidth = 2;
-		gbcPnlLines.insets = new Insets(0, 0, 5, 0);
-		gbcPnlLines.fill = GridBagConstraints.BOTH;
-		gbcPnlLines.gridx = 0;
-		gbcPnlLines.gridy = 2;
-		frame.getContentPane().add(pnlSwap, gbcPnlLines);
+		{
+			GridBagConstraints gbcPnlLines = new GridBagConstraints();
+			gbcPnlLines.insets = new Insets(0, 0, 5, 0);
+			gbcPnlLines.fill = GridBagConstraints.BOTH;
+			gbcPnlLines.gridx = 0;
+			gbcPnlLines.gridy = 1;
+			frame.getContentPane().add(pnlSwap, gbcPnlLines);
+		}
 
-		JPanel pnlPlaceholder = new JPanel();
-		pnlPlaceholder.setLayout(null);
-		GridBagConstraints gbcPnlPlaceholder = new GridBagConstraints();
-		gbcPnlPlaceholder.gridwidth = 2;
-		gbcPnlPlaceholder.insets = new Insets(0, 0, 0, 0);
-		gbcPnlPlaceholder.fill = GridBagConstraints.BOTH;
-		gbcPnlPlaceholder.gridx = 0;
-		gbcPnlPlaceholder.gridy = 3;
-		frame.getContentPane().add(pnlPlaceholder, gbcPnlPlaceholder);
-
-		txtHint = new JTextPane();
-		txtHint.setFont(DEFAULT_FONT_BOLD.deriveFont(24f));
-		txtHint.setOpaque(false);
-		txtHint.setFocusable(false);
-		GridBagConstraints gbcLblHint = new GridBagConstraints();
-		gbcLblHint.gridwidth = 2;
-		gbcLblHint.insets = new Insets(0, 5, 5, 5);
-		gbcLblHint.fill = GridBagConstraints.BOTH;
-		gbcLblHint.gridx = 0;
-		gbcLblHint.gridy = 4;
-		frame.getContentPane().add(txtHint, gbcLblHint);
+		lblHint = new JLabel();
+		{
+			lblHint.setFont(HINT_FONT);
+			lblHint.setHorizontalAlignment(SwingConstants.CENTER);
+			GridBagConstraints gbcLblHint = new GridBagConstraints();
+			gbcLblHint.insets = new Insets(0, 5, 5, 5);
+			gbcLblHint.fill = GridBagConstraints.BOTH;
+			gbcLblHint.gridx = 0;
+			gbcLblHint.gridy = 2;
+			frame.getContentPane().add(lblHint, gbcLblHint);
+		}
 
 		initMenuBar();
 		updateStats();
 	}
 
 	private void initFrame() {
-		frame.setBounds(100, 100, 700, 500);
+		frame.setBounds(100, 100, 700, 450);
 		frame.setMinimumSize(new Dimension(500, 450));
 		frame.setTitle("Sort the Cards!");
 		frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		GridBagLayout gblFrame = new GridBagLayout();
-		gblFrame.columnWidths = new int[] { 508, 190, 0 };
-		gblFrame.rowHeights = new int[] { 90, 160, 90, 10, 90, 0 };
-		gblFrame.columnWeights = new double[] { 1.0, 0.0, Double.MIN_VALUE };
-		gblFrame.rowWeights = new double[] { 0.0, 0.0, 0.0, 1.0, 0.0,
-				Double.MIN_VALUE };
+		gblFrame.columnWidths = new int[] { 0, 0 };
+		gblFrame.rowHeights = new int[] { 260, 90, 0, 0 };
+		gblFrame.columnWeights = new double[] { 1.0, Double.MIN_VALUE };
+		gblFrame.rowWeights = new double[] { 0.0, 0.0, 1.0, Double.MIN_VALUE };
 		frame.getContentPane().setLayout(gblFrame);
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
@@ -210,7 +179,7 @@ public class ClientGUI implements CardSetHandler {
 		JMenu mnConfig = new JMenu("Config");
 		{
 			mnConfig.setEnabled(!clientMode);
-			
+
 			ButtonGroup algorithmGroup = new ButtonGroup();
 			int idx = 0;
 			for (SortAlgorithm<?> sort : config.getAllAlgorithms()) {
@@ -222,13 +191,11 @@ public class ClientGUI implements CardSetHandler {
 					public void actionPerformed(ActionEvent e) {
 						DEBUGLOG.config("Set algorithm to "
 								+ config.getAllAlgorithms().get(index));
-						
+
 						config = Configuration.deriveWithNewSortIdx(config,
 								index);
 						setupCards();
 						reset();
-						// FIXME when finished, reset fails (e.g. all stays
-						// green)
 					}
 				});
 				mnConfig.add(item);
@@ -319,16 +286,16 @@ public class ClientGUI implements CardSetHandler {
 	private void checkFinish() {
 		if (cards.allMarked()) {
 			if (cards.isSorted()) {
-				txtHint.setForeground(Color.GREEN);
-				txtHint.setText("Congratulations!");
+				lblHint.setForeground(POSITIVE_HINT_COLOR);
+				lblHint.setText("Congratulations!");
 			} else {
-				txtHint.setForeground(Color.RED);
-				txtHint.setText("There is something wrong!");
+				lblHint.setForeground(NEGATIVE_HINT_COLOR);
+				lblHint.setText("There is something wrong!");
 			}
 			pnlSwap.removeAll();
 			cards.selectAll();
 			updateComponents();
-			cardSet.finishCards(cards);
+			pnlCards.cardSet.finishCards(cards);
 		}
 	}
 
@@ -338,12 +305,12 @@ public class ClientGUI implements CardSetHandler {
 	}
 
 	private void clearErrors() {
-		txtHint.setText("");
+		lblHint.setText("");
 	}
 
 	private void reportError(SelectionException ex) {
-		txtHint.setForeground(Color.RED);
-		txtHint.setText(ex.getMessage());
+		lblHint.setForeground(Color.RED);
+		lblHint.setText(ex.getMessage());
 
 		Clip clip = loadClip(ERROR_SND);
 		if (clip != null)
@@ -355,29 +322,16 @@ public class ClientGUI implements CardSetHandler {
 	}
 
 	private void updateComponents() {
-		cardSet.updateCards(cards);
+		pnlCards.cardSet.updateCards(cards);
 		pnlSwap.showButton(cards.twoSelected());
-		lblTitle.setText(config.toString());
+		pnlCards.setTitle(config.toString());
 		frame.repaint();
-	}
-
-	private void updateStats() {
-		final StringBuilder sb = new StringBuilder();
-		sb.append("Errors: ");
-		sb.append(cards.getErrorCount());
-		sb.append(System.lineSeparator());
-		sb.append("Swaps: ");
-		sb.append(cards.getSwapCount());
-		sb.append(System.lineSeparator());
-		sb.append("Compares: ");
-		sb.append(cards.getCompareCount());
-		txtStats.setText(sb.toString());
 	}
 
 	private void setupCards() {
 		size = config.size;
 		cards = new Cards<>(config);
-		cardSet.set(size, this, name, true);
+		pnlCards.cardSet.set(size, this, name, true);
 	}
 
 	private void reportErrorToPresenter() {
@@ -399,6 +353,11 @@ public class ClientGUI implements CardSetHandler {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	private void updateStats() {
+		pnlCards.setStats(cards.getCompareCount(), cards.getSwapCount(),
+				cards.getErrorCount());
 	}
 
 	@Override
@@ -454,14 +413,14 @@ public class ClientGUI implements CardSetHandler {
 	}
 
 	public int getLeftReference() {
-		final Component comp = cardSet.get(cards.getFirstSelectedIndex())
-				.getParent();
+		final Component comp = pnlCards.cardSet.get(
+				cards.getFirstSelectedIndex()).getParent();
 		return comp.getLocation().x + comp.getWidth() / 2;
 	}
 
 	public int getRightReference() {
-		final Component comp = cardSet.get(cards.getSecondSelectedIndex())
-				.getParent();
+		final Component comp = pnlCards.cardSet.get(
+				cards.getSecondSelectedIndex()).getParent();
 		return comp.getLocation().x + comp.getWidth() / 2;
 	}
 

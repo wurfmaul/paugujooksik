@@ -1,12 +1,13 @@
 package at.jku.paugujooksik.gui.server;
 
-import static at.jku.paugujooksik.gui.ResourceLoader.PLAY_ICON;
-import static at.jku.paugujooksik.gui.ResourceLoader.loadIcon;
-import static at.jku.paugujooksik.logic.Configuration.DEFAULT_SIZE;
-import static at.jku.paugujooksik.logic.Configuration.MAX_SIZE;
-import static at.jku.paugujooksik.logic.Configuration.MIN_SIZE;
-import static at.jku.paugujooksik.logic.Toolkit.DEFAULT_FONT;
-import static at.jku.paugujooksik.logic.Toolkit.DEFAULT_FONT_BOLD;
+import static at.jku.paugujooksik.model.Configuration.DEFAULT_SIZE;
+import static at.jku.paugujooksik.model.Configuration.MAX_SIZE;
+import static at.jku.paugujooksik.model.Configuration.MIN_SIZE;
+import static at.jku.paugujooksik.tools.ResourceLoader.PLAY_ICON;
+import static at.jku.paugujooksik.tools.ResourceLoader.STOP_ICON;
+import static at.jku.paugujooksik.tools.ResourceLoader.loadIcon;
+import static at.jku.paugujooksik.tools.Constants.DEFAULT_FONT;
+import static at.jku.paugujooksik.tools.Constants.DEFAULT_FONT_BOLD;
 
 import java.awt.Dimension;
 import java.awt.EventQueue;
@@ -25,7 +26,6 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -35,12 +35,13 @@ import javax.swing.JMenuItem;
 import javax.swing.JSlider;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.JToggleButton;
 import javax.swing.UIManager;
 import javax.swing.border.BevelBorder;
 
-import at.jku.paugujooksik.logic.Configuration;
-import at.jku.paugujooksik.logic.ValueGenerator.ValueMode;
-import at.jku.paugujooksik.logic.ValueGenerator.ValueType;
+import at.jku.paugujooksik.model.Configuration;
+import at.jku.paugujooksik.model.ValueGenerator.ValueMode;
+import at.jku.paugujooksik.model.ValueGenerator.ValueType;
 import at.jku.paugujooksik.server.ServerControl;
 import at.jku.paugujooksik.server.ServerControlImpl;
 
@@ -53,7 +54,7 @@ public class ServerGUI {
 	private final Set<String> registeredClients = new LinkedHashSet<>();
 
 	private Presenter presenter = null;
-	private JButton btnPlay;
+	private JToggleButton btnPlay;
 	private JTextArea txtPlayers;
 	private JComboBox<Object> cbxCfgAlgo;
 	private JComboBox<ValueType> cbxCfgType;
@@ -243,36 +244,16 @@ public class ServerGUI {
 		gbcSldrSize.gridy = 7;
 		frame.getContentPane().add(sldrCfgSize, gbcSldrSize);
 
-		// TODO option to close the presenter on stop buttons
-		btnPlay = new JButton(loadIcon(PLAY_ICON));
+		btnPlay = new JToggleButton(loadIcon(PLAY_ICON));
+		btnPlay.setRolloverIcon(loadIcon(PLAY_ICON));
+		btnPlay.setSelectedIcon(loadIcon(STOP_ICON));
 		btnPlay.setEnabled(false);
 		GridBagConstraints gbcBtnPlay = new GridBagConstraints();
 		gbcBtnPlay.gridwidth = 2;
 		gbcBtnPlay.gridheight = 3;
 		gbcBtnPlay.gridx = 2;
 		gbcBtnPlay.gridy = 5;
-		btnPlay.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				final ValueMode mode = (ValueMode) cbxCfgMode.getSelectedItem();
-				final ValueType type = (ValueType) cbxCfgType.getSelectedItem();
-				final int sortIdx = cbxCfgAlgo.getSelectedIndex();
-				final int size = sldrCfgSize.getValue();
-				final Configuration<?> config = Configuration.generate(mode,
-						type, sortIdx, size);
-
-				EventQueue.invokeLater(new Runnable() {
-					public void run() {
-						try {
-							presenter = new Presenter(frame, config,
-									registeredClients);
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					}
-				});
-			}
-		});
+		btnPlay.addActionListener(new PresenterListener());
 		frame.getContentPane().add(btnPlay, gbcBtnPlay);
 
 		initMenuBar();
@@ -306,7 +287,8 @@ public class ServerGUI {
 
 		if (registeredClients.size() == 0) {
 			sb.append("Waiting for players...");
-			btnPlay.setEnabled(false);
+			if (!btnPlay.isSelected())
+				btnPlay.setEnabled(false);
 		} else {
 			btnPlay.setEnabled(true);
 		}
@@ -328,15 +310,17 @@ public class ServerGUI {
 	}
 
 	public boolean register(String name) {
-		final boolean ret = registeredClients.add(name);
+		if (registeredClients.contains(name))
+			return false;
+		registeredClients.add(name);
 		updatePlayerList();
-		return ret;
+		return true;
 	}
 
-	public void unregister(String name) {
-		registeredClients.remove(name);
+	public void unregister(String clientId) {
+		registeredClients.remove(clientId);
 		updatePlayerList();
-		// TODO notify presenter!
+		presenter.unregister(clientId);
 	}
 
 	/**
@@ -358,5 +342,34 @@ public class ServerGUI {
 				}
 			}
 		});
+	}
+
+	private class PresenterListener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			final JToggleButton sourceBtn = (JToggleButton) e.getSource();
+			if (sourceBtn.isSelected()) {
+				final ValueMode mode = (ValueMode) cbxCfgMode.getSelectedItem();
+				final ValueType type = (ValueType) cbxCfgType.getSelectedItem();
+				final int sortIdx = cbxCfgAlgo.getSelectedIndex();
+				final int size = sldrCfgSize.getValue();
+				final Configuration<?> config = Configuration.generate(mode,
+						type, sortIdx, size);
+
+				EventQueue.invokeLater(new Runnable() {
+					public void run() {
+						try {
+							presenter = new Presenter(frame, config,
+									registeredClients);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+				});
+			} else {
+				presenter.quit();
+				presenter = null;
+			}
+		}
 	}
 }

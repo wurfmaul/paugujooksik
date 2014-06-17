@@ -1,4 +1,4 @@
-package at.jku.paugujooksik.logic;
+package at.jku.paugujooksik.model;
 
 import java.io.Serializable;
 

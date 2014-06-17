@@ -1,4 +1,4 @@
-package at.jku.paugujooksik.gui;
+package at.jku.paugujooksik.tools;
 
 import java.awt.Font;
 import java.awt.FontFormatException;
@@ -16,6 +16,7 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
+import at.jku.paugujooksik.gui.AbstractPanel;
 import at.jku.paugujooksik.gui.client.ClientGUI;
 
 public class ResourceLoader {
@@ -33,6 +34,7 @@ public class ResourceLoader {
 	public static final String GRAY_CHECK_ICON = "check-gray.png";
 	public static final String PLAY_ICON = "play.png";
 	public static final String PLAY_ICON_SMALL = "play_small.png";
+	public static final String STOP_ICON = "stop.png";
 	public static final String STOP_ICON_SMALL = "stop_small.png";
 	public static final String COMPARE_ICON = "compare.png";
 	public static final String ERROR_ICON = "error.png";

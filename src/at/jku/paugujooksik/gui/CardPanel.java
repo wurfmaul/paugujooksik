@@ -1,20 +1,20 @@
 package at.jku.paugujooksik.gui;
 
-import static at.jku.paugujooksik.gui.ResourceLoader.BLACK_CHECK_ICON;
-import static at.jku.paugujooksik.gui.ResourceLoader.BLACK_PIN_ICON;
-import static at.jku.paugujooksik.gui.ResourceLoader.GRAY_CHECK_ICON;
-import static at.jku.paugujooksik.gui.ResourceLoader.GRAY_PIN_ICON;
-import static at.jku.paugujooksik.gui.ResourceLoader.ROTATED_PIN_ICON;
-import static at.jku.paugujooksik.gui.ResourceLoader.loadIcon;
-import static at.jku.paugujooksik.logic.Toolkit.CARD_LABEL_FONT_ONECHAR;
-import static at.jku.paugujooksik.logic.Toolkit.CARD_LABEL_FONT_THREECHAR;
-import static at.jku.paugujooksik.logic.Toolkit.CARD_LABEL_FONT_TWOCHAR;
-import static at.jku.paugujooksik.logic.Toolkit.DEFAULT_BUTTON_SIZE;
-import static at.jku.paugujooksik.logic.Toolkit.DEFAULT_CARD_TEXT;
-import static at.jku.paugujooksik.logic.Toolkit.DEFAULT_COLOR;
-import static at.jku.paugujooksik.logic.Toolkit.ERROR_COLOR;
-import static at.jku.paugujooksik.logic.Toolkit.MARK_COLOR;
-import static at.jku.paugujooksik.logic.Toolkit.SELECTED_COLOR;
+import static at.jku.paugujooksik.tools.ResourceLoader.BLACK_CHECK_ICON;
+import static at.jku.paugujooksik.tools.ResourceLoader.BLACK_PIN_ICON;
+import static at.jku.paugujooksik.tools.ResourceLoader.GRAY_CHECK_ICON;
+import static at.jku.paugujooksik.tools.ResourceLoader.GRAY_PIN_ICON;
+import static at.jku.paugujooksik.tools.ResourceLoader.ROTATED_PIN_ICON;
+import static at.jku.paugujooksik.tools.ResourceLoader.loadIcon;
+import static at.jku.paugujooksik.tools.Constants.CARD_LABEL_FONT_ONECHAR;
+import static at.jku.paugujooksik.tools.Constants.CARD_LABEL_FONT_THREECHAR;
+import static at.jku.paugujooksik.tools.Constants.CARD_LABEL_FONT_TWOCHAR;
+import static at.jku.paugujooksik.tools.Constants.DEFAULT_BUTTON_SIZE;
+import static at.jku.paugujooksik.tools.Constants.DEFAULT_CARD_TEXT;
+import static at.jku.paugujooksik.tools.Constants.DEFAULT_COLOR;
+import static at.jku.paugujooksik.tools.Constants.ERROR_COLOR;
+import static at.jku.paugujooksik.tools.Constants.MARK_COLOR;
+import static at.jku.paugujooksik.tools.Constants.SELECTED_COLOR;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -28,7 +28,7 @@ import javax.swing.JPanel;
 import javax.swing.JToggleButton;
 import javax.swing.border.SoftBevelBorder;
 
-import at.jku.paugujooksik.logic.Card;
+import at.jku.paugujooksik.model.Card;
 
 public class CardPanel extends AbstractPanel {
 	private static final long serialVersionUID = 68959464664105468L;

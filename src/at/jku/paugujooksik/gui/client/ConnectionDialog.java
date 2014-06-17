@@ -1,8 +1,9 @@
 package at.jku.paugujooksik.gui.client;
 
-import static at.jku.paugujooksik.gui.ResourceLoader.PLAY_ICON_SMALL;
-import static at.jku.paugujooksik.gui.ResourceLoader.STOP_ICON_SMALL;
-import static at.jku.paugujooksik.gui.ResourceLoader.loadIcon;
+import static at.jku.paugujooksik.tools.ResourceLoader.PLAY_ICON_SMALL;
+import static at.jku.paugujooksik.tools.ResourceLoader.STOP_ICON_SMALL;
+import static at.jku.paugujooksik.tools.ResourceLoader.loadIcon;
+import static at.jku.paugujooksik.tools.Constants.DEFAULT_FONT_BOLD;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -13,7 +14,6 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.util.logging.Logger;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -28,29 +28,21 @@ import at.jku.paugujooksik.server.ServerControl;
 
 public class ConnectionDialog extends JDialog {
 	private static final long serialVersionUID = 1513880741540102732L;
-	private static final Logger DEBUGLOG = Logger.getLogger("DEBUG");
 
 	private final JTextField txtHost;
 	private final JTextField txtPort;
 	private final JTextField txtName;
-	private final ClientGUI target;
 	private Thread registerThread;
+	private JLabel lblTitle;
 
 	/**
 	 * Create the dialog.
 	 */
 	public ConnectionDialog(final JFrame parent, final ClientGUI target) {
 		super(parent, true);
-		this.target = target;
 		setBounds(100, 100, 400, 200);
-		// TODO unregister on closing dialog
-//		addWindowListener(new WindowAdapter() {
-//			@Override
-//			public void windowClosed(WindowEvent e) {
-//				target.quit();
-//			}
-//		});
-		
+		setTitle("Connection Assistant");
+
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWidths = new int[] { 120, 120, 60, 0 };
 		gridBagLayout.rowHeights = new int[] { 50, 40, 40, 40, 0 };
@@ -60,7 +52,8 @@ public class ConnectionDialog extends JDialog {
 				Double.MIN_VALUE };
 		getContentPane().setLayout(gridBagLayout);
 		{
-			JLabel lblTitle = new JLabel("Connect to host...");
+			lblTitle = new JLabel("Connect to host...");
+			lblTitle.setFont(DEFAULT_FONT_BOLD);
 			GridBagConstraints gbc = new GridBagConstraints();
 			gbc.gridwidth = 3;
 			gbc.insets = new Insets(5, 5, 5, 5);
@@ -80,7 +73,7 @@ public class ConnectionDialog extends JDialog {
 			getContentPane().add(lblHost, gbc);
 		}
 		{
-			txtHost = new JTextField();
+			txtHost = new JTextField("localhost");
 			GridBagConstraints gbc = new GridBagConstraints();
 			gbc.insets = new Insets(5, 5, 5, 5);
 			gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -139,28 +132,7 @@ public class ConnectionDialog extends JDialog {
 			okButton.setRolloverIcon(loadIcon(PLAY_ICON_SMALL));
 			okButton.setSelectedIcon(loadIcon(STOP_ICON_SMALL));
 			okButton.setFocusable(false);
-			okButton.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					final JToggleButton source = (JToggleButton) e.getSource();
-					if (source.isSelected()) {
-						final String host = txtHost.getText().trim();
-						final int port = Integer.parseInt(txtPort.getText());
-						final String name = txtName.getText().trim();
-						if (name.equals("")) {
-							JOptionPane.showMessageDialog(
-									ConnectionDialog.this,
-									"Please enter your name!", "Naming error",
-									JOptionPane.ERROR_MESSAGE);
-							source.setSelected(false);
-						} else {
-							setupRegistry(host, port, name);
-						}
-					} else {
-						registerThread.interrupt();
-					}
-				}
-			});
+			okButton.addActionListener(new ConnectionListener(target));
 		}
 		{
 			JButton cancelButton = new JButton("Cancel");
@@ -178,37 +150,6 @@ public class ConnectionDialog extends JDialog {
 		}
 	}
 
-	private void setupRegistry(String host, int port, final String name) {
-		try {
-			Registry reg = LocateRegistry.getRegistry(host, port);
-			final ServerControl p = (ServerControl) reg.lookup("pres");
-			target.setName(name);
-			target.setPres(p);
-
-			registerThread = new Thread(new Runnable() {
-				@Override
-				public void run() {
-					try {
-						p.register(name); // FIXME forbid same name!
-						while (!p.isRunning()) {
-							Thread.sleep(500);
-						}
-						ConnectionDialog.this.dispose();
-					} catch (InterruptedException | RemoteException e) {
-						try {
-							p.unregister(name);
-						} catch (RemoteException e1) {
-						}
-					}
-				}
-			});
-			registerThread.start();
-		} catch (RemoteException | NotBoundException e) {
-			// TODO timeout
-			DEBUGLOG.severe("Could not connect to host!");
-		}
-	}
-
 	/**
 	 * Launch the application.
 	 */
@@ -223,6 +164,75 @@ public class ConnectionDialog extends JDialog {
 			dialog.setVisible(true);
 		} catch (Exception e) {
 			e.printStackTrace();
+		}
+	}
+
+	private class ConnectionListener implements ActionListener {
+		private ClientGUI target;
+
+		public ConnectionListener(ClientGUI target) {
+			this.target = target;
+		}
+
+		public void actionPerformed(ActionEvent e) {
+			final JToggleButton sourceBtn = (JToggleButton) e.getSource();
+			if (sourceBtn.isSelected()) {
+				final String host = txtHost.getText().trim();
+				final int port = Integer.parseInt(txtPort.getText());
+				final String name = txtName.getText().trim();
+				try {
+					Registry reg = LocateRegistry.getRegistry(host, port);
+					final ServerControl p = (ServerControl) reg.lookup("pres");
+					if (name.equals("")) {
+						JOptionPane.showMessageDialog(ConnectionDialog.this,
+								"Please enter your name!", "Naming error",
+								JOptionPane.ERROR_MESSAGE);
+						sourceBtn.setSelected(false);
+					} else if (!p.register(name)) {
+						JOptionPane.showMessageDialog(ConnectionDialog.this,
+								"Please choose another name!", "Naming error",
+								JOptionPane.ERROR_MESSAGE);
+						sourceBtn.setSelected(false);
+					} else {
+						txtHost.setEnabled(false);
+						txtName.setEnabled(false);
+						txtPort.setEnabled(false);
+						lblTitle.setText("Waiting for host...");
+
+						target.setName(name);
+						target.setPres(p);
+
+						registerThread = new Thread(new Runnable() {
+							@Override
+							public void run() {
+								try {
+									while (!p.isRunning()) {
+										Thread.sleep(500);
+									}
+									ConnectionDialog.this.dispose();
+								} catch (InterruptedException | RemoteException e) {
+									try {
+										p.unregister(name);
+									} catch (RemoteException e1) {
+									}
+								}
+							}
+						});
+						registerThread.start();
+					}
+				} catch (RemoteException | NotBoundException ex) {
+					JOptionPane.showMessageDialog(ConnectionDialog.this,
+							"Host cannot be found!", "Network error",
+							JOptionPane.ERROR_MESSAGE);
+					sourceBtn.setSelected(false);
+				}
+			} else {
+				registerThread.interrupt();
+				txtHost.setEnabled(true);
+				txtName.setEnabled(true);
+				txtPort.setEnabled(true);
+				lblTitle.setText("Connect to host...");
+			}
 		}
 	}
 }

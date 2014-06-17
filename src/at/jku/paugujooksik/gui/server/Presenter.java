@@ -1,6 +1,6 @@
 package at.jku.paugujooksik.gui.server;
 
-import static at.jku.paugujooksik.logic.Toolkit.TITLE_FONT;
+import static at.jku.paugujooksik.tools.Constants.TITLE_FONT;
 
 import java.awt.Frame;
 import java.awt.GraphicsDevice;
@@ -21,9 +21,10 @@ import javax.swing.JLabel;
 import at.jku.paugujooksik.action.BinaryAction;
 import at.jku.paugujooksik.action.UnaryAction;
 import at.jku.paugujooksik.gui.CardSetHandler;
+import at.jku.paugujooksik.gui.CardSetPanel;
 import at.jku.paugujooksik.gui.SelectionException;
-import at.jku.paugujooksik.logic.Cards;
-import at.jku.paugujooksik.logic.Configuration;
+import at.jku.paugujooksik.model.Cards;
+import at.jku.paugujooksik.model.Configuration;
 
 public class Presenter extends Window implements CardSetHandler {
 	private static final long serialVersionUID = 8299211278767397214L;
@@ -83,14 +84,14 @@ public class Presenter extends Window implements CardSetHandler {
 		frame.getContentPane().add(lblConfig, gbcLblConfig);
 
 		for (String name : registeredClients) {
-			final String title = "Team '" + name + "'";
 			GridBagConstraints gbcPnlRow = new GridBagConstraints();
 			gbcPnlRow.insets = new Insets(10, 10, 10, 10);
 			gbcPnlRow.fill = GridBagConstraints.BOTH;
 			gbcPnlRow.gridx = 0;
 			gbcPnlRow.gridy = curRow++;
 			CardSetPanel cardSetPanel = new CardSetPanel(this, config.size,
-					name, title, true, false);
+					name, true, false);
+			cardSetPanel.setTitle("Team '" + name + "'");
 			players.put(name, new Player(cardSetPanel));
 			frame.getContentPane().add(cardSetPanel, gbcPnlRow);
 		}
@@ -150,6 +151,14 @@ public class Presenter extends Window implements CardSetHandler {
 		default:
 			DEBUGLOG.severe("Cannot perform action: '" + action + "'");
 		}
+	}
+
+	public void quit() {
+		frame.dispose();
+	}
+
+	public void unregister(String clientId) {
+		players.get(clientId).panel.setTitle("<gone>");
 	}
 
 	@Override

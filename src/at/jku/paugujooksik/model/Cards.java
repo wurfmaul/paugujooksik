@@ -1,4 +1,4 @@
-package at.jku.paugujooksik.logic;
+package at.jku.paugujooksik.model;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -21,6 +21,7 @@ public class Cards<T extends Comparable<T>> {
 
 	private List<Action> expectedActions;
 	private int curAction;
+	private Action lastAction = null;
 	private int pinIndex = -1;
 
 	public Cards(Configuration<T> config) {
@@ -222,6 +223,7 @@ public class Cards<T extends Comparable<T>> {
 		}
 		expectedActions = config.getAlgorithm().getActions(values);
 		curAction = 0;
+		lastAction = null;
 		stat.reset();
 	}
 
@@ -256,7 +258,10 @@ public class Cards<T extends Comparable<T>> {
 					curAction++;
 				}
 			} else {
-				stat.errorCount++;
+				if (lastAction == null || !lastAction.equals(action)) {
+					lastAction = action;
+					stat.errorCount++;
+				}
 				throw new SelectionException("You should " + exp + " instead!");
 			}
 		} else if (!config.getAlgorithm().allowsMoreActions()) {

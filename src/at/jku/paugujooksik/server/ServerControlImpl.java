@@ -6,7 +6,7 @@ import java.rmi.server.UnicastRemoteObject;
 import at.jku.paugujooksik.action.BinaryAction;
 import at.jku.paugujooksik.action.UnaryAction;
 import at.jku.paugujooksik.gui.server.ServerGUI;
-import at.jku.paugujooksik.logic.Configuration;
+import at.jku.paugujooksik.model.Configuration;
 
 public class ServerControlImpl extends UnicastRemoteObject implements
 		ServerControl {

@@ -5,7 +5,7 @@ import java.rmi.RemoteException;
 
 import at.jku.paugujooksik.action.BinaryAction;
 import at.jku.paugujooksik.action.UnaryAction;
-import at.jku.paugujooksik.logic.Configuration;
+import at.jku.paugujooksik.model.Configuration;
 
 public interface ServerControl extends Remote {
 	public boolean register(String name) throws RemoteException;
