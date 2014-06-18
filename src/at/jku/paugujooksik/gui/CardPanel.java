@@ -115,21 +115,21 @@ public class CardPanel extends AbstractPanel {
 		cardMouseAdapter = new MouseAdapter() {
 			@Override
 			public void mouseReleased(MouseEvent e) {
-				if (staysInsideComponent(e))
+				if (!target.isProcessing() && staysInsideComponent(e))
 					target.performSelect(clientId, index);
 			}
 		};
 		pinMouseAdapter = new MouseAdapter() {
 			@Override
 			public void mouseReleased(MouseEvent e) {
-				if (staysInsideComponent(e))
+				if (!target.isProcessing() && staysInsideComponent(e))
 					target.performPin(clientId, index);
 			}
 		};
 		finMouseAdapter = new MouseAdapter() {
 			@Override
 			public void mouseReleased(MouseEvent e) {
-				if (staysInsideComponent(e))
+				if (!target.isProcessing() && staysInsideComponent(e))
 					target.performMark(clientId, index);
 			}
 		};

@@ -1,5 +1,8 @@
 package at.jku.paugujooksik.model;
 
+import static at.jku.paugujooksik.tools.Constants.MOVE_MARK_ON_SWAP;
+import static at.jku.paugujooksik.tools.Constants.MOVE_PIN_ON_SWAP;
+
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -10,8 +13,6 @@ import at.jku.paugujooksik.gui.SelectionException;
 
 public class Cards<T extends Comparable<T>> {
 	private static final Logger DEBUGLOG = Logger.getLogger("DEBUG");
-	private static final boolean MOVE_PIN = false;
-	private static final boolean MOVE_MARK = false;
 
 	private final Statistics stat = new Statistics();
 	private final List<Card<T>> cardList = new LinkedList<>();
@@ -120,18 +121,18 @@ public class Cards<T extends Comparable<T>> {
 		checkAction(action, dryRun);
 		if (dryRun)
 			return action;
-		
+
 		final Card<T> left = cardList.get(getFirstSelectedIndex());
 		final Card<T> right = cardList.get(getSecondSelectedIndex());
 		cardList.set(getFirstSelectedIndex(), right);
 		cardList.set(getSecondSelectedIndex(), left);
-		if (!MOVE_PIN) {
+		if (!MOVE_PIN_ON_SWAP) {
 			boolean leftPinned = left.pinned;
 			boolean rightPinned = right.pinned;
 			left.pinned = rightPinned;
 			right.pinned = leftPinned;
 		}
-		if (!MOVE_MARK) {
+		if (!MOVE_MARK_ON_SWAP) {
 			boolean leftMarked = left.marked;
 			boolean rightMarked = right.marked;
 			left.marked = rightMarked;
@@ -142,31 +143,28 @@ public class Cards<T extends Comparable<T>> {
 	}
 
 	public Action togglePin(int index) {
+		final Action action = Action.pin(index);
 		if (pinIndex == -1 || pinIndex != index) {
-			final Action action = Action.pin(index);
 			checkAction(action, false);
 			if (pinIndex != -1)
 				cardList.get(pinIndex).pinned = false;
 			cardList.get(index).pinned = true;
 			pinIndex = index;
-			return action;
 		} else {
 			cardList.get(pinIndex).pinned = false;
 			pinIndex = -1;
 		}
-		return null;
+		return action;
 	}
 
 	public Action toggleMark(int index) {
 		final Card<T> card = cardList.get(index);
 		Action action;
 		if (card.marked) {
-			action = Action.unmark(index);
-			checkAction(action, false);
+			action = Action.mark(index);
 			card.marked = false;
 		} else {
 			action = Action.mark(index);
-			checkAction(action, false);
 			card.marked = true;
 		}
 		return action;

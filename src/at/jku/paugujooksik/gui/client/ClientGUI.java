@@ -30,6 +30,7 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
@@ -68,6 +69,7 @@ public class ClientGUI implements CardSetHandler {
 	private ServerControl controler;
 	private Cards<?> cards;
 	private int size;
+	private boolean animating;
 
 	private ClientGUI(boolean clientMode) {
 		this.clientMode = clientMode;
@@ -125,6 +127,7 @@ public class ClientGUI implements CardSetHandler {
 		{
 			lblHint.setFont(HINT_FONT);
 			lblHint.setHorizontalAlignment(SwingConstants.CENTER);
+			lblHint.setVerticalAlignment(SwingConstants.TOP);
 			GridBagConstraints gbcLblHint = new GridBagConstraints();
 			gbcLblHint.insets = new Insets(0, 5, 5, 5);
 			gbcLblHint.fill = GridBagConstraints.BOTH;
@@ -349,27 +352,40 @@ public class ClientGUI implements CardSetHandler {
 	private void reportErrorToPresenter() {
 		try {
 			controler.incErrorCount(name);
-		} catch (RemoteException e) {
-			e.printStackTrace();
+		} catch (RemoteException | NullPointerException e) {
+			displayErrorMessage();
 		}
 	}
 
 	private void reportActionToPresenter(Action action) {
 		if (clientMode) {
-			try { // TODO bad style
+			try {
 				if (action instanceof UnaryAction)
 					controler.performAction(name, (UnaryAction) action);
 				else if (action instanceof BinaryAction)
 					controler.performAction(name, (BinaryAction) action);
 			} catch (RemoteException e) {
-				e.printStackTrace();
+				displayErrorMessage();
 			}
 		}
+	}
+
+	private void displayErrorMessage() {
+		DEBUGLOG.severe("Connection to server lost!");
+		JOptionPane.showMessageDialog(frame,
+				"Connection to server lost! Shutting down.", "Network error",
+				JOptionPane.ERROR_MESSAGE);
+		quit();
 	}
 
 	private void updateStats() {
 		pnlCards.setStats(cards.getCompareCount(), cards.getSwapCount(),
 				cards.getErrorCount());
+	}
+
+	@Override
+	public boolean isProcessing() {
+		return animating;
 	}
 
 	@Override
@@ -419,16 +435,17 @@ public class ClientGUI implements CardSetHandler {
 
 			int leftIndex = cards.getFirstSelectedIndex();
 			int rightIndex = cards.getSecondSelectedIndex();
-			
+
 			// FIXME bring the cards in between to back
-//				pnlCards.cardSet.set(size, this, clientId, true, rightIndex);
-			
+			// pnlCards.cardSet.set(size, this, clientId, true, rightIndex);
+
 			CardPanel btnLeft = pnlCards.cardSet.get(leftIndex);
 			CardPanel btnRight = pnlCards.cardSet.get(rightIndex);
 			AnimationListener listener = new AnimationListener(btnLeft,
 					btnRight, this, clientId);
 			Timer timer = new Timer(40, listener);
 			listener.setTimer(timer);
+			animating = true;
 			timer.start();
 		} catch (SelectionException ex) {
 			reportError(ex);
@@ -447,6 +464,7 @@ public class ClientGUI implements CardSetHandler {
 		}
 		pnlCards.cardSet.updateCards(cards);
 		checkFinish();
+		animating = false;
 	}
 
 	public int getLeftReference() {

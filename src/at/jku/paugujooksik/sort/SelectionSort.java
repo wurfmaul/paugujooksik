@@ -31,19 +31,11 @@ public class SelectionSort<T extends Comparable<T>> extends SortAlgorithm<T> {
 				actionOpen(j, iMin);
 				actionSwap(iMin, j);
 			}
-			actionMark(j);
 		}
-		actions.add(Action.mark(n - 1));
 
 		DEBUGLOG.fine("SelectionSort sorted the values " + values);
 		assert isListSorted(a);
 		return actions;
-	}
-
-	private void actionMark(int i) {
-		if (pinned != -1) {
-			actions.add(Action.mark(i));
-		}
 	}
 
 	private void actionSwap(int i, int j) {

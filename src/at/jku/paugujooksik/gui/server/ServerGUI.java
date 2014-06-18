@@ -3,26 +3,39 @@ package at.jku.paugujooksik.gui.server;
 import static at.jku.paugujooksik.model.Configuration.DEFAULT_SIZE;
 import static at.jku.paugujooksik.model.Configuration.MAX_SIZE;
 import static at.jku.paugujooksik.model.Configuration.MIN_SIZE;
+import static at.jku.paugujooksik.tools.Constants.BINDING_ID;
+import static at.jku.paugujooksik.tools.Constants.DEFAULT_FONT;
+import static at.jku.paugujooksik.tools.Constants.DEFAULT_FONT_BOLD;
+import static at.jku.paugujooksik.tools.Constants.DEFAULT_PORT;
+import static at.jku.paugujooksik.tools.Constants.SHOW_IP6_ADDRESSES;
 import static at.jku.paugujooksik.tools.ResourceLoader.PLAY_ICON;
 import static at.jku.paugujooksik.tools.ResourceLoader.STOP_ICON;
 import static at.jku.paugujooksik.tools.ResourceLoader.loadIcon;
-import static at.jku.paugujooksik.tools.Constants.DEFAULT_FONT;
-import static at.jku.paugujooksik.tools.Constants.DEFAULT_FONT_BOLD;
 
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.DisplayMode;
 import java.awt.EventQueue;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.net.Inet4Address;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.net.InterfaceAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.rmi.AlreadyBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.util.Enumeration;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -47,28 +60,54 @@ import at.jku.paugujooksik.server.ServerControlImpl;
 
 public class ServerGUI {
 	private static final Logger DEBUGLOG = Logger.getLogger("DEBUG");
-	private static final String HOST_IP;
-	private static final int HOST_PORT = 1099;
+	private static final List<String> HOST_ADDRESSES = new LinkedList<>();
+	private static final List<String> AVAILABLE_DISPLAYS = new LinkedList<>();
+	private static final GraphicsDevice[] DISPLAY_DEVICES;
 
 	private final JFrame frame = new JFrame();
 	private final Set<String> registeredClients = new LinkedHashSet<>();
 
-	private Presenter presenter = null;
+	private boolean joinable = true;
+	private Presenter presenter;
 	private JToggleButton btnPlay;
 	private JTextArea txtPlayers;
+	private JComboBox<Object> cbxDisplay;
+	private JComboBox<Object> cbxCfgHost;
 	private JComboBox<Object> cbxCfgAlgo;
 	private JComboBox<ValueType> cbxCfgType;
 	private JComboBox<ValueMode> cbxCfgMode;
 	private JSlider sldrCfgSize;
 
 	static {
-		String ip = "unknown";
+		// compute host addresses
 		try {
-			ip = InetAddress.getLocalHost().getHostAddress();
-		} catch (UnknownHostException e) {
+			Enumeration<NetworkInterface> interfaces = NetworkInterface
+					.getNetworkInterfaces();
+			while (interfaces.hasMoreElements()) {
+				NetworkInterface iface = interfaces.nextElement();
+				if (iface.isLoopback() || !iface.isUp())
+					continue;
+
+				for (InterfaceAddress addr : iface.getInterfaceAddresses()) {
+					InetAddress address = addr.getAddress();
+					if (address instanceof Inet4Address || SHOW_IP6_ADDRESSES) {
+						HOST_ADDRESSES.add(address.getHostAddress());
+					}
+				}
+			}
+		} catch (SocketException e) {
 			DEBUGLOG.severe("Could not retrieve IP address.");
-		} finally {
-			HOST_IP = ip;
+		}
+
+		// list all available monitors
+		DISPLAY_DEVICES = GraphicsEnvironment
+				.getLocalGraphicsEnvironment().getScreenDevices();
+
+		for (int i = 0; i < DISPLAY_DEVICES.length; i++) {
+			GraphicsDevice device = DISPLAY_DEVICES[i];
+			DisplayMode mode = device.getDisplayMode();
+			AVAILABLE_DISPLAYS.add(String.format("%d: [%dx%d]", i,
+					mode.getWidth(), mode.getHeight()));
 		}
 	}
 
@@ -81,17 +120,18 @@ public class ServerGUI {
 	}
 
 	private void initialize() {
-		frame.setBounds(100, 100, 700, 430);
-		frame.setMinimumSize(new Dimension(500, 430));
+		frame.setBounds(100, 100, 700, 520);
+		frame.setMinimumSize(new Dimension(500, 520));
 		frame.setTitle("Paugujooksik - Presenter Mode");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		GridBagLayout gblFrame = new GridBagLayout();
 		gblFrame.columnWidths = new int[] { 175, 175, 175, 175, 0 };
-		gblFrame.rowHeights = new int[] { 50, 40, 40, 50, 40, 40, 40, 40, 0 };
+		gblFrame.rowHeights = new int[] { 50, 40, 40, 50, 40, 50, 40, 40, 40,
+				40, 0 };
 		gblFrame.columnWeights = new double[] { 1.0, 1.0, 1.0, 1.0,
 				Double.MIN_VALUE };
 		gblFrame.rowWeights = new double[] { 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-				1.0, Double.MIN_VALUE };
+				1.0, 1.0, 1.0, Double.MIN_VALUE };
 		frame.getContentPane().setLayout(gblFrame);
 
 		JLabel lblConnTitle = new JLabel("Connection");
@@ -104,7 +144,7 @@ public class ServerGUI {
 		gbcLblConnTitle.gridy = 0;
 		frame.getContentPane().add(lblConnTitle, gbcLblConnTitle);
 
-		JLabel lblCfgIp = new JLabel("IP address: ");
+		JLabel lblCfgIp = new JLabel("Host address: ");
 		GridBagConstraints gbcLblFfgIp = new GridBagConstraints();
 		gbcLblFfgIp.anchor = GridBagConstraints.WEST;
 		gbcLblFfgIp.insets = new Insets(0, 10, 5, 5);
@@ -112,15 +152,13 @@ public class ServerGUI {
 		gbcLblFfgIp.gridy = 1;
 		frame.getContentPane().add(lblCfgIp, gbcLblFfgIp);
 
-		JTextField txtCfgIp = new JTextField(HOST_IP);
-		txtCfgIp.setEditable(false);
+		cbxCfgHost = new JComboBox<>(HOST_ADDRESSES.toArray());
 		GridBagConstraints gbcTxtCfgIp = new GridBagConstraints();
 		gbcTxtCfgIp.insets = new Insets(0, 0, 5, 5);
 		gbcTxtCfgIp.fill = GridBagConstraints.HORIZONTAL;
 		gbcTxtCfgIp.gridx = 1;
 		gbcTxtCfgIp.gridy = 1;
-		frame.getContentPane().add(txtCfgIp, gbcTxtCfgIp);
-		txtCfgIp.setColumns(10);
+		frame.getContentPane().add(cbxCfgHost, gbcTxtCfgIp);
 
 		JLabel lblCfgPort = new JLabel("Port: ");
 		GridBagConstraints gbcLblCfgPort = new GridBagConstraints();
@@ -130,8 +168,8 @@ public class ServerGUI {
 		gbcLblCfgPort.gridy = 2;
 		frame.getContentPane().add(lblCfgPort, gbcLblCfgPort);
 
-		JTextField txtCfgPort = new JTextField(Integer.toString(HOST_PORT));
-		txtCfgPort.setEditable(false);
+		JTextField txtCfgPort = new JTextField(Integer.toString(DEFAULT_PORT));
+		txtCfgPort.setBackground(Color.WHITE);
 		GridBagConstraints gbcTxtCfgPort = new GridBagConstraints();
 		gbcTxtCfgPort.insets = new Insets(0, 0, 5, 5);
 		gbcTxtCfgPort.fill = GridBagConstraints.HORIZONTAL;
@@ -156,13 +194,41 @@ public class ServerGUI {
 		txtPlayers.setFocusable(false);
 		txtPlayers.setBorder(new BevelBorder(BevelBorder.LOWERED));
 		GridBagConstraints gbcTxtPlayers = new GridBagConstraints();
-		gbcTxtPlayers.gridheight = 4;
+		gbcTxtPlayers.gridheight = 6;
 		gbcTxtPlayers.gridwidth = 2;
 		gbcTxtPlayers.insets = new Insets(5, 5, 5, 5);
 		gbcTxtPlayers.fill = GridBagConstraints.BOTH;
 		gbcTxtPlayers.gridx = 2;
 		gbcTxtPlayers.gridy = 1;
 		frame.getContentPane().add(txtPlayers, gbcTxtPlayers);
+
+		JLabel lblDisplayTitle = new JLabel("Display");
+		lblDisplayTitle.setFont(DEFAULT_FONT_BOLD);
+		GridBagConstraints gbcLblDisplayTitle = new GridBagConstraints();
+		gbcLblDisplayTitle.gridwidth = 2;
+		gbcLblDisplayTitle.fill = GridBagConstraints.BOTH;
+		gbcLblDisplayTitle.insets = new Insets(0, 5, 5, 5);
+		gbcLblDisplayTitle.gridx = 0;
+		gbcLblDisplayTitle.gridy = 3;
+		frame.getContentPane().add(lblDisplayTitle, gbcLblDisplayTitle);
+
+		JLabel lblDisplay = new JLabel("Presentation screen: ");
+		GridBagConstraints gbcLblDisplay = new GridBagConstraints();
+		gbcLblDisplay.fill = GridBagConstraints.HORIZONTAL;
+		gbcLblDisplay.insets = new Insets(0, 10, 5, 5);
+		gbcLblDisplay.gridx = 0;
+		gbcLblDisplay.gridy = 4;
+		frame.getContentPane().add(lblDisplay, gbcLblDisplay);
+
+		cbxDisplay = new JComboBox<>(AVAILABLE_DISPLAYS.toArray());
+		if (cbxDisplay.getItemCount() > 1)
+			cbxDisplay.setSelectedIndex(1);
+		GridBagConstraints gbcCbxDisplay = new GridBagConstraints();
+		gbcCbxDisplay.insets = new Insets(0, 0, 5, 5);
+		gbcCbxDisplay.fill = GridBagConstraints.HORIZONTAL;
+		gbcCbxDisplay.gridx = 1;
+		gbcCbxDisplay.gridy = 4;
+		frame.getContentPane().add(cbxDisplay, gbcCbxDisplay);
 
 		JLabel lblConfigTitle = new JLabel("Configuration");
 		lblConfigTitle.setFont(DEFAULT_FONT_BOLD);
@@ -171,7 +237,7 @@ public class ServerGUI {
 		gbcLblConfigTitle.fill = GridBagConstraints.BOTH;
 		gbcLblConfigTitle.insets = new Insets(0, 5, 5, 5);
 		gbcLblConfigTitle.gridx = 0;
-		gbcLblConfigTitle.gridy = 3;
+		gbcLblConfigTitle.gridy = 5;
 		frame.getContentPane().add(lblConfigTitle, gbcLblConfigTitle);
 
 		JLabel lblCfgAlgo = new JLabel("Algorithm: ");
@@ -179,7 +245,7 @@ public class ServerGUI {
 		gbcLblCfgAlgo.fill = GridBagConstraints.HORIZONTAL;
 		gbcLblCfgAlgo.insets = new Insets(0, 10, 5, 5);
 		gbcLblCfgAlgo.gridx = 0;
-		gbcLblCfgAlgo.gridy = 4;
+		gbcLblCfgAlgo.gridy = 6;
 		frame.getContentPane().add(lblCfgAlgo, gbcLblCfgAlgo);
 
 		cbxCfgAlgo = new JComboBox<>(Configuration.getAlgorithmList());
@@ -187,7 +253,7 @@ public class ServerGUI {
 		gbcCbxCfgAlgo.insets = new Insets(0, 0, 5, 5);
 		gbcCbxCfgAlgo.fill = GridBagConstraints.HORIZONTAL;
 		gbcCbxCfgAlgo.gridx = 1;
-		gbcCbxCfgAlgo.gridy = 4;
+		gbcCbxCfgAlgo.gridy = 6;
 		frame.getContentPane().add(cbxCfgAlgo, gbcCbxCfgAlgo);
 
 		JLabel lblCfgType = new JLabel("Type: ");
@@ -195,7 +261,7 @@ public class ServerGUI {
 		gbcLblCfgType.fill = GridBagConstraints.HORIZONTAL;
 		gbcLblCfgType.insets = new Insets(0, 10, 5, 5);
 		gbcLblCfgType.gridx = 0;
-		gbcLblCfgType.gridy = 5;
+		gbcLblCfgType.gridy = 7;
 		frame.getContentPane().add(lblCfgType, gbcLblCfgType);
 
 		cbxCfgType = new JComboBox<>(ValueType.values());
@@ -203,7 +269,7 @@ public class ServerGUI {
 		gbcCbxCfgType.insets = new Insets(0, 0, 5, 5);
 		gbcCbxCfgType.fill = GridBagConstraints.HORIZONTAL;
 		gbcCbxCfgType.gridx = 1;
-		gbcCbxCfgType.gridy = 5;
+		gbcCbxCfgType.gridy = 7;
 		frame.getContentPane().add(cbxCfgType, gbcCbxCfgType);
 
 		JLabel lblCfgMode = new JLabel("Mode: ");
@@ -211,7 +277,7 @@ public class ServerGUI {
 		gbcLblCfgMode.fill = GridBagConstraints.HORIZONTAL;
 		gbcLblCfgMode.insets = new Insets(0, 10, 5, 5);
 		gbcLblCfgMode.gridx = 0;
-		gbcLblCfgMode.gridy = 6;
+		gbcLblCfgMode.gridy = 8;
 		frame.getContentPane().add(lblCfgMode, gbcLblCfgMode);
 
 		cbxCfgMode = new JComboBox<>(ValueMode.values());
@@ -219,7 +285,7 @@ public class ServerGUI {
 		gbcCbxCfgMode.insets = new Insets(0, 0, 5, 5);
 		gbcCbxCfgMode.fill = GridBagConstraints.HORIZONTAL;
 		gbcCbxCfgMode.gridx = 1;
-		gbcCbxCfgMode.gridy = 6;
+		gbcCbxCfgMode.gridy = 8;
 		frame.getContentPane().add(cbxCfgMode, gbcCbxCfgMode);
 
 		JLabel lblCfgSize = new JLabel("Size: ");
@@ -227,7 +293,7 @@ public class ServerGUI {
 		gbcLblCfgSize.fill = GridBagConstraints.HORIZONTAL;
 		gbcLblCfgSize.insets = new Insets(0, 10, 0, 5);
 		gbcLblCfgSize.gridx = 0;
-		gbcLblCfgSize.gridy = 7;
+		gbcLblCfgSize.gridy = 9;
 		frame.getContentPane().add(lblCfgSize, gbcLblCfgSize);
 
 		sldrCfgSize = new JSlider();
@@ -241,7 +307,7 @@ public class ServerGUI {
 		gbcSldrSize.fill = GridBagConstraints.HORIZONTAL;
 		gbcSldrSize.insets = new Insets(0, 0, 0, 5);
 		gbcSldrSize.gridx = 1;
-		gbcSldrSize.gridy = 7;
+		gbcSldrSize.gridy = 9;
 		frame.getContentPane().add(sldrCfgSize, gbcSldrSize);
 
 		btnPlay = new JToggleButton(loadIcon(PLAY_ICON));
@@ -252,7 +318,7 @@ public class ServerGUI {
 		gbcBtnPlay.gridwidth = 2;
 		gbcBtnPlay.gridheight = 3;
 		gbcBtnPlay.gridx = 2;
-		gbcBtnPlay.gridy = 5;
+		gbcBtnPlay.gridy = 7;
 		btnPlay.addActionListener(new PresenterListener());
 		frame.getContentPane().add(btnPlay, gbcBtnPlay);
 
@@ -298,8 +364,8 @@ public class ServerGUI {
 	private void setupRegistry() {
 		try {
 			ServerControl p = new ServerControlImpl(this);
-			Registry reg = LocateRegistry.createRegistry(HOST_PORT);
-			reg.bind("pres", p);
+			Registry reg = LocateRegistry.createRegistry(DEFAULT_PORT);
+			reg.bind(BINDING_ID, p);
 		} catch (RemoteException | AlreadyBoundException e) {
 			DEBUGLOG.severe("Could not share object!");
 		}
@@ -307,6 +373,14 @@ public class ServerGUI {
 
 	public Presenter getPresenter() {
 		return presenter;
+	}
+
+	public boolean isJoinable() {
+		return joinable ;
+	}
+
+	public boolean isRunning() {
+		return presenter != null;
 	}
 
 	public boolean register(String name) {
@@ -320,7 +394,8 @@ public class ServerGUI {
 	public void unregister(String clientId) {
 		registeredClients.remove(clientId);
 		updatePlayerList();
-		presenter.unregister(clientId);
+		if (presenter != null)
+			presenter.unregister(clientId);
 	}
 
 	/**
@@ -356,19 +431,29 @@ public class ServerGUI {
 				final Configuration<?> config = Configuration.generate(mode,
 						type, sortIdx, size);
 
+				// compute used screen
+				int dspDix = cbxDisplay.getSelectedIndex();
+				if (dspDix < 0)
+					dspDix = 0;
+				final GraphicsDevice device = DISPLAY_DEVICES[dspDix];
+
 				EventQueue.invokeLater(new Runnable() {
 					public void run() {
 						try {
 							presenter = new Presenter(frame, config,
-									registeredClients);
+									registeredClients, device);
 						} catch (Exception e) {
 							e.printStackTrace();
 						}
 					}
 				});
+				joinable = false;
 			} else {
+				registeredClients.clear();
+				updatePlayerList();
 				presenter.quit();
 				presenter = null;
+				joinable = true;
 			}
 		}
 	}

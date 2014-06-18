@@ -34,8 +34,13 @@ public class ServerControlImpl extends UnicastRemoteObject implements
 	}
 
 	@Override
+	public boolean isJoinable() throws RemoteException {
+		return server.isJoinable();
+	}
+	
+	@Override
 	public boolean isRunning() throws RemoteException {
-		return server.getPresenter() != null;
+		return server.isRunning();
 	}
 
 	@Override

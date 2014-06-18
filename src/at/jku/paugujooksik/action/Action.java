@@ -4,7 +4,6 @@ import static at.jku.paugujooksik.action.ActionType.MARK;
 import static at.jku.paugujooksik.action.ActionType.OPEN;
 import static at.jku.paugujooksik.action.ActionType.PIN;
 import static at.jku.paugujooksik.action.ActionType.SWAP;
-import static at.jku.paugujooksik.action.ActionType.UNMARK;
 
 import java.io.Serializable;
 
@@ -22,10 +21,6 @@ public abstract class Action implements Serializable {
 
 	public static UnaryAction mark(int index) {
 		return new UnaryAction(MARK, index);
-	}
-
-	public static UnaryAction unmark(int index) {
-		return new UnaryAction(UNMARK, index);
 	}
 
 	public static UnaryAction pin(int index) {

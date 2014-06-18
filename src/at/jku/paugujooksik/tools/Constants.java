@@ -37,11 +37,18 @@ public class Constants {
 	public static final String ERROR_LABEL = "≠ ";
 	public static final String SWAP_LABEL = "↔ ";
 	public static final String COMPARE_LABEL = "≶ ";
+	public static final String DEFAULT_HOST = "localhost";
+	public static final String BINDING_ID = "pres";
+	public static final String HISTORY_FILE_DELIM = ";";
 
 	public static final int PLAYER_BORDER_THICKNESS = 3;
 	public static final int DEFAULT_BUTTON_SIZE = 25;
+	public static final int DEFAULT_PORT = 1099;
 
 	public static final boolean PLAYER_BORDER_ISROUNDED = true;
+	public static final boolean MOVE_PIN_ON_SWAP = true;
+	public static final boolean MOVE_MARK_ON_SWAP = true;
+	public static final boolean SHOW_IP6_ADDRESSES = false;
 
 	static {
 		if (loadFonts()) {

@@ -53,7 +53,7 @@ public class ValueGenerator {
 	}
 
 	public enum ValueType {
-		INTEGER, STRING;
+		NUMBERS, LETTERS;
 
 		@Override
 		public String toString() {
@@ -61,7 +61,6 @@ public class ValueGenerator {
 			final StringBuilder sb = new StringBuilder();
 			sb.append(name().charAt(0));
 			sb.append(name().substring(1).toLowerCase());
-			sb.append("s");
 			return sb.toString();
 		};
 	}

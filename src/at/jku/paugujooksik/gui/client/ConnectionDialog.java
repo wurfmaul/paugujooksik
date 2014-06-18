@@ -1,6 +1,12 @@
 package at.jku.paugujooksik.gui.client;
 
-import static at.jku.paugujooksik.tools.Constants.*;
+import static at.jku.paugujooksik.tools.Constants.BINDING_ID;
+import static at.jku.paugujooksik.tools.Constants.DEFAULT_FONT;
+import static at.jku.paugujooksik.tools.Constants.DEFAULT_FONT_BOLD;
+import static at.jku.paugujooksik.tools.Constants.DEFAULT_HOST;
+import static at.jku.paugujooksik.tools.Constants.DEFAULT_PORT;
+import static at.jku.paugujooksik.tools.Constants.HISTORY_FILE_DELIM;
+import static at.jku.paugujooksik.tools.Constants.TITLE_FONT;
 import static at.jku.paugujooksik.tools.ResourceLoader.PLAY_ICON_SMALL;
 import static at.jku.paugujooksik.tools.ResourceLoader.STOP_ICON_SMALL;
 import static at.jku.paugujooksik.tools.ResourceLoader.loadIcon;
@@ -10,17 +16,29 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
 
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.UIManager;
 
@@ -29,11 +47,12 @@ import at.jku.paugujooksik.server.ServerControl;
 public class ConnectionDialog extends JDialog {
 	private static final long serialVersionUID = 1513880741540102732L;
 
-	private final JTextField txtHost;
-	private final JTextField txtPort;
-	private final JTextField txtName;
+	private final JComboBox<String> cbxCfgAddress;
+	private final JComboBox<String> cbxCfgPort;
+	private final JComboBox<String> cbxCfgName;
+	private final JLabel lblTitle;
+
 	private Thread registerThread;
-	private JLabel lblTitle;
 
 	/**
 	 * Create the dialog.
@@ -75,14 +94,17 @@ public class ConnectionDialog extends JDialog {
 			getContentPane().add(lblHost, gbc);
 		}
 		{
-			txtHost = new JTextField("localhost");
-			txtHost.setFont(DEFAULT_FONT);
+			cbxCfgAddress = new JComboBox<>(ConfigHistory.getRecentAddresses());
+			if (cbxCfgAddress.getItemCount() == 0)
+				cbxCfgAddress.addItem(DEFAULT_HOST);
+			cbxCfgAddress.setFont(DEFAULT_FONT);
+			cbxCfgAddress.setEditable(true);
 			GridBagConstraints gbc = new GridBagConstraints();
 			gbc.insets = new Insets(5, 5, 5, 5);
 			gbc.fill = GridBagConstraints.HORIZONTAL;
 			gbc.gridx = 1;
 			gbc.gridy = 1;
-			getContentPane().add(txtHost, gbc);
+			getContentPane().add(cbxCfgAddress, gbc);
 		}
 		{
 			JLabel lblPort = new JLabel("Port: ");
@@ -96,14 +118,17 @@ public class ConnectionDialog extends JDialog {
 			getContentPane().add(lblPort, gbc);
 		}
 		{
-			txtPort = new JTextField("1099");
-			txtPort.setFont(DEFAULT_FONT);
+			cbxCfgPort = new JComboBox<>(ConfigHistory.getRecentPorts());
+			if (cbxCfgPort.getItemCount() == 0)
+				cbxCfgPort.addItem(Integer.toString(DEFAULT_PORT));
+			cbxCfgPort.setFont(DEFAULT_FONT);
+			cbxCfgPort.setEditable(true);
 			GridBagConstraints gbc = new GridBagConstraints();
 			gbc.insets = new Insets(5, 5, 5, 5);
 			gbc.fill = GridBagConstraints.HORIZONTAL;
 			gbc.gridx = 1;
 			gbc.gridy = 2;
-			getContentPane().add(txtPort, gbc);
+			getContentPane().add(cbxCfgPort, gbc);
 		}
 		{
 			JLabel lblName = new JLabel("Your name: ");
@@ -117,14 +142,15 @@ public class ConnectionDialog extends JDialog {
 			getContentPane().add(lblName, gbc);
 		}
 		{
-			txtName = new JTextField();
-			txtName.setFont(DEFAULT_FONT);
+			cbxCfgName = new JComboBox<>(ConfigHistory.getRecentNames());
+			cbxCfgName.setFont(DEFAULT_FONT);
+			cbxCfgName.setEditable(true);
 			GridBagConstraints gbc = new GridBagConstraints();
 			gbc.insets = new Insets(5, 5, 5, 5);
 			gbc.fill = GridBagConstraints.HORIZONTAL;
 			gbc.gridx = 1;
 			gbc.gridy = 3;
-			getContentPane().add(txtName, gbc);
+			getContentPane().add(cbxCfgName, gbc);
 		}
 		{
 			JToggleButton okButton = new JToggleButton();
@@ -185,15 +211,29 @@ public class ConnectionDialog extends JDialog {
 		public void actionPerformed(ActionEvent e) {
 			final JToggleButton sourceBtn = (JToggleButton) e.getSource();
 			if (sourceBtn.isSelected()) {
-				final String host = txtHost.getText().trim();
-				final int port = Integer.parseInt(txtPort.getText());
-				final String name = txtName.getText().trim();
+				final String host = cbxCfgAddress.getEditor().getItem()
+						.toString().trim();
+				final String port = cbxCfgPort.getEditor().getItem().toString().trim();
+				final String name = cbxCfgName.getEditor().getItem().toString()
+						.trim();
+
+				ConfigHistory.addEntry(host, port, name);
+				cbxCfgAddress.addItem(host);
+				cbxCfgPort.addItem(port);
+				cbxCfgName.addItem(name);
+
 				try {
-					Registry reg = LocateRegistry.getRegistry(host, port);
-					final ServerControl p = (ServerControl) reg.lookup("pres");
+					Registry reg = LocateRegistry.getRegistry(host, Integer.parseInt(port));
+					final ServerControl p = (ServerControl) reg
+							.lookup(BINDING_ID);
 					if (name.equals("")) {
 						JOptionPane.showMessageDialog(ConnectionDialog.this,
 								"Please enter your name!", "Naming error",
+								JOptionPane.ERROR_MESSAGE);
+						sourceBtn.setSelected(false);
+					} else if (!p.isJoinable()) {
+						JOptionPane.showMessageDialog(ConnectionDialog.this,
+								"The selected server is busy!", "Network error",
 								JOptionPane.ERROR_MESSAGE);
 						sourceBtn.setSelected(false);
 					} else if (!p.register(name)) {
@@ -202,9 +242,9 @@ public class ConnectionDialog extends JDialog {
 								JOptionPane.ERROR_MESSAGE);
 						sourceBtn.setSelected(false);
 					} else {
-						txtHost.setEnabled(false);
-						txtName.setEnabled(false);
-						txtPort.setEnabled(false);
+						cbxCfgAddress.setEnabled(false);
+						cbxCfgName.setEnabled(false);
+						cbxCfgPort.setEnabled(false);
 						lblTitle.setText("Waiting for host...");
 
 						target.setName(name);
@@ -236,11 +276,101 @@ public class ConnectionDialog extends JDialog {
 				}
 			} else {
 				registerThread.interrupt();
-				txtHost.setEnabled(true);
-				txtName.setEnabled(true);
-				txtPort.setEnabled(true);
+				cbxCfgAddress.setEnabled(true);
+				cbxCfgName.setEnabled(true);
+				cbxCfgPort.setEnabled(true);
 				lblTitle.setText("Connect to host...");
 			}
+		}
+	}
+
+	private static class ConfigHistory {
+		public static final File file = new File("ConnectionHistory.lst");
+
+		private static final int ADDRESS_LINE = 0;
+		private static final int PORT_LINE = 1;
+		private static final int NAME_LINE = 2;
+
+		public static void addEntry(String address, String port, String name) {
+			Map<Integer, String> map = new LinkedHashMap<>();
+
+			map.put(ADDRESS_LINE, createLine(ADDRESS_LINE, address));
+			map.put(PORT_LINE, createLine(PORT_LINE, port));
+			map.put(NAME_LINE, createLine(NAME_LINE, name));
+
+			BufferedWriter writer = null;
+			try {
+				writer = new BufferedWriter(new FileWriter(file));
+				writer.write(map.get(0));
+				writer.write(map.get(1));
+				writer.write(map.get(2));
+			} catch (IOException e) {
+			} finally {
+				try {
+					writer.close();
+				} catch (Exception e) {
+				}
+			}
+		}
+
+		public static String[] getRecentAddresses() {
+			return getRecentEntries(ADDRESS_LINE).toArray(new String[0]);
+		}
+
+		public static String[] getRecentNames() {
+			return getRecentEntries(NAME_LINE).toArray(new String[0]);
+		}
+
+		public static String[] getRecentPorts() {
+			return getRecentEntries(PORT_LINE).toArray(new String[0]);
+		}
+
+		private static String createLine(int line, String entry) {
+			List<String> addressList = getRecentEntries(line);
+			addressList.remove(entry);
+			addressList.add(0, entry);
+			StringBuilder sb = new StringBuilder();
+			Iterator<String> iterator = addressList.iterator();
+			while (iterator.hasNext()) {
+				sb.append(iterator.next());
+				if (iterator.hasNext())
+					sb.append(HISTORY_FILE_DELIM);
+			}
+			sb.append(System.lineSeparator());
+			return sb.toString();
+		}
+
+		private static List<String> getRecentEntries(int lineNumber) {
+			ArrayList<String> list = new ArrayList<>();
+
+			String line = readLine(lineNumber);
+			StringTokenizer t = new StringTokenizer(line, HISTORY_FILE_DELIM);
+
+			while (t.hasMoreTokens()) {
+				list.add(t.nextToken());
+			}
+
+			return list;
+		}
+
+		private static String readLine(int lineNumber) {
+			BufferedReader reader = null;
+			String line = "";
+			try {
+				reader = new BufferedReader(new FileReader(file));
+				int i = 0;
+				for (String curLine; (curLine = reader.readLine()) != null; i++) {
+					if (i == lineNumber)
+						line = curLine;
+				}
+			} catch (IOException e) {
+			} finally {
+				try {
+					reader.close();
+				} catch (Exception e) {
+				}
+			}
+			return line;
 		}
 	}
 }

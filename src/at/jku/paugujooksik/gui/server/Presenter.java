@@ -7,7 +7,6 @@ import static at.jku.paugujooksik.tools.ResourceLoader.loadClip;
 
 import java.awt.Frame;
 import java.awt.GraphicsDevice;
-import java.awt.GraphicsEnvironment;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -45,16 +44,14 @@ public class Presenter extends Window implements CardSetHandler {
 
 	/**
 	 * Create the application.
-	 * 
-	 * @param registeredClients
 	 */
 	public Presenter(Frame owner, Configuration<?> config,
-			Set<String> registeredClients) {
+			Set<String> registeredClients, GraphicsDevice device) {
 		super(owner);
 		this.config = config;
 		this.registeredClients = registeredClients;
 		initialize();
-		setToFullScreen();
+		setToFullScreen(device);
 	}
 
 	/**
@@ -106,16 +103,11 @@ public class Presenter extends Window implements CardSetHandler {
 		}
 	}
 
-	private void setToFullScreen() {
-		// use secondary monitor if available
-		GraphicsDevice[] devices = GraphicsEnvironment
-				.getLocalGraphicsEnvironment().getScreenDevices();
-		GraphicsDevice monitor = devices.length > 1 ? devices[1] : devices[0];
-
+	private void setToFullScreen(GraphicsDevice device) {
 		frame.dispose();
 		frame.setUndecorated(true);
 		frame.setVisible(true);
-		monitor.setFullScreenWindow(frame);
+		device.setFullScreenWindow(frame);
 	}
 
 	public Configuration<?> getConfig() {
@@ -171,7 +163,12 @@ public class Presenter extends Window implements CardSetHandler {
 	}
 
 	public void unregister(String clientId) {
-		players.get(clientId).panel.setTitle("<gone>");
+		players.get(clientId).panel.setTitle(clientId + " (gone)");
+	}
+
+	@Override
+	public boolean isProcessing() {
+		return false;
 	}
 
 	@Override
@@ -254,6 +251,7 @@ public class Presenter extends Window implements CardSetHandler {
 			panel.cardSet.updateCards(cards);
 			if (cards.allMarked()) {
 				cards.selectAll();
+				panel.cardSet.updateCards(cards);
 				panel.cardSet.finishCards(cards);
 			}
 		}

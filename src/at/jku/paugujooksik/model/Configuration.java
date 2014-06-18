@@ -22,7 +22,7 @@ public class Configuration<T extends Comparable<T>> implements Serializable {
 	public static final int MIN_SIZE = 7;
 	public static final int MAX_SIZE = 15;
 	public static final int DEFAULT_SIZE = 7;
-	public static final ValueType DEFAULT_TYPE = ValueType.INTEGER;
+	public static final ValueType DEFAULT_TYPE = ValueType.NUMBERS;
 	public static final ValueMode DEFAULT_MODE = ValueMode.SMALL;
 
 	private final List<SortAlgorithm<T>> algorithms = new LinkedList<>();
@@ -68,16 +68,16 @@ public class Configuration<T extends Comparable<T>> implements Serializable {
 	public static Configuration<?> generate(ValueMode mode, ValueType type, int sortIdx, int size) {
 		switch (mode) {
 		case SMALL:
-			if (type == ValueType.INTEGER) {
+			if (type == ValueType.NUMBERS) {
 				return new Configuration<>(sortIdx, mode, size, type, ValueGenerator.smallIntValues(size));
-			} else if (type == ValueType.STRING) {
+			} else if (type == ValueType.LETTERS) {
 				return new Configuration<>(sortIdx, mode, size, type, ValueGenerator.smallStringValues(size));
 			}
 			break;
 		case RANDOM:
-			if (type == ValueType.INTEGER) {
+			if (type == ValueType.NUMBERS) {
 				return new Configuration<>(sortIdx, mode, size, type, ValueGenerator.randomIntValues(size));
-			} else if (type == ValueType.STRING) {
+			} else if (type == ValueType.LETTERS) {
 				return new Configuration<>(sortIdx, mode, size, type, ValueGenerator.randomStringValues(size));
 			}
 			break;

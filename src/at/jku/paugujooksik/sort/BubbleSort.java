@@ -12,7 +12,7 @@ public class BubbleSort<T extends Comparable<T>> extends SortAlgorithm<T> {
 		setup(values);
 		boolean swapped = true;
 		int max = n - 1;
-		
+
 		while (swapped) {
 			swapped = false;
 			for (int i = 1; i <= max; i++) {
@@ -25,15 +25,10 @@ public class BubbleSort<T extends Comparable<T>> extends SortAlgorithm<T> {
 					swapped = true;
 					actions.add(Action.swap(i - 1, i));
 				}
-				if (i == max)
-					actions.add(Action.mark(i));
 			}
 			max--;
 		}
-		while (max >= 0) {
-			actions.add(Action.mark(max--)); // FIXME mark last if the last two cards are swapped!
-		}
-		
+
 		DEBUGLOG.fine("BubbleSort sorted the values " + values);
 		assert isListSorted(a);
 		return actions;

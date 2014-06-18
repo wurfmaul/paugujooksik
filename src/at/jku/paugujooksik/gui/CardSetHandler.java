@@ -1,6 +1,8 @@
 package at.jku.paugujooksik.gui;
 
 public interface CardSetHandler {
+	public boolean isProcessing();
+
 	public void performPin(String clientId, int index);
 
 	public void performMark(String clientId, int index);
