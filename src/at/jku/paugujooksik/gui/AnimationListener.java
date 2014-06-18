@@ -1,5 +1,7 @@
 package at.jku.paugujooksik.gui;
 
+import static at.jku.paugujooksik.tools.Constants.ANIMATION_SPEED;
+
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -14,7 +16,7 @@ public class AnimationListener implements ActionListener {
 	private final Point leftDest;
 	private final Point rightDest;
 	private final String clientId;
-	private Timer timer;
+	private final Timer timer;
 
 	public AnimationListener(CardPanel leftCard, CardPanel rightCard,
 			CardSetHandler target, String clientId) {
@@ -22,6 +24,7 @@ public class AnimationListener implements ActionListener {
 		this.rightCard = rightCard;
 		this.target = target;
 		this.clientId = clientId;
+		timer = new Timer(40, this);
 		leftDest = rightCard.getLocation();
 		rightDest = leftCard.getLocation();
 	}
@@ -36,16 +39,19 @@ public class AnimationListener implements ActionListener {
 			return;
 		}
 
-		leftCard.setLocation(Math.min(leftLoc.x + 10, leftDest.x), leftLoc.y);
-		rightCard.setLocation(Math.max(rightLoc.x - 10, rightDest.x),
-				rightLoc.y);
+		leftCard.setLocation(Math.min(leftLoc.x + ANIMATION_SPEED, leftDest.x),
+				leftLoc.y);
+		rightCard
+				.setLocation(
+						Math.max(rightLoc.x - ANIMATION_SPEED, rightDest.x),
+						rightLoc.y);
 
 		leftCard.repaint();
 		rightCard.repaint();
 	}
 
-	public void setTimer(Timer timer) {
-		this.timer = timer;
+	public void start() {
+		timer.start();
 	}
 
 }

@@ -3,8 +3,7 @@ package at.jku.paugujooksik.server;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
-import at.jku.paugujooksik.action.BinaryAction;
-import at.jku.paugujooksik.action.UnaryAction;
+import at.jku.paugujooksik.action.Action;
 import at.jku.paugujooksik.gui.server.ServerGUI;
 import at.jku.paugujooksik.model.Configuration;
 
@@ -37,22 +36,16 @@ public class ServerControlImpl extends UnicastRemoteObject implements
 	public boolean isJoinable() throws RemoteException {
 		return server.isJoinable();
 	}
-	
+
 	@Override
 	public boolean isRunning() throws RemoteException {
 		return server.isRunning();
 	}
 
 	@Override
-	public void performAction(String clientId, UnaryAction action)
+	public void performAction(String clientId, Action action)
 			throws RemoteException {
-		server.getPresenter().performAction(clientId, action);
-	}
-
-	@Override
-	public void performAction(String clientId, BinaryAction action)
-			throws RemoteException {
-		server.getPresenter().performAction(clientId, action);
+		server.getPresenter().queueAction(clientId, action);
 	}
 
 	@Override

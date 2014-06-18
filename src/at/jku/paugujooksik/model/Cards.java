@@ -122,6 +122,7 @@ public class Cards<T extends Comparable<T>> {
 		if (dryRun)
 			return action;
 
+		// FIXME following 4 lines are evil!
 		final Card<T> left = cardList.get(getFirstSelectedIndex());
 		final Card<T> right = cardList.get(getSecondSelectedIndex());
 		cardList.set(getFirstSelectedIndex(), right);

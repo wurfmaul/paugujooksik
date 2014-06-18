@@ -3,8 +3,7 @@ package at.jku.paugujooksik.server;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-import at.jku.paugujooksik.action.BinaryAction;
-import at.jku.paugujooksik.action.UnaryAction;
+import at.jku.paugujooksik.action.Action;
 import at.jku.paugujooksik.model.Configuration;
 
 public interface ServerControl extends Remote {
@@ -18,10 +17,7 @@ public interface ServerControl extends Remote {
 
 	public boolean isRunning() throws RemoteException;
 
-	public void performAction(String clientId, UnaryAction action)
-			throws RemoteException;
-
-	public void performAction(String clientId, BinaryAction action)
+	public void performAction(String clientId, Action action)
 			throws RemoteException;
 
 	public void unregister(String name) throws RemoteException;

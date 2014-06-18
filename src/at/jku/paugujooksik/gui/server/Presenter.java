@@ -15,26 +15,21 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import javax.sound.sampled.Clip;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.Timer;
 
-import at.jku.paugujooksik.action.BinaryAction;
-import at.jku.paugujooksik.action.UnaryAction;
+import at.jku.paugujooksik.action.Action;
 import at.jku.paugujooksik.gui.AnimationListener;
 import at.jku.paugujooksik.gui.CardPanel;
 import at.jku.paugujooksik.gui.CardSetContainerPanel;
 import at.jku.paugujooksik.gui.CardSetHandler;
 import at.jku.paugujooksik.gui.SelectionException;
-import at.jku.paugujooksik.model.Cards;
 import at.jku.paugujooksik.model.Configuration;
 
 public class Presenter extends Window implements CardSetHandler {
 	private static final long serialVersionUID = 8299211278767397214L;
-	private static final Logger DEBUGLOG = Logger.getLogger("DEBUG");
 
 	private final Map<String, Player> players = new LinkedHashMap<>();
 
@@ -97,7 +92,7 @@ public class Presenter extends Window implements CardSetHandler {
 					this, config.size, name, true, false);
 			cardSetPanel.setBackground(PLAYER_COLORS[curRow - 1]);
 			cardSetPanel.setTitle("Team '" + name + "'");
-			players.put(name, new Player(cardSetPanel));
+			players.put(name, new Player(cardSetPanel, this));
 			frame.getContentPane().add(cardSetPanel, gbcPnlRow);
 			curRow++;
 		}
@@ -124,38 +119,8 @@ public class Presenter extends Window implements CardSetHandler {
 			clip.start();
 	}
 
-	public void performAction(String clientId, UnaryAction action) {
-		switch (action.type) {
-		case OPEN:
-			performSelect(clientId, action.index);
-			break;
-		case MARK:
-		case UNMARK:
-			performMark(clientId, action.index);
-			break;
-		case PIN:
-			performPin(clientId, action.index);
-			break;
-		default:
-			DEBUGLOG.severe("Cannot perform action: '" + action + "'");
-		}
-	}
-
-	public void performAction(String clientId, BinaryAction action) {
-		final Player curPlayer = players.get(clientId);
-		switch (action.type) {
-		case OPEN:
-			if (curPlayer.cards.isSelected(action.indexLeft))
-				performSelect(clientId, action.indexRight);
-			else
-				performSelect(clientId, action.indexLeft);
-			break;
-		case SWAP:
-			performSwap(clientId);
-			break;
-		default:
-			DEBUGLOG.severe("Cannot perform action: '" + action + "'");
-		}
+	public void queueAction(String clientId, Action action) {
+		players.get(clientId).queueAction(clientId, action);
 	}
 
 	public void quit() {
@@ -167,8 +132,8 @@ public class Presenter extends Window implements CardSetHandler {
 	}
 
 	@Override
-	public boolean isProcessing() {
-		return false;
+	public boolean isProcessing(String clientId) {
+		return players.get(clientId).animating;
 	}
 
 	@Override
@@ -216,11 +181,8 @@ public class Presenter extends Window implements CardSetHandler {
 
 			CardPanel btnLeft = curPlayer.panel.cardSet.get(leftIndex);
 			CardPanel btnRight = curPlayer.panel.cardSet.get(rightIndex);
-			AnimationListener listener = new AnimationListener(btnLeft,
-					btnRight, this, clientId);
-			Timer timer = new Timer(40, listener);
-			listener.setTimer(timer);
-			timer.start();
+			new AnimationListener(btnLeft, btnRight, this, clientId).start();
+			curPlayer.animating = true;
 		} catch (SelectionException ex) {
 		}
 		curPlayer.updateStats();
@@ -236,29 +198,6 @@ public class Presenter extends Window implements CardSetHandler {
 		}
 		curPlayer.updateStats();
 		curPlayer.updateComponents();
-	}
-
-	private class Player {
-		public final Cards<?> cards;
-		public final CardSetContainerPanel panel;
-
-		public Player(CardSetContainerPanel panel) {
-			this.cards = new Cards<>(config);
-			this.panel = panel;
-		}
-
-		public void updateComponents() {
-			panel.cardSet.updateCards(cards);
-			if (cards.allMarked()) {
-				cards.selectAll();
-				panel.cardSet.updateCards(cards);
-				panel.cardSet.finishCards(cards);
-			}
-		}
-
-		public void updateStats() {
-			panel.setStats(cards.getCompareCount(), cards.getSwapCount(),
-					cards.getErrorCount());
-		}
+		curPlayer.animating = false;
 	}
 }

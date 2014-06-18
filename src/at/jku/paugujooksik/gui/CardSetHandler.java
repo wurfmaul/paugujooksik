@@ -1,7 +1,7 @@
 package at.jku.paugujooksik.gui;
 
 public interface CardSetHandler {
-	public boolean isProcessing();
+	public boolean isProcessing(String clientId);
 
 	public void performPin(String clientId, int index);
 

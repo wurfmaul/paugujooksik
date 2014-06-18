@@ -44,6 +44,7 @@ public class Constants {
 	public static final int PLAYER_BORDER_THICKNESS = 3;
 	public static final int DEFAULT_BUTTON_SIZE = 25;
 	public static final int DEFAULT_PORT = 1099;
+	public static final int ANIMATION_SPEED = 15;
 
 	public static final boolean PLAYER_BORDER_ISROUNDED = true;
 	public static final boolean MOVE_PIN_ON_SWAP = true;

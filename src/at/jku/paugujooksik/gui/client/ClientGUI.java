@@ -34,13 +34,10 @@ import javax.swing.JOptionPane;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
-import javax.swing.Timer;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 
 import at.jku.paugujooksik.action.Action;
-import at.jku.paugujooksik.action.BinaryAction;
-import at.jku.paugujooksik.action.UnaryAction;
 import at.jku.paugujooksik.gui.AnimationListener;
 import at.jku.paugujooksik.gui.CardPanel;
 import at.jku.paugujooksik.gui.CardSetContainerPanel;
@@ -360,11 +357,8 @@ public class ClientGUI implements CardSetHandler {
 	private void reportActionToPresenter(Action action) {
 		if (clientMode) {
 			try {
-				if (action instanceof UnaryAction)
-					controler.performAction(name, (UnaryAction) action);
-				else if (action instanceof BinaryAction)
-					controler.performAction(name, (BinaryAction) action);
-			} catch (RemoteException e) {
+				controler.performAction(name, action);
+			} catch (RemoteException | NullPointerException e) {
 				displayErrorMessage();
 			}
 		}
@@ -384,7 +378,7 @@ public class ClientGUI implements CardSetHandler {
 	}
 
 	@Override
-	public boolean isProcessing() {
+	public boolean isProcessing(String clientId) {
 		return animating;
 	}
 
@@ -441,12 +435,8 @@ public class ClientGUI implements CardSetHandler {
 
 			CardPanel btnLeft = pnlCards.cardSet.get(leftIndex);
 			CardPanel btnRight = pnlCards.cardSet.get(rightIndex);
-			AnimationListener listener = new AnimationListener(btnLeft,
-					btnRight, this, clientId);
-			Timer timer = new Timer(40, listener);
-			listener.setTimer(timer);
+			new AnimationListener(btnLeft, btnRight, this, clientId).start();
 			animating = true;
-			timer.start();
 		} catch (SelectionException ex) {
 			reportError(ex);
 		}
