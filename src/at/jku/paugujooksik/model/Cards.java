@@ -85,7 +85,7 @@ public class Cards<T extends Comparable<T>> {
 		}
 
 		Action action = Action.open(index);
-		checkAction(action);
+		checkAction(action, false);
 
 		if (twoSelected()) {
 			Card<T> left = cardList.get(getFirstSelectedIndex());
@@ -99,7 +99,7 @@ public class Cards<T extends Comparable<T>> {
 		switch (getSelection().size()) {
 		case 1:
 			action = Action.open(index, getSelectedIndex());
-			checkAction(action);
+			checkAction(action, false);
 			stat.compareCount++;
 		case 0:
 			cardList.get(index).selected = true;
@@ -111,13 +111,16 @@ public class Cards<T extends Comparable<T>> {
 		return action;
 	}
 
-	public Action swapSelection() {
+	public Action swapSelection(boolean dryRun) {
 		if (!twoSelected())
 			throw new SelectionException("Two cards need to be open.");
 
 		final Action action = Action.swap(getFirstSelectedIndex(),
 				getSecondSelectedIndex());
-		checkAction(action);
+		checkAction(action, dryRun);
+		if (dryRun)
+			return action;
+		
 		final Card<T> left = cardList.get(getFirstSelectedIndex());
 		final Card<T> right = cardList.get(getSecondSelectedIndex());
 		cardList.set(getFirstSelectedIndex(), right);
@@ -141,7 +144,7 @@ public class Cards<T extends Comparable<T>> {
 	public Action togglePin(int index) {
 		if (pinIndex == -1 || pinIndex != index) {
 			final Action action = Action.pin(index);
-			checkAction(action);
+			checkAction(action, false);
 			if (pinIndex != -1)
 				cardList.get(pinIndex).pinned = false;
 			cardList.get(index).pinned = true;
@@ -159,11 +162,11 @@ public class Cards<T extends Comparable<T>> {
 		Action action;
 		if (card.marked) {
 			action = Action.unmark(index);
-			checkAction(action);
+			checkAction(action, false);
 			card.marked = false;
 		} else {
 			action = Action.mark(index);
-			checkAction(action);
+			checkAction(action, false);
 			card.marked = true;
 		}
 		return action;
@@ -246,7 +249,7 @@ public class Cards<T extends Comparable<T>> {
 		return sel;
 	}
 
-	private void checkAction(Action action) {
+	private void checkAction(Action action, boolean dryRun) {
 		if (curAction < expectedActions.size()) {
 			final Action exp = expectedActions.get(curAction);
 			DEBUGLOG.fine("Expected: '" + exp + "'; actual: '" + action + "' "
@@ -254,7 +257,7 @@ public class Cards<T extends Comparable<T>> {
 					+ "compatible>" + "<" + (!exp.equals(action) ? "not " : "")
 					+ "equal>");
 			if (exp.isCompatibleTo(action)) {
-				if (exp.equals(action)) {
+				if (exp.equals(action) && !dryRun) {
 					curAction++;
 				}
 			} else {

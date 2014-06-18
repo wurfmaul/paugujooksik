@@ -1,141 +1,89 @@
 package at.jku.paugujooksik.gui;
 
-import static at.jku.paugujooksik.tools.Constants.COMPARE_LABEL;
-import static at.jku.paugujooksik.tools.Constants.ERROR_BACKGROUND_COLOR;
-import static at.jku.paugujooksik.tools.Constants.ERROR_LABEL;
-import static at.jku.paugujooksik.tools.Constants.ERROR_LINE_COLOR;
-import static at.jku.paugujooksik.tools.Constants.PLAYER_BORDER_COLOR;
-import static at.jku.paugujooksik.tools.Constants.PLAYER_BORDER_ISROUNDED;
-import static at.jku.paugujooksik.tools.Constants.PLAYER_BORDER_THICKNESS;
-import static at.jku.paugujooksik.tools.Constants.STAT_BACKGROUND_COLOR;
-import static at.jku.paugujooksik.tools.Constants.STAT_FONT;
-import static at.jku.paugujooksik.tools.Constants.STAT_LINE_COLOR;
-import static at.jku.paugujooksik.tools.Constants.SWAP_LABEL;
-
-import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
-import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.SwingConstants;
-import javax.swing.border.LineBorder;
+
+import at.jku.paugujooksik.model.Cards;
 
 public class CardSetPanel extends JPanel {
-	public static final long serialVersionUID = 979482902923838043L;
+	private static final long serialVersionUID = 8943110545308400878L;
 
-	public final CardSet cardSet;
+	public static final int INSET = 10;
 
-	private final JLabel lblCompareCount;
-	private final JLabel lblErrorCount;
-	private final JLabel lblSwapCount;
+	private final List<CardPanel> cardBtns = new LinkedList<>();
 
-	private JLabel lblTitle;
-
-	public CardSetPanel(CardSetHandler target, int size, String name,
-			boolean border, boolean enableMouseActions) {
-
-		if (border)
-			setBorder(new LineBorder(PLAYER_BORDER_COLOR,
-					PLAYER_BORDER_THICKNESS, PLAYER_BORDER_ISROUNDED));
-
-		GridBagLayout gblPnlRow = new GridBagLayout();
-		gblPnlRow.columnWidths = new int[] { 0, 0, 0, 0, 0 };
-		gblPnlRow.rowHeights = new int[] { 0, 0, 0 };
-		gblPnlRow.columnWeights = new double[] { 1.0, 0.0, 0.0, 0.0,
-				Double.MIN_VALUE };
-		gblPnlRow.rowWeights = new double[] { 0.0, 1.0, Double.MIN_VALUE };
-		setLayout(gblPnlRow);
-
-		lblTitle = new JLabel();
-		GridBagConstraints gbcLblTitle = new GridBagConstraints();
-		gbcLblTitle.insets = new Insets(5, 5, 5, 5);
-		gbcLblTitle.gridx = 0;
-		gbcLblTitle.gridy = 0;
-		add(lblTitle, gbcLblTitle);
-		lblTitle.setFont(STAT_FONT);
-
-		JPanel pnlCompare = new JPanel(new FlowLayout());
-		{
-			pnlCompare.setBorder(new LineBorder(STAT_LINE_COLOR));
-			pnlCompare.setBackground(STAT_BACKGROUND_COLOR);
-
-			GridBagConstraints gbcPnlCompare = new GridBagConstraints();
-			gbcPnlCompare.insets = new Insets(5, 5, 5, 5);
-			gbcPnlCompare.gridx = 1;
-			gbcPnlCompare.gridy = 0;
-			add(pnlCompare, gbcPnlCompare);
-
-			JLabel lblCompare = new JLabel(COMPARE_LABEL);
-			lblCompare.setHorizontalAlignment(SwingConstants.RIGHT);
-			lblCompare.setFont(STAT_FONT);
-			pnlCompare.add(lblCompare);
-
-			lblCompareCount = new JLabel("0");
-			lblCompareCount.setFont(STAT_FONT);
-			pnlCompare.add(lblCompareCount);
-		}
-
-		JPanel pnlSwap = new JPanel(new FlowLayout());
-		{
-			pnlSwap.setBorder(new LineBorder(STAT_LINE_COLOR));
-			pnlSwap.setBackground(STAT_BACKGROUND_COLOR);
-
-			GridBagConstraints gbcPnlSwap = new GridBagConstraints();
-			gbcPnlSwap.insets = new Insets(5, 5, 5, 5);
-			gbcPnlSwap.gridx = 2;
-			gbcPnlSwap.gridy = 0;
-			add(pnlSwap, gbcPnlSwap);
-
-			JLabel lblSwap = new JLabel(SWAP_LABEL);
-			lblSwap.setHorizontalAlignment(SwingConstants.RIGHT);
-			lblSwap.setFont(STAT_FONT);
-			pnlSwap.add(lblSwap);
-
-			lblSwapCount = new JLabel("0");
-			lblSwapCount.setFont(STAT_FONT);
-			pnlSwap.add(lblSwapCount);
-		}
-
-		JPanel pnlError = new JPanel(new FlowLayout());
-		{
-			pnlError.setBorder(new LineBorder(ERROR_LINE_COLOR));
-			pnlError.setBackground(ERROR_BACKGROUND_COLOR);
-
-			GridBagConstraints gbcPnlError = new GridBagConstraints();
-			gbcPnlError.insets = new Insets(5, 5, 5, 5);
-			gbcPnlError.gridx = 3;
-			gbcPnlError.gridy = 0;
-			add(pnlError, gbcPnlError);
-
-			JLabel lblError = new JLabel(ERROR_LABEL);
-			lblError.setHorizontalAlignment(SwingConstants.RIGHT);
-			lblError.setFont(STAT_FONT);
-			pnlError.add(lblError);
-
-			lblErrorCount = new JLabel("0");
-			lblErrorCount.setFont(STAT_FONT);
-			pnlError.add(lblErrorCount);
-		}
-
-		cardSet = new CardSet(size, target, name, enableMouseActions);
-		GridBagConstraints gbc_panel = new GridBagConstraints();
-		gbc_panel.gridwidth = 5;
-		gbc_panel.insets = new Insets(5, 5, 5, 5);
-		gbc_panel.fill = GridBagConstraints.BOTH;
-		gbc_panel.gridx = 0;
-		gbc_panel.gridy = 1;
-		add(cardSet, gbc_panel);
+	public CardSetPanel(int size, CardSetHandler target, String clientId,
+			boolean enableMouseActions) {
+		set(size, target, clientId, enableMouseActions);
+		setOpaque(false);
 	}
 
-	public void setStats(int compareCount, int swapCount, int errorCount) {
-		lblCompareCount.setText(Integer.toString(compareCount));
-		lblErrorCount.setText(Integer.toString(errorCount));
-		lblSwapCount.setText(Integer.toString(swapCount));
+	public CardPanel get(int index) {
+		return cardBtns.get(index);
 	}
 
-	public void setTitle(String title) {
-		lblTitle.setText(title);
+	public void updateCards(Cards<?> cards) {
+		for (int i = 0; i < cardBtns.size(); i++) {
+			cardBtns.get(i).updateCard(cards.getCard(i));
+		}
+	}
+
+	public void finishCards(Cards<?> cards) {
+		for (int i = 0; i < cardBtns.size(); i++) {
+			cardBtns.get(i).finish(!cards.isOnRightPosition(i));
+		}
+	}
+
+	public void set(int size, CardSetHandler target, String clientId,
+			boolean enableMouseActions) {
+		final GridBagLayout gblPnlCards = new GridBagLayout();
+		{
+			gblPnlCards.columnWidths = new int[size + 1];
+			gblPnlCards.rowHeights = new int[] { 0 };
+			double[] weights = new double[size + 1];
+			{
+				Arrays.fill(weights, 1.0);
+				weights[weights.length - 1] = Double.MIN_VALUE;
+			}
+			gblPnlCards.columnWeights = weights;
+			gblPnlCards.rowWeights = new double[] { 1.0 };
+		}
+		setLayout(gblPnlCards);
+
+		removeAll();
+		cardBtns.clear();
+
+		for (int i = 0; i < size; i++) {
+			final CardPanel card = new CardPanel(i, target, clientId,
+					enableMouseActions);
+			final GridBagConstraints gbcCard = new GridBagConstraints();
+			{
+				gbcCard.fill = GridBagConstraints.BOTH;
+				gbcCard.insets = new Insets(25, INSET + 2, INSET, INSET + 2);
+				gbcCard.gridx = i;
+				gbcCard.gridy = 0;
+			}
+			add(card, gbcCard);
+			cardBtns.add(card);
+		}
+
+		for (int i = 0; i < size; i++) {
+			final CardSlotPanel slot = new CardSlotPanel(i);
+			final GridBagConstraints gbcSlot = new GridBagConstraints();
+			{
+				gbcSlot.fill = GridBagConstraints.BOTH;
+				gbcSlot.insets = new Insets(0, 2, 0, 2);
+				gbcSlot.gridx = i;
+				gbcSlot.gridy = 0;
+			}
+			add(slot, gbcSlot);
+		}
+
 	}
 }

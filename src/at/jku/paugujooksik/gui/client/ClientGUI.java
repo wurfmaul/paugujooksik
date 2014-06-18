@@ -24,6 +24,7 @@ import java.util.logging.Logger;
 
 import javax.sound.sampled.Clip;
 import javax.swing.ButtonGroup;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -32,12 +33,16 @@ import javax.swing.JMenuItem;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
+import javax.swing.Timer;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 
 import at.jku.paugujooksik.action.Action;
 import at.jku.paugujooksik.action.BinaryAction;
 import at.jku.paugujooksik.action.UnaryAction;
+import at.jku.paugujooksik.gui.AnimationListener;
+import at.jku.paugujooksik.gui.CardPanel;
+import at.jku.paugujooksik.gui.CardSetContainerPanel;
 import at.jku.paugujooksik.gui.CardSetHandler;
 import at.jku.paugujooksik.gui.CardSetPanel;
 import at.jku.paugujooksik.gui.SelectionException;
@@ -54,7 +59,7 @@ public class ClientGUI implements CardSetHandler {
 	private final boolean clientMode;
 	private final JFrame frame = new JFrame();
 
-	private CardSetPanel pnlCards;
+	private CardSetContainerPanel pnlCards;
 	private SwapPanel pnlSwap;
 	private JLabel lblHint;
 
@@ -95,7 +100,7 @@ public class ClientGUI implements CardSetHandler {
 	private void initialize() {
 		frame.getContentPane().removeAll();
 
-		pnlCards = new CardSetPanel(this, size, name, false, true);
+		pnlCards = new CardSetContainerPanel(this, size, name, false, true);
 		{
 			pnlCards.setTitle(config.toString());
 			GridBagConstraints gbcPnlCards = new GridBagConstraints();
@@ -368,7 +373,7 @@ public class ClientGUI implements CardSetHandler {
 	}
 
 	@Override
-	public void performPin(String originId, int index) {
+	public void performPin(String clientId, int index) {
 		if (cards.getCard(index).selected) {
 			try {
 				Action action = cards.togglePin(index);
@@ -382,7 +387,7 @@ public class ClientGUI implements CardSetHandler {
 	}
 
 	@Override
-	public void performMark(String originId, int index) {
+	public void performMark(String clientId, int index) {
 		try {
 			Action action = cards.toggleMark(index);
 			clearErrors();
@@ -394,7 +399,7 @@ public class ClientGUI implements CardSetHandler {
 	}
 
 	@Override
-	public void performSelect(String originId, int index) {
+	public void performSelect(String clientId, int index) {
 		try {
 			Action action = cards.select(index);
 			updateStats();
@@ -407,38 +412,53 @@ public class ClientGUI implements CardSetHandler {
 	}
 
 	@Override
-	public void performSwap(String originId) {
+	public void performSwap(String clientId) {
 		try {
-			Action action = cards.swapSelection();
-
-			// FIXME animation
-			// int i = cards.getFirstSelectedIndex();
-			// int j = cards.getSecondSelectedIndex();
-			// CardPanel btnLeft = pnlCards.cardSet.get(i);
-			// CardPanel btnRight = pnlCards.cardSet.get(j);
-			// Timer timer = new Timer(15, new AnimationListener(btnLeft,
-			// btnRight));
-			// timer.start();
-
-			clearErrors();
-			updateStats();
+			Action action = cards.swapSelection(true);
 			reportActionToPresenter(action);
+
+			int leftIndex = cards.getFirstSelectedIndex();
+			int rightIndex = cards.getSecondSelectedIndex();
+			
+			// FIXME bring the cards in between to back
+//				pnlCards.cardSet.set(size, this, clientId, true, rightIndex);
+			
+			CardPanel btnLeft = pnlCards.cardSet.get(leftIndex);
+			CardPanel btnRight = pnlCards.cardSet.get(rightIndex);
+			AnimationListener listener = new AnimationListener(btnLeft,
+					btnRight, this, clientId);
+			Timer timer = new Timer(40, listener);
+			listener.setTimer(timer);
+			timer.start();
 		} catch (SelectionException ex) {
 			reportError(ex);
 		}
 		checkComponents();
 	}
 
+	@Override
+	public void finishSwap(String clientId) {
+		try {
+			cards.swapSelection(false);
+			clearErrors();
+			updateStats();
+		} catch (SelectionException ex) {
+			reportError(ex);
+		}
+		pnlCards.cardSet.updateCards(cards);
+		checkFinish();
+	}
+
 	public int getLeftReference() {
-		final Component comp = pnlCards.cardSet.get(
-				cards.getFirstSelectedIndex()).getParent();
-		return comp.getLocation().x + comp.getWidth() / 2;
+		final JComponent comp = pnlCards.cardSet.get(cards
+				.getFirstSelectedIndex());
+		return comp.getLocation().x + comp.getWidth() / 2 + CardSetPanel.INSET;
 	}
 
 	public int getRightReference() {
-		final Component comp = pnlCards.cardSet.get(
-				cards.getSecondSelectedIndex()).getParent();
-		return comp.getLocation().x + comp.getWidth() / 2;
+		final Component comp = pnlCards.cardSet.get(cards
+				.getSecondSelectedIndex());
+		return comp.getLocation().x + comp.getWidth() / 2 + CardSetPanel.INSET;
 	}
 
 	public String getName() {

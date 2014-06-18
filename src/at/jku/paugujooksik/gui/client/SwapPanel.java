@@ -15,12 +15,12 @@ import at.jku.paugujooksik.gui.AbstractPanel;
 public class SwapPanel extends AbstractPanel {
 	private static final long serialVersionUID = -7863948686242926432L;
 	private final ClientGUI target;
-	private String originId;
+	private String clientId;
 
-	public SwapPanel(ClientGUI target, String originId) {
+	public SwapPanel(ClientGUI target, String clientId) {
 		super(null);
 		this.target = target;
-		this.originId = originId;
+		this.clientId = clientId;
 	}
 
 	@Override
@@ -31,10 +31,11 @@ public class SwapPanel extends AbstractPanel {
 			{
 				final int left = target.getLeftReference();
 				final int right = target.getRightReference();
-				g2d.drawLine(left, 20, right, 20);
-				g2d.drawLine(left, 0, left, 20);
-				g2d.drawLine(right, 0, right, 20);
-				g2d.drawLine(getCenter(), 20, getCenter(), 30);
+				final int yOff = 20;
+				g2d.drawLine(left, yOff, right, yOff);
+				g2d.drawLine(left, 0, left, yOff);
+				g2d.drawLine(right, 0, right, yOff);
+				g2d.drawLine(getCenter(), yOff, getCenter(), 30);
 			}
 		}
 	}
@@ -64,7 +65,7 @@ public class SwapPanel extends AbstractPanel {
 				@Override
 				public void mouseReleased(MouseEvent e) {
 					if (staysInsideComponent(e))
-						target.performSwap(originId);
+						target.performSwap(clientId);
 				}
 			});
 		}

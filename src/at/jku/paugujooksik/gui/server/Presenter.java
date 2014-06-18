@@ -21,11 +21,14 @@ import java.util.logging.Logger;
 import javax.sound.sampled.Clip;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.Timer;
 
 import at.jku.paugujooksik.action.BinaryAction;
 import at.jku.paugujooksik.action.UnaryAction;
+import at.jku.paugujooksik.gui.AnimationListener;
+import at.jku.paugujooksik.gui.CardPanel;
+import at.jku.paugujooksik.gui.CardSetContainerPanel;
 import at.jku.paugujooksik.gui.CardSetHandler;
-import at.jku.paugujooksik.gui.CardSetPanel;
 import at.jku.paugujooksik.gui.SelectionException;
 import at.jku.paugujooksik.model.Cards;
 import at.jku.paugujooksik.model.Configuration;
@@ -93,8 +96,8 @@ public class Presenter extends Window implements CardSetHandler {
 			gbcPnlRow.fill = GridBagConstraints.BOTH;
 			gbcPnlRow.gridx = 0;
 			gbcPnlRow.gridy = curRow;
-			CardSetPanel cardSetPanel = new CardSetPanel(this, config.size,
-					name, true, false);
+			CardSetContainerPanel cardSetPanel = new CardSetContainerPanel(
+					this, config.size, name, true, false);
 			cardSetPanel.setBackground(PLAYER_COLORS[curRow - 1]);
 			cardSetPanel.setTitle("Team '" + name + "'");
 			players.put(name, new Player(cardSetPanel));
@@ -119,44 +122,44 @@ public class Presenter extends Window implements CardSetHandler {
 		return config;
 	}
 
-	public void incErrorCount(String originId) {
-		Player curPlayers = players.get(originId);
+	public void incErrorCount(String clientId) {
+		Player curPlayers = players.get(clientId);
 		curPlayers.cards.incErrorCount();
 		curPlayers.updateStats();
-		
+
 		Clip clip = loadClip(ERROR_SND);
 		if (clip != null)
 			clip.start();
 	}
 
-	public void performAction(String originId, UnaryAction action) {
+	public void performAction(String clientId, UnaryAction action) {
 		switch (action.type) {
 		case OPEN:
-			performSelect(originId, action.index);
+			performSelect(clientId, action.index);
 			break;
 		case MARK:
 		case UNMARK:
-			performMark(originId, action.index);
+			performMark(clientId, action.index);
 			break;
 		case PIN:
-			performPin(originId, action.index);
+			performPin(clientId, action.index);
 			break;
 		default:
 			DEBUGLOG.severe("Cannot perform action: '" + action + "'");
 		}
 	}
 
-	public void performAction(String originId, BinaryAction action) {
-		final Player curPlayer = players.get(originId);
+	public void performAction(String clientId, BinaryAction action) {
+		final Player curPlayer = players.get(clientId);
 		switch (action.type) {
 		case OPEN:
 			if (curPlayer.cards.isSelected(action.indexLeft))
-				performSelect(originId, action.indexRight);
+				performSelect(clientId, action.indexRight);
 			else
-				performSelect(originId, action.indexLeft);
+				performSelect(clientId, action.indexLeft);
 			break;
 		case SWAP:
-			performSwap(originId);
+			performSwap(clientId);
 			break;
 		default:
 			DEBUGLOG.severe("Cannot perform action: '" + action + "'");
@@ -172,8 +175,8 @@ public class Presenter extends Window implements CardSetHandler {
 	}
 
 	@Override
-	public void performPin(String originId, int index) {
-		final Player curPlayer = players.get(originId);
+	public void performPin(String clientId, int index) {
+		final Player curPlayer = players.get(clientId);
 		try {
 			curPlayer.cards.togglePin(index);
 		} catch (SelectionException ex) {
@@ -182,8 +185,8 @@ public class Presenter extends Window implements CardSetHandler {
 	}
 
 	@Override
-	public void performMark(String originId, int index) {
-		final Player curPlayer = players.get(originId);
+	public void performMark(String clientId, int index) {
+		final Player curPlayer = players.get(clientId);
 		try {
 			curPlayer.cards.toggleMark(index);
 		} catch (SelectionException ex) {
@@ -192,8 +195,8 @@ public class Presenter extends Window implements CardSetHandler {
 	}
 
 	@Override
-	public void performSelect(String originId, int index) {
-		final Player curPlayer = players.get(originId);
+	public void performSelect(String clientId, int index) {
+		final Player curPlayer = players.get(clientId);
 		try {
 			curPlayer.cards.select(index);
 		} catch (SelectionException ex) {
@@ -203,10 +206,35 @@ public class Presenter extends Window implements CardSetHandler {
 	}
 
 	@Override
-	public void performSwap(String originId) {
-		final Player curPlayer = players.get(originId);
+	public void performSwap(String clientId) {
+		final Player curPlayer = players.get(clientId);
 		try {
-			curPlayer.cards.swapSelection();
+			curPlayer.cards.swapSelection(true); // FIXME animation also here!
+
+			int leftIndex = curPlayer.cards.getFirstSelectedIndex();
+			int rightIndex = curPlayer.cards.getSecondSelectedIndex();
+
+			// FIXME bring the cards in between to back
+			// pnlCards.cardSet.set(size, this, clientId, true, rightIndex);
+
+			CardPanel btnLeft = curPlayer.panel.cardSet.get(leftIndex);
+			CardPanel btnRight = curPlayer.panel.cardSet.get(rightIndex);
+			AnimationListener listener = new AnimationListener(btnLeft,
+					btnRight, this, clientId);
+			Timer timer = new Timer(40, listener);
+			listener.setTimer(timer);
+			timer.start();
+		} catch (SelectionException ex) {
+		}
+		curPlayer.updateStats();
+		curPlayer.updateComponents();
+	}
+
+	@Override
+	public void finishSwap(String clientId) {
+		final Player curPlayer = players.get(clientId);
+		try {
+			curPlayer.cards.swapSelection(false);
 		} catch (SelectionException ex) {
 		}
 		curPlayer.updateStats();
@@ -215,9 +243,9 @@ public class Presenter extends Window implements CardSetHandler {
 
 	private class Player {
 		public final Cards<?> cards;
-		public final CardSetPanel panel;
+		public final CardSetContainerPanel panel;
 
-		public Player(CardSetPanel panel) {
+		public Player(CardSetContainerPanel panel) {
 			this.cards = new Cards<>(config);
 			this.panel = panel;
 		}

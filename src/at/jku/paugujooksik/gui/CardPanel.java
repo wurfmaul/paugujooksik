@@ -33,7 +33,7 @@ import at.jku.paugujooksik.model.Card;
 public class CardPanel extends AbstractPanel {
 	private static final long serialVersionUID = 68959464664105468L;
 
-	private final String originId;
+	private final String clientId;
 	private final JLabel label;
 	private final JToggleButton pin;
 	private final JToggleButton fin;
@@ -42,11 +42,11 @@ public class CardPanel extends AbstractPanel {
 	private MouseAdapter pinMouseAdapter;
 	private MouseAdapter finMouseAdapter;
 
-	public CardPanel(final int index, CardSetHandler target, String originId,
+	public CardPanel(final int index, CardSetHandler target, String clientId,
 			boolean enableMouseActions) {
 		super(new BorderLayout());
 		this.target = target;
-		this.originId = originId;
+		this.clientId = clientId;
 
 		if (enableMouseActions)
 			initMouseListeners(index);
@@ -116,21 +116,21 @@ public class CardPanel extends AbstractPanel {
 			@Override
 			public void mouseReleased(MouseEvent e) {
 				if (staysInsideComponent(e))
-					target.performSelect(originId, index);
+					target.performSelect(clientId, index);
 			}
 		};
 		pinMouseAdapter = new MouseAdapter() {
 			@Override
 			public void mouseReleased(MouseEvent e) {
 				if (staysInsideComponent(e))
-					target.performPin(originId, index);
+					target.performPin(clientId, index);
 			}
 		};
 		finMouseAdapter = new MouseAdapter() {
 			@Override
 			public void mouseReleased(MouseEvent e) {
 				if (staysInsideComponent(e))
-					target.performMark(originId, index);
+					target.performMark(clientId, index);
 			}
 		};
 	}

@@ -29,8 +29,8 @@ public class ServerControlImpl extends UnicastRemoteObject implements
 	}
 
 	@Override
-	public void incErrorCount(String originId) throws RemoteException {
-		server.getPresenter().incErrorCount(originId);
+	public void incErrorCount(String clientId) throws RemoteException {
+		server.getPresenter().incErrorCount(clientId);
 	}
 
 	@Override
@@ -39,15 +39,15 @@ public class ServerControlImpl extends UnicastRemoteObject implements
 	}
 
 	@Override
-	public void performAction(String originId, UnaryAction action)
+	public void performAction(String clientId, UnaryAction action)
 			throws RemoteException {
-		server.getPresenter().performAction(originId, action);
+		server.getPresenter().performAction(clientId, action);
 	}
 
 	@Override
-	public void performAction(String originId, BinaryAction action)
+	public void performAction(String clientId, BinaryAction action)
 			throws RemoteException {
-		server.getPresenter().performAction(originId, action);
+		server.getPresenter().performAction(clientId, action);
 	}
 
 	@Override

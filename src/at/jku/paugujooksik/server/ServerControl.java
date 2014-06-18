@@ -12,13 +12,13 @@ public interface ServerControl extends Remote {
 
 	public Configuration<?> getConfig() throws RemoteException;
 
-	public void incErrorCount(String originId) throws RemoteException;
+	public void incErrorCount(String clientId) throws RemoteException;
 
 	public boolean isRunning() throws RemoteException;
 
-	public void performAction(String originId, BinaryAction action) throws RemoteException;
+	public void performAction(String clientId, BinaryAction action) throws RemoteException;
 
-	public void performAction(String originId, UnaryAction action) throws RemoteException;
+	public void performAction(String clientId, UnaryAction action) throws RemoteException;
 
 	public void unregister(String name) throws RemoteException;
 
