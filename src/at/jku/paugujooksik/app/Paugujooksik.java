@@ -1,5 +1,8 @@
 package at.jku.paugujooksik.app;
 
+import static at.jku.paugujooksik.tools.Constants.DEBUGLOG;
+import static at.jku.paugujooksik.tools.Constants.LOGLEVEL;
+
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -9,12 +12,9 @@ import at.jku.paugujooksik.gui.client.ClientGUI;
 import at.jku.paugujooksik.gui.server.ServerGUI;
 
 public class Paugujooksik {
-	private static final Logger DEBUGLOG = Logger.getLogger("DEBUG");
-	private static final Level LOGLEVEL = Level.CONFIG;
-
 	public static void main(String[] args) {
 		configureLoggers();
-		
+
 		if (args.length > 0) {
 			switch (args[0]) {
 			case "--server":

@@ -65,7 +65,6 @@ public class ServerGUI {
 
 	private final JFrame frame = new JFrame();
 	private final Set<String> registeredClients = new LinkedHashSet<>();
-
 	private boolean joinable = true;
 	private Presenter presenter;
 	private JToggleButton btnPlay;
@@ -77,42 +76,36 @@ public class ServerGUI {
 	private JComboBox<ValueMode> cbxCfgMode;
 	private JSlider sldrCfgSize;
 
-	static {
-		// compute host addresses
-		try {
-			Enumeration<NetworkInterface> interfaces = NetworkInterface
-					.getNetworkInterfaces();
-			while (interfaces.hasMoreElements()) {
-				NetworkInterface iface = interfaces.nextElement();
-				if (iface.isLoopback() || !iface.isUp())
-					continue;
-
-				for (InterfaceAddress addr : iface.getInterfaceAddresses()) {
-					InetAddress address = addr.getAddress();
-					if (address instanceof Inet4Address || SHOW_IP6_ADDRESSES) {
-						HOST_ADDRESSES.add(address.getHostAddress());
-					}
-				}
-			}
-		} catch (SocketException e) {
-			DEBUGLOG.severe("Could not retrieve IP address.");
-		}
-
-		// list all available monitors
-		for (int i = 0; i < DISPLAY_DEVICES.length; i++) {
-			GraphicsDevice device = DISPLAY_DEVICES[i];
-			DisplayMode mode = device.getDisplayMode();
-			AVAILABLE_DISPLAYS.add(String.format("%d: [%dx%d]", i,
-					mode.getWidth(), mode.getHeight()));
-		}
-	}
-
-	/**
-	 * Create the application.
-	 */
 	public ServerGUI() {
 		initRegistry();
 		initialize();
+	}
+
+	public Presenter getPresenter() {
+		return presenter;
+	}
+
+	public boolean isJoinable() {
+		return joinable;
+	}
+
+	public boolean isRunning() {
+		return presenter != null;
+	}
+
+	public boolean register(String name) {
+		if (registeredClients.contains(name))
+			return false;
+		registeredClients.add(name);
+		updatePlayerList();
+		return true;
+	}
+
+	public void unregister(String clientId) {
+		registeredClients.remove(clientId);
+		updatePlayerList();
+		if (presenter != null)
+			presenter.unregister(clientId);
 	}
 
 	private void initialize() {
@@ -358,7 +351,11 @@ public class ServerGUI {
 		}
 
 		if (registeredClients.size() == 0) {
-			sb.append("Waiting for players...");
+			if (isJoinable())
+				sb.append("Waiting for players...");
+			else
+				sb.append("No players!");
+
 			if (!btnPlay.isSelected())
 				btnPlay.setEnabled(false);
 		} else {
@@ -367,36 +364,36 @@ public class ServerGUI {
 		txtPlayers.setText(sb.toString());
 	}
 
-	public Presenter getPresenter() {
-		return presenter;
+	static {
+		// compute host addresses
+		try {
+			Enumeration<NetworkInterface> interfaces = NetworkInterface
+					.getNetworkInterfaces();
+			while (interfaces.hasMoreElements()) {
+				NetworkInterface iface = interfaces.nextElement();
+				if (iface.isLoopback() || !iface.isUp())
+					continue;
+
+				for (InterfaceAddress addr : iface.getInterfaceAddresses()) {
+					InetAddress address = addr.getAddress();
+					if (address instanceof Inet4Address || SHOW_IP6_ADDRESSES) {
+						HOST_ADDRESSES.add(address.getHostAddress());
+					}
+				}
+			}
+		} catch (SocketException e) {
+			DEBUGLOG.severe("Could not retrieve IP address.");
+		}
+
+		// list all available monitors
+		for (int i = 0; i < DISPLAY_DEVICES.length; i++) {
+			GraphicsDevice device = DISPLAY_DEVICES[i];
+			DisplayMode mode = device.getDisplayMode();
+			AVAILABLE_DISPLAYS.add(String.format("%d: [%dx%d]", i,
+					mode.getWidth(), mode.getHeight()));
+		}
 	}
 
-	public boolean isJoinable() {
-		return joinable;
-	}
-
-	public boolean isRunning() {
-		return presenter != null;
-	}
-
-	public boolean register(String name) {
-		if (registeredClients.contains(name))
-			return false;
-		registeredClients.add(name);
-		updatePlayerList();
-		return true;
-	}
-
-	public void unregister(String clientId) {
-		registeredClients.remove(clientId);
-		updatePlayerList();
-		if (presenter != null)
-			presenter.unregister(clientId);
-	}
-
-	/**
-	 * Launch the application.
-	 */
 	public static void initAndRun() {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {

@@ -14,6 +14,7 @@ import at.jku.paugujooksik.gui.AbstractPanel;
 
 public class SwapPanel extends AbstractPanel {
 	private static final long serialVersionUID = -7863948686242926432L;
+
 	private final ClientGUI target;
 	private String clientId;
 
@@ -21,6 +22,14 @@ public class SwapPanel extends AbstractPanel {
 		super(null);
 		this.target = target;
 		this.clientId = clientId;
+	}
+
+	public void updateButton(boolean show) {
+		removeAll();
+		if (show) {
+			add(new SwapButton());
+		}
+		repaint();
 	}
 
 	@Override
@@ -40,16 +49,6 @@ public class SwapPanel extends AbstractPanel {
 		}
 	}
 
-	public void updateButton(boolean show) {
-		removeAll();
-		if (show) {
-			SwapButton btn = new SwapButton();
-			btn.setBounds(getCenter() - 50, 30, 100, 50);
-			add(btn);
-		}
-		repaint();
-	}
-
 	private int getCenter() {
 		final int left = target.getLeftReference();
 		final int right = target.getRightReference();
@@ -58,16 +57,20 @@ public class SwapPanel extends AbstractPanel {
 
 	private class SwapButton extends JButton {
 		private static final long serialVersionUID = -6368213501613529319L;
+		private static final int OFFSET_Y = 30;
+		private static final int WIDTH = 100;
+		private static final int HEIGHT = 50;
 
 		public SwapButton() {
 			super(loadIcon(SWAP_ICON_SMALL));
 
+			setBounds(getCenter() - WIDTH / 2, OFFSET_Y, WIDTH, HEIGHT);
 			addMouseListener(new MouseAdapter() {
 				@Override
 				public void mouseReleased(MouseEvent e) {
 					if (!target.isProcessing(clientId)
 							&& staysInsideComponent(e))
-						target.performSwap(clientId);
+						target.performSwapStart(clientId);
 				}
 			});
 		}
@@ -75,7 +78,7 @@ public class SwapPanel extends AbstractPanel {
 		@Override
 		protected void paintComponent(Graphics g) {
 			super.paintComponent(g);
-			setBounds(getCenter() - 50, 30, 100, 50);
+			setBounds(getCenter() - WIDTH / 2, OFFSET_Y, WIDTH, HEIGHT);
 		}
 	}
 }

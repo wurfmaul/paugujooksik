@@ -1,5 +1,7 @@
 package at.jku.paugujooksik.sort;
 
+import static at.jku.paugujooksik.tools.Constants.DEBUGLOG;
+
 import java.util.List;
 
 import at.jku.paugujooksik.action.Action;

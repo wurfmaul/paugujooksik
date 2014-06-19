@@ -29,7 +29,6 @@ public class CardSetContainerPanel extends JPanel {
 	private final JLabel lblCompareCount;
 	private final JLabel lblErrorCount;
 	private final JLabel lblSwapCount;
-
 	private JLabel lblTitle;
 
 	public CardSetContainerPanel(CardSetHandler target, int size, String name,

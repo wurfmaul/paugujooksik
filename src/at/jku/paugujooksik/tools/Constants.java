@@ -8,12 +8,16 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import at.jku.paugujooksik.model.ValueGenerator.ValueMode;
 import at.jku.paugujooksik.model.ValueGenerator.ValueType;
 
 public class Constants {
 	public static final Color[] PLAYER_COLORS;
+	public static final Logger DEBUGLOG = Logger.getLogger("DEBUG");
+	public static final Level LOGLEVEL = Level.CONFIG;
 
 	public static final Font DEFAULT_FONT;
 	public static final Font DEFAULT_FONT_BOLD;
@@ -53,6 +57,7 @@ public class Constants {
 	public static final int MIN_SIZE = 7;
 	public static final int MAX_SIZE = 15;
 	public static final int DEFAULT_SIZE = 7;
+	public static final int INSET = 10;
 
 	public static final boolean MOVE_PIN_ON_SWAP = true;
 	public static final boolean MOVE_MARK_ON_SWAP = true;

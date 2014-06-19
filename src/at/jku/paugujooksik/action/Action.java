@@ -9,7 +9,20 @@ import java.io.Serializable;
 
 public abstract class Action implements Serializable {
 	private static final long serialVersionUID = 9168826858554586354L;
+
 	public ActionType type;
+
+	@Override
+	public abstract boolean equals(Object obj);
+
+	public abstract boolean isCompatibleTo(Action other);
+
+	@Override
+	public abstract String toString();
+
+	public static UnaryAction mark(int index) {
+		return new UnaryAction(MARK, index);
+	}
 
 	public static UnaryAction open(int index) {
 		return new UnaryAction(OPEN, index);
@@ -19,10 +32,6 @@ public abstract class Action implements Serializable {
 		return new BinaryAction(OPEN, left, right);
 	}
 
-	public static UnaryAction mark(int index) {
-		return new UnaryAction(MARK, index);
-	}
-
 	public static UnaryAction pin(int index) {
 		return new UnaryAction(PIN, index);
 	}
@@ -30,13 +39,5 @@ public abstract class Action implements Serializable {
 	public static BinaryAction swap(int left, int right) {
 		return new BinaryAction(SWAP, left, right);
 	}
-
-	public abstract boolean isCompatibleTo(Action other);
-
-	@Override
-	public abstract boolean equals(Object obj);
-
-	@Override
-	public abstract String toString();
 
 }

@@ -1,5 +1,7 @@
 package at.jku.paugujooksik.gui;
 
+import static at.jku.paugujooksik.tools.Constants.INSET;
+
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -14,8 +16,6 @@ import at.jku.paugujooksik.model.Cards;
 public class CardSetPanel extends JPanel {
 	private static final long serialVersionUID = 8943110545308400878L;
 
-	public static final int INSET = 10;
-
 	private final List<CardPanel> cardBtns = new LinkedList<>();
 
 	public CardSetPanel(int size, CardSetHandler target, String clientId,
@@ -26,12 +26,6 @@ public class CardSetPanel extends JPanel {
 
 	public CardPanel get(int index) {
 		return cardBtns.get(index);
-	}
-
-	public void updateCards(Cards<?> cards) {
-		for (int i = 0; i < cardBtns.size(); i++) {
-			cardBtns.get(i).updateCard(cards.getCard(i));
-		}
 	}
 
 	public void finishCards(Cards<?> cards) {
@@ -85,5 +79,11 @@ public class CardSetPanel extends JPanel {
 			add(slot, gbcSlot);
 		}
 
+	}
+
+	public void updateCards(Cards<?> cards) {
+		for (int i = 0; i < cardBtns.size(); i++) {
+			cardBtns.get(i).updateCard(cards.getCard(i));
+		}
 	}
 }

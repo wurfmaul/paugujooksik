@@ -51,12 +51,8 @@ public class ConnectionDialog extends JDialog {
 	private final JComboBox<String> cbxCfgPort;
 	private final JComboBox<String> cbxCfgName;
 	private final JLabel lblTitle;
-
 	private Thread registerThread;
 
-	/**
-	 * Create the dialog.
-	 */
 	public ConnectionDialog(final JFrame parent, final ClientGUI target) {
 		super(parent, true);
 		setBounds(100, 100, 400, 200);
@@ -184,9 +180,6 @@ public class ConnectionDialog extends JDialog {
 		}
 	}
 
-	/**
-	 * Launch the application.
-	 */
 	public static void init(JFrame parent, ClientGUI target) {
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -248,7 +241,7 @@ public class ConnectionDialog extends JDialog {
 						lblTitle.setText("Waiting for host...");
 
 						target.setName(name);
-						target.setPres(p);
+						target.setController(p);
 
 						registerThread = new Thread(new Runnable() {
 							@Override

@@ -19,11 +19,10 @@ public class Cards<T extends Comparable<T>> {
 	private final Configuration<T> config;
 	private final List<T> values;
 	private final List<T> sortedValues;
-
-	private List<Action> expectedActions;
 	private int curAction;
-	private Action lastAction = null;
 	private int pinIndex = -1;
+	private List<Action> expectedActions;
+	private Action lastAction = null;
 
 	public Cards(Configuration<T> config) {
 		this.config = config;
@@ -79,16 +78,11 @@ public class Cards<T extends Comparable<T>> {
 	}
 
 	public Action select(int index) {
-		if (isSelected(index) && oneSelected()) {
-			// click twice at same card
-			cardList.get(index).selected = false;
-			return null;
-		}
-
 		Action action = Action.open(index);
 		checkAction(action);
 
 		if (twoSelected()) {
+			// two cards already opened -> close unpinned ones!
 			Card<T> left = cardList.get(getFirstSelectedIndex());
 			Card<T> right = cardList.get(getSecondSelectedIndex());
 			if (!left.pinned)
@@ -99,10 +93,19 @@ public class Cards<T extends Comparable<T>> {
 
 		switch (getSelection().size()) {
 		case 1:
-			action = Action.open(index, getSelectedIndex());
-			checkAction(action);
-			stat.compareCount++;
+			if (isSelected(index)) {
+				// click twice at same card -> if not pinned, close it!
+				cardList.get(index).selected = isPinned(index);
+			} else {
+				// click at another card -> open second card!
+				action = Action.open(index, getSelectedIndex());
+				checkAction(action);
+				cardList.get(index).selected = true;
+				stat.compareCount++;
+			}
+			break;
 		case 0:
+			// click at first card -> open it!
 			cardList.get(index).selected = true;
 			break;
 
@@ -273,14 +276,18 @@ public class Cards<T extends Comparable<T>> {
 	}
 
 	private class Statistics {
-		public int errorCount = 0;
-		public int swapCount = 0;
-		public int compareCount = 0;
+		public int compareCount;
+		public int errorCount;
+		public int swapCount;
+
+		public Statistics() {
+			reset();
+		}
 
 		public void reset() {
+			compareCount = 0;
 			errorCount = 0;
 			swapCount = 0;
-			compareCount = 0;
 		}
 	}
 }

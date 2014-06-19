@@ -1,8 +1,13 @@
 package at.jku.paugujooksik.gui.client;
 
-import static at.jku.paugujooksik.tools.Constants.*;
+import static at.jku.paugujooksik.tools.Constants.DEBUGLOG;
+import static at.jku.paugujooksik.tools.Constants.HINT_FONT;
+import static at.jku.paugujooksik.tools.Constants.INSET;
+import static at.jku.paugujooksik.tools.Constants.MAX_SIZE;
+import static at.jku.paugujooksik.tools.Constants.MIN_SIZE;
 import static at.jku.paugujooksik.tools.Constants.NEGATIVE_HINT_COLOR;
 import static at.jku.paugujooksik.tools.Constants.POSITIVE_HINT_COLOR;
+import static at.jku.paugujooksik.tools.Constants.USE_ANIMATION;
 import static at.jku.paugujooksik.tools.ResourceLoader.ERROR_SND;
 import static at.jku.paugujooksik.tools.ResourceLoader.loadClip;
 
@@ -18,7 +23,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.rmi.RemoteException;
-import java.util.logging.Logger;
 
 import javax.sound.sampled.Clip;
 import javax.swing.ButtonGroup;
@@ -40,7 +44,6 @@ import at.jku.paugujooksik.gui.AnimationListener;
 import at.jku.paugujooksik.gui.CardPanel;
 import at.jku.paugujooksik.gui.CardSetContainerPanel;
 import at.jku.paugujooksik.gui.CardSetHandler;
-import at.jku.paugujooksik.gui.CardSetPanel;
 import at.jku.paugujooksik.gui.SelectionException;
 import at.jku.paugujooksik.model.Cards;
 import at.jku.paugujooksik.model.Configuration;
@@ -50,21 +53,17 @@ import at.jku.paugujooksik.server.ServerControl;
 import at.jku.paugujooksik.sort.SortAlgorithm;
 
 public class ClientGUI implements CardSetHandler {
-	private static final Logger DEBUGLOG = Logger.getLogger("DEBUG");
-
 	private final boolean clientMode;
 	private final JFrame frame = new JFrame();
-
+	private boolean animating;
 	private CardSetContainerPanel pnlCards;
 	private SwapPanel pnlSwap;
 	private JLabel lblHint;
-
 	private Configuration<?> config;
 	private String name;
 	private ServerControl controler;
 	private Cards<?> cards;
 	private int size;
-	private boolean animating;
 
 	private ClientGUI(boolean clientMode) {
 		this.clientMode = clientMode;
@@ -85,11 +84,127 @@ public class ClientGUI implements CardSetHandler {
 		initialize();
 	}
 
-	private void reset() {
-		clearErrors();
-		cards.reset(true);
-		checkComponents();
-		updateStats();
+	public int getLeftReference() {
+		final JComponent comp = pnlCards.cardSet.get(cards
+				.getFirstSelectedIndex());
+		return comp.getLocation().x + comp.getWidth() / 2 + INSET;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public int getRightReference() {
+		final Component comp = pnlCards.cardSet.get(cards
+				.getSecondSelectedIndex());
+		return comp.getLocation().x + comp.getWidth() / 2 + INSET;
+	}
+
+	public void quit() {
+		DEBUGLOG.info("Exiting game...");
+		try {
+			controler.unregister(name);
+		} catch (RemoteException | NullPointerException e) {
+		}
+		frame.dispose();
+		System.exit(0);
+	}
+
+	public void setController(ServerControl controller) {
+		this.controler = controller;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public boolean showSwapButton() {
+		return cards.twoSelected();
+	}
+
+	@Override
+	public boolean isProcessing(String clientId) {
+		return animating;
+	}
+
+	@Override
+	public void performMark(String clientId, int index) {
+		try {
+			Action action = cards.toggleMark(index);
+			clearErrorMessage();
+			reportActionToPresenter(action);
+		} catch (SelectionException ex) {
+			showErrorMessage(ex);
+		}
+		updateAllComponents();
+	}
+
+	@Override
+	public void performPin(String clientId, int index) {
+		if (cards.getCard(index).selected) {
+			try {
+				Action action = cards.togglePin(index);
+				clearErrorMessage();
+				reportActionToPresenter(action);
+			} catch (SelectionException e) {
+				showErrorMessage(e);
+			}
+			updateAllComponents();
+		}
+	}
+
+	@Override
+	public void performSelect(String clientId, int index) {
+		try {
+			Action action = cards.select(index);
+			updateStats();
+			clearErrorMessage();
+			reportActionToPresenter(action);
+		} catch (SelectionException ex) {
+			showErrorMessage(ex);
+		}
+		updateAllComponents();
+	}
+
+	@Override
+	public void performSwapStart(String clientId) {
+		try {
+			Action action = cards.swapSelection();
+			reportActionToPresenter(action);
+			updateStats();
+
+			int leftIndex = cards.getFirstSelectedIndex();
+			int rightIndex = cards.getSecondSelectedIndex();
+			CardPanel cardLeft = pnlCards.cardSet.get(leftIndex);
+			CardPanel cardRight = pnlCards.cardSet.get(rightIndex);
+
+			if (USE_ANIMATION)
+				new AnimationListener(cardLeft, cardRight, this, clientId)
+						.start();
+			else
+				performSwapStop(clientId);
+			animating = true;
+		} catch (SelectionException ex) {
+			showErrorMessage(ex);
+		}
+	}
+
+	@Override
+	public void performSwapStop(String clientId) {
+		pnlCards.cardSet.updateCards(cards);
+		animating = false;
+	}
+
+	private void clearErrorMessage() {
+		lblHint.setText("");
+	}
+
+	private void displayErrorMessageDialog() {
+		DEBUGLOG.severe("Connection to server lost!");
+		JOptionPane.showMessageDialog(frame,
+				"Connection to server lost! Shutting down.", "Network error",
+				JOptionPane.ERROR_MESSAGE);
+		quit();
 	}
 
 	/**
@@ -134,6 +249,12 @@ public class ClientGUI implements CardSetHandler {
 
 		initMenuBar();
 		updateStats();
+	}
+
+	private void initCards() {
+		size = config.size;
+		cards = new Cards<>(config);
+		pnlCards.cardSet.set(size, this, name, true);
 	}
 
 	private void initFrame() {
@@ -201,7 +322,7 @@ public class ClientGUI implements CardSetHandler {
 
 						config = Configuration.deriveWithNewSortIdx(config,
 								index);
-						setupCards();
+						initCards();
 						reset();
 					}
 				});
@@ -225,7 +346,7 @@ public class ClientGUI implements CardSetHandler {
 							DEBUGLOG.config("Changed size to " + newSize);
 							config = Configuration.deriveWithNewSize(config,
 									newSize);
-							setupCards();
+							initCards();
 							initialize();
 						}
 					});
@@ -250,7 +371,7 @@ public class ClientGUI implements CardSetHandler {
 							DEBUGLOG.config("Changed type to " + type);
 							config = Configuration.deriveWithNewType(config,
 									type);
-							setupCards();
+							initCards();
 							initialize();
 						}
 					});
@@ -275,7 +396,7 @@ public class ClientGUI implements CardSetHandler {
 							DEBUGLOG.config("Changed mode to " + mode);
 							config = Configuration.deriveWithNewMode(config,
 									mode);
-							setupCards();
+							initCards();
 							initialize();
 						}
 
@@ -290,32 +411,32 @@ public class ClientGUI implements CardSetHandler {
 		frame.setJMenuBar(menuBar);
 	}
 
-	private void checkFinish() {
-		if (cards.allMarked()) {
-			if (cards.isSorted()) {
-				lblHint.setForeground(POSITIVE_HINT_COLOR);
-				lblHint.setText("Congratulations!");
-			} else {
-				lblHint.setForeground(NEGATIVE_HINT_COLOR);
-				lblHint.setText("There is something wrong!");
+	private void reportActionToPresenter(Action action) {
+		if (clientMode) {
+			try {
+				controler.performAction(name, action);
+			} catch (RemoteException | NullPointerException e) {
+				displayErrorMessageDialog();
 			}
-			pnlSwap.removeAll();
-			cards.selectAll();
-			updateComponents();
-			pnlCards.cardSet.finishCards(cards);
 		}
 	}
 
-	private void checkComponents() {
-		updateComponents();
-		checkFinish();
+	private void reportErrorToPresenter() {
+		try {
+			controler.incErrorCount(name);
+		} catch (RemoteException | NullPointerException e) {
+			displayErrorMessageDialog();
+		}
 	}
 
-	private void clearErrors() {
-		lblHint.setText("");
+	private void reset() {
+		clearErrorMessage();
+		cards.reset(true);
+		updateAllComponents();
+		updateStats();
 	}
 
-	private void reportError(SelectionException e) {
+	private void showErrorMessage(SelectionException e) {
 		lblHint.setForeground(Color.RED);
 		lblHint.setText(e.getMessage());
 
@@ -332,42 +453,31 @@ public class ClientGUI implements CardSetHandler {
 		}
 	}
 
+	private void updateAllComponents() {
+		updateComponents();
+		updateCardsIfFinished();
+	}
+
+	private void updateCardsIfFinished() {
+		if (cards.allMarked()) {
+			if (cards.isSorted()) {
+				lblHint.setForeground(POSITIVE_HINT_COLOR);
+				lblHint.setText("Congratulations!");
+			} else {
+				lblHint.setForeground(NEGATIVE_HINT_COLOR);
+				lblHint.setText("There is something wrong!");
+			}
+			pnlSwap.removeAll();
+			cards.selectAll();
+			updateComponents();
+			pnlCards.cardSet.finishCards(cards);
+		}
+	}
+
 	private void updateComponents() {
 		pnlCards.cardSet.updateCards(cards);
 		pnlSwap.updateButton(cards.twoSelected());
 		pnlCards.setTitle(config.toString());
-	}
-
-	private void setupCards() {
-		size = config.size;
-		cards = new Cards<>(config);
-		pnlCards.cardSet.set(size, this, name, true);
-	}
-
-	private void reportErrorToPresenter() {
-		try {
-			controler.incErrorCount(name);
-		} catch (RemoteException | NullPointerException e) {
-			displayErrorMessage();
-		}
-	}
-
-	private void reportActionToPresenter(Action action) {
-		if (clientMode) {
-			try {
-				controler.performAction(name, action);
-			} catch (RemoteException | NullPointerException e) {
-				displayErrorMessage();
-			}
-		}
-	}
-
-	private void displayErrorMessage() {
-		DEBUGLOG.severe("Connection to server lost!");
-		JOptionPane.showMessageDialog(frame,
-				"Connection to server lost! Shutting down.", "Network error",
-				JOptionPane.ERROR_MESSAGE);
-		quit();
 	}
 
 	private void updateStats() {
@@ -375,120 +485,6 @@ public class ClientGUI implements CardSetHandler {
 				cards.getErrorCount());
 	}
 
-	@Override
-	public boolean isProcessing(String clientId) {
-		return animating;
-	}
-
-	@Override
-	public void performPin(String clientId, int index) {
-		if (cards.getCard(index).selected) {
-			try {
-				Action action = cards.togglePin(index);
-				clearErrors();
-				reportActionToPresenter(action);
-			} catch (SelectionException e) {
-				reportError(e);
-			}
-			checkComponents();
-		}
-	}
-
-	@Override
-	public void performMark(String clientId, int index) {
-		try {
-			Action action = cards.toggleMark(index);
-			clearErrors();
-			reportActionToPresenter(action);
-		} catch (SelectionException ex) {
-			reportError(ex);
-		}
-		checkComponents();
-	}
-
-	@Override
-	public void performSelect(String clientId, int index) {
-		try {
-			Action action = cards.select(index);
-			updateStats();
-			clearErrors();
-			reportActionToPresenter(action);
-		} catch (SelectionException ex) {
-			reportError(ex);
-		}
-		checkComponents();
-	}
-
-	@Override
-	public void performSwap(String clientId) {
-		try {
-			Action action = cards.swapSelection();
-			reportActionToPresenter(action);
-			updateStats();
-			
-			int leftIndex = cards.getFirstSelectedIndex();
-			int rightIndex = cards.getSecondSelectedIndex();
-			CardPanel cardLeft = pnlCards.cardSet.get(leftIndex);
-			CardPanel cardRight = pnlCards.cardSet.get(rightIndex);
-			
-			
-			if (USE_ANIMATION)
-				new AnimationListener(cardLeft, cardRight, this, clientId).start();
-			else
-				finishSwap(clientId);
-			animating = true;
-		} catch (SelectionException ex) {
-			reportError(ex);
-		}
-	}
-
-	@Override
-	public void finishSwap(String clientId) {
-		pnlCards.cardSet.updateCards(cards);
-		animating = false;
-	}
-
-	public int getLeftReference() {
-		final JComponent comp = pnlCards.cardSet.get(cards
-				.getFirstSelectedIndex());
-		return comp.getLocation().x + comp.getWidth() / 2 + CardSetPanel.INSET;
-	}
-
-	public int getRightReference() {
-		final Component comp = pnlCards.cardSet.get(cards
-				.getSecondSelectedIndex());
-		return comp.getLocation().x + comp.getWidth() / 2 + CardSetPanel.INSET;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public boolean showSwapButton() {
-		return cards.twoSelected();
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public void setPres(ServerControl pres) {
-		this.controler = pres;
-	}
-
-	public void quit() {
-		DEBUGLOG.info("Exiting game...");
-		try {
-			controler.unregister(name);
-		} catch (RemoteException | NullPointerException e) {
-		}
-		frame.dispose();
-		System.exit(0);
-	}
-
-	/**
-	 * Launch the application.
-	 */
 	public static void initAndRun(final boolean remoteConfig) {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {

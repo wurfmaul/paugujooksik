@@ -7,8 +7,6 @@ import at.jku.paugujooksik.action.Action;
 import at.jku.paugujooksik.model.Configuration;
 
 public interface ServerControl extends Remote {
-	public boolean register(String name) throws RemoteException;
-
 	public Configuration<?> getConfig() throws RemoteException;
 
 	public void incErrorCount(String clientId) throws RemoteException;
@@ -19,6 +17,8 @@ public interface ServerControl extends Remote {
 
 	public void performAction(String clientId, Action action)
 			throws RemoteException;
+
+	public boolean register(String name) throws RemoteException;
 
 	public void unregister(String name) throws RemoteException;
 

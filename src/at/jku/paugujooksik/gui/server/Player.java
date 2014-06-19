@@ -1,8 +1,9 @@
 package at.jku.paugujooksik.gui.server;
 
+import static at.jku.paugujooksik.tools.Constants.DEBUGLOG;
+
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.logging.Logger;
 
 import at.jku.paugujooksik.action.Action;
 import at.jku.paugujooksik.action.BinaryAction;
@@ -11,8 +12,6 @@ import at.jku.paugujooksik.gui.CardSetContainerPanel;
 import at.jku.paugujooksik.model.Cards;
 
 public class Player {
-	private static final Logger DEBUGLOG = Logger.getLogger("DEBUG");
-
 	public final Cards<?> cards;
 	public final CardSetContainerPanel panel;
 	public boolean animating;
@@ -23,7 +22,7 @@ public class Player {
 
 	public Player(CardSetContainerPanel panel, Presenter target) {
 		this.target = target;
-		this.cards = new Cards<>(target.getConfig());
+		this.cards = new Cards<>(target.config);
 		this.panel = panel;
 		queueWorker.start();
 	}
@@ -93,7 +92,7 @@ public class Player {
 					target.performSelect(clientId, action.indexLeft);
 				break;
 			case SWAP:
-				target.performSwap(clientId);
+				target.performSwapStart(clientId);
 				break;
 			default:
 				DEBUGLOG.severe("Cannot perform action: '" + action + "'");
@@ -102,12 +101,12 @@ public class Player {
 	}
 
 	private class QueuedAction {
-		public final String clientId;
 		public final Action action;
+		public final String clientId;
 
 		public QueuedAction(String clientId, Action action) {
-			this.clientId = clientId;
 			this.action = action;
+			this.clientId = clientId;
 		}
 	}
 }

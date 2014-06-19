@@ -13,6 +13,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Window;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -32,11 +33,12 @@ import at.jku.paugujooksik.model.Configuration;
 public class Presenter extends Window implements CardSetHandler {
 	private static final long serialVersionUID = 8299211278767397214L;
 
+	public final Configuration<?> config;
+	
 	private final Map<String, Player> players = new LinkedHashMap<>();
-	private final Configuration<?> config;
+	private final Set<JWindow> playerWindows = new LinkedHashSet<>();
 	private final Set<String> registeredClients;
 	private final int playerCount;
-
 	private JFrame frame;
 
 	/**
@@ -50,74 +52,6 @@ public class Presenter extends Window implements CardSetHandler {
 		this.playerCount = registeredClients.size();
 
 		initialize(deviceIndex);
-	}
-
-	/**
-	 * Initialize the contents of the frame.
-	 */
-	private void initialize(int deviceIndex) {
-		int xOffset = 0;
-		int yOffset = 60;
-		if (deviceIndex != 0) {
-			for (int i = 0; i < deviceIndex; i++)
-				xOffset += DISPLAY_DEVICES[i].getDisplayMode().getWidth();
-		}
-
-		frame = new JFrame();
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		GridBagLayout gridBagLayout = new GridBagLayout();
-		gridBagLayout.columnWidths = new int[] { 0, 0 };
-		gridBagLayout.rowHeights = new int[] { yOffset, 0, 0 };
-		gridBagLayout.columnWeights = new double[] { 1.0, Double.MIN_VALUE };
-		gridBagLayout.rowWeights = new double[] { 0.0, 1.0, Double.MIN_VALUE };
-		frame.getContentPane().setLayout(gridBagLayout);
-
-		JLabel lblConfig = new JLabel(config.toString());
-		lblConfig.setFont(TITLE_FONT);
-		GridBagConstraints gbcLblConfig = new GridBagConstraints();
-		gbcLblConfig.insets = new Insets(10, 10, 10, 10);
-		gbcLblConfig.gridx = 0;
-		gbcLblConfig.gridy = 0;
-		frame.getContentPane().add(lblConfig, gbcLblConfig);
-
-		// init background
-		frame.setUndecorated(true);
-		frame.setVisible(true);
-		frame.setLocation(xOffset, 0);
-		frame.setExtendedState(Frame.MAXIMIZED_BOTH);
-
-		// init players
-		final int displayWidth = DISPLAY_DEVICES[deviceIndex].getDisplayMode()
-				.getWidth();
-		final int displayHeight = DISPLAY_DEVICES[deviceIndex].getDisplayMode()
-				.getHeight();
-		final int inset = 10;
-		final int maxHeight = (displayHeight - yOffset) / playerCount;
-
-		int curRow = 1;
-		for (String name : registeredClients) {
-			CardSetContainerPanel cardSetPanel = new CardSetContainerPanel(
-					this, config.size, name, true, false);
-			cardSetPanel.setBackground(PLAYER_COLORS[curRow - 1]);
-			cardSetPanel.setTitle("Team '" + name + "'");
-			players.put(name, new Player(cardSetPanel, this));
-
-			JWindow window = new JWindow();
-			{
-				window.add(cardSetPanel);
-				int x = xOffset + inset;
-				int y = yOffset + (curRow - 1) * maxHeight;
-				int width = displayWidth - 2 * inset;
-				int height = maxHeight - inset;
-				window.setBounds(x, y, width, height);
-				window.setVisible(true);
-			}
-			curRow++;
-		}
-	}
-
-	public Configuration<?> getConfig() {
-		return config;
 	}
 
 	public void incErrorCount(String clientId) {
@@ -135,6 +69,9 @@ public class Presenter extends Window implements CardSetHandler {
 	}
 
 	public void quit() {
+		for (JWindow window : playerWindows) {
+			window.dispose();
+		}
 		frame.dispose();
 	}
 
@@ -179,7 +116,7 @@ public class Presenter extends Window implements CardSetHandler {
 	}
 
 	@Override
-	public void performSwap(String clientId) {
+	public void performSwapStart(String clientId) {
 		final Player curPlayer = players.get(clientId);
 		try {
 			curPlayer.cards.swapSelection();
@@ -197,16 +134,81 @@ public class Presenter extends Window implements CardSetHandler {
 				new AnimationListener(btnLeft, btnRight, this, clientId)
 						.start();
 			else
-				finishSwap(clientId);
+				performSwapStop(clientId);
 			curPlayer.animating = true;
 		} catch (SelectionException ex) {
 		}
 	}
 
 	@Override
-	public void finishSwap(String clientId) {
+	public void performSwapStop(String clientId) {
 		Player curPlayer = players.get(clientId);
 		curPlayer.updateComponents();
 		curPlayer.animating = false;
+	}
+
+	/**
+	 * Initialize the contents of the frame.
+	 */
+	private void initialize(int deviceIndex) {
+		int xOffset = 0;
+		int yOffset = 60;
+		if (deviceIndex != 0) {
+			for (int i = 0; i < deviceIndex; i++)
+				xOffset += DISPLAY_DEVICES[i].getDisplayMode().getWidth();
+		}
+	
+		frame = new JFrame();
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		GridBagLayout gridBagLayout = new GridBagLayout();
+		gridBagLayout.columnWidths = new int[] { 0, 0 };
+		gridBagLayout.rowHeights = new int[] { yOffset, 0, 0 };
+		gridBagLayout.columnWeights = new double[] { 1.0, Double.MIN_VALUE };
+		gridBagLayout.rowWeights = new double[] { 0.0, 1.0, Double.MIN_VALUE };
+		frame.getContentPane().setLayout(gridBagLayout);
+	
+		JLabel lblConfig = new JLabel(config.toString());
+		lblConfig.setFont(TITLE_FONT);
+		GridBagConstraints gbcLblConfig = new GridBagConstraints();
+		gbcLblConfig.insets = new Insets(10, 10, 10, 10);
+		gbcLblConfig.gridx = 0;
+		gbcLblConfig.gridy = 0;
+		frame.getContentPane().add(lblConfig, gbcLblConfig);
+	
+		// init background
+		frame.setUndecorated(true);
+		frame.setVisible(true);
+		frame.setLocation(xOffset, 0);
+		frame.setExtendedState(Frame.MAXIMIZED_BOTH);
+	
+		// init players
+		final int displayWidth = DISPLAY_DEVICES[deviceIndex].getDisplayMode()
+				.getWidth();
+		final int displayHeight = DISPLAY_DEVICES[deviceIndex].getDisplayMode()
+				.getHeight();
+		final int inset = 10;
+		final int maxHeight = (displayHeight - yOffset) / playerCount;
+	
+		int curRow = 1;
+		for (String name : registeredClients) {
+			CardSetContainerPanel cardSetPanel = new CardSetContainerPanel(
+					this, config.size, name, true, false);
+			cardSetPanel.setBackground(PLAYER_COLORS[curRow - 1]);
+			cardSetPanel.setTitle("Team '" + name + "'");
+			players.put(name, new Player(cardSetPanel, this));
+	
+			JWindow window = new JWindow();
+			{
+				window.add(cardSetPanel);
+				int x = xOffset + inset;
+				int y = yOffset + (curRow - 1) * maxHeight;
+				int width = displayWidth - 2 * inset;
+				int height = maxHeight - inset;
+				window.setBounds(x, y, width, height);
+				window.setVisible(true);
+				playerWindows.add(window);
+			}
+			curRow++;
+		}
 	}
 }

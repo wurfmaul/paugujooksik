@@ -8,7 +8,6 @@ import java.awt.event.ActionListener;
 import javax.swing.Timer;
 
 public class AnimationListener implements ActionListener {
-
 	private final CardSetHandler target;
 	private final CardPanel leftCard;
 	private final CardPanel rightCard;
@@ -23,7 +22,7 @@ public class AnimationListener implements ActionListener {
 		this.rightCard = rightCard;
 		this.target = target;
 		this.clientId = clientId;
-		
+
 		this.leftDestX = rightCard.getLocation().x;
 		this.rightDestY = leftCard.getLocation().x;
 		this.timer = new Timer(40, this);
@@ -36,13 +35,14 @@ public class AnimationListener implements ActionListener {
 		int leftY = leftCard.getLocation().y;
 		int rightY = rightCard.getLocation().y;
 
-		leftCard.setLocation(Math.min(leftX + ANIMATION_SPEED, leftDestX), leftY);
+		leftCard.setLocation(Math.min(leftX + ANIMATION_SPEED, leftDestX),
+				leftY);
 		rightCard.setLocation(Math.max(rightX - ANIMATION_SPEED, rightDestY),
 				rightY);
-		
+
 		if (leftX == leftDestX || rightX == rightDestY) {
 			timer.stop();
-			target.finishSwap(clientId);
+			target.performSwapStop(clientId);
 			return;
 		}
 	}

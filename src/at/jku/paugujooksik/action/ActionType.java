@@ -1,12 +1,8 @@
 package at.jku.paugujooksik.action;
 
 public enum ActionType {
-	SWAP, 
-	OPEN, 
-	PIN, 
-	MARK, 
-	UNMARK;
-	
+	MARK, OPEN, PIN, SWAP, UNMARK;
+
 	@Override
 	public String toString() {
 		return name().toLowerCase();

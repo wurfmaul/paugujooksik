@@ -18,13 +18,8 @@ public class ServerControlImpl extends UnicastRemoteObject implements
 	}
 
 	@Override
-	public boolean register(String name) throws RemoteException {
-		return server.register(name);
-	}
-
-	@Override
 	public Configuration<?> getConfig() throws RemoteException {
-		return server.getPresenter().getConfig();
+		return server.getPresenter().config;
 	}
 
 	@Override
@@ -46,6 +41,11 @@ public class ServerControlImpl extends UnicastRemoteObject implements
 	public void performAction(String clientId, Action action)
 			throws RemoteException {
 		server.getPresenter().queueAction(clientId, action);
+	}
+
+	@Override
+	public boolean register(String name) throws RemoteException {
+		return server.register(name);
 	}
 
 	@Override

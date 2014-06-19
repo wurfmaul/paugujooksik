@@ -35,7 +35,7 @@ public class StarterDialog extends JDialog {
 		setBounds(100, 100, 450, 300);
 		setTitle("Choose a mode!");
 		setResizable(false);
-		
+
 		getContentPane().setLayout(new BorderLayout());
 
 		JPanel contentPanel = new JPanel();
