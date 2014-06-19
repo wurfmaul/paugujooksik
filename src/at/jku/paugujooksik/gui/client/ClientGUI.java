@@ -336,7 +336,6 @@ public class ClientGUI implements CardSetHandler {
 		pnlCards.cardSet.updateCards(cards);
 		pnlSwap.updateButton(cards.twoSelected());
 		pnlCards.setTitle(config.toString());
-		frame.repaint();
 	}
 
 	private void setupCards() {
@@ -425,11 +424,13 @@ public class ClientGUI implements CardSetHandler {
 		try {
 			Action action = cards.swapSelection();
 			reportActionToPresenter(action);
+			updateStats();
 			
 			int leftIndex = cards.getFirstSelectedIndex();
 			int rightIndex = cards.getSecondSelectedIndex();
 			CardPanel cardLeft = pnlCards.cardSet.get(leftIndex);
 			CardPanel cardRight = pnlCards.cardSet.get(rightIndex);
+			
 			
 			if (USE_ANIMATION)
 				new AnimationListener(cardLeft, cardRight, this, clientId).start();
@@ -443,6 +444,7 @@ public class ClientGUI implements CardSetHandler {
 
 	@Override
 	public void finishSwap(String clientId) {
+		pnlCards.cardSet.updateCards(cards);
 		animating = false;
 	}
 

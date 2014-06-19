@@ -36,15 +36,15 @@ public class AnimationListener implements ActionListener {
 		int leftY = leftCard.getLocation().y;
 		int rightY = rightCard.getLocation().y;
 
+		leftCard.setLocation(Math.min(leftX + ANIMATION_SPEED, leftDestX), leftY);
+		rightCard.setLocation(Math.max(rightX - ANIMATION_SPEED, rightDestY),
+				rightY);
+		
 		if (leftX == leftDestX || rightX == rightDestY) {
 			timer.stop();
 			target.finishSwap(clientId);
 			return;
 		}
-
-		leftCard.setLocation(Math.min(leftX + ANIMATION_SPEED, leftDestX), leftY);
-		rightCard.setLocation(Math.max(rightX - ANIMATION_SPEED, rightDestY),
-				rightY);
 	}
 
 	public void start() {

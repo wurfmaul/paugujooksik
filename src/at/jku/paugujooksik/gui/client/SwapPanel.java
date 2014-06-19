@@ -47,6 +47,7 @@ public class SwapPanel extends AbstractPanel {
 			btn.setBounds(getCenter() - 50, 30, 100, 50);
 			add(btn);
 		}
+		repaint();
 	}
 
 	private int getCenter() {

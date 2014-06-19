@@ -88,6 +88,7 @@ public class Presenter extends Window implements CardSetHandler {
 			gbcPnlRow.fill = GridBagConstraints.BOTH;
 			gbcPnlRow.gridx = 0;
 			gbcPnlRow.gridy = curRow;
+			
 			CardSetContainerPanel cardSetPanel = new CardSetContainerPanel(
 					this, config.size, name, true, false);
 			cardSetPanel.setBackground(PLAYER_COLORS[curRow - 1]);
@@ -182,7 +183,8 @@ public class Presenter extends Window implements CardSetHandler {
 			CardPanel btnLeft = curPlayer.panel.cardSet.get(leftIndex);
 			CardPanel btnRight = curPlayer.panel.cardSet.get(rightIndex);
 			if (USE_ANIMATION)
-				new AnimationListener(btnLeft, btnRight, this, clientId).start();
+				new AnimationListener(btnLeft, btnRight, this, clientId)
+						.start();
 			else
 				finishSwap(clientId);
 			curPlayer.animating = true;
@@ -192,6 +194,8 @@ public class Presenter extends Window implements CardSetHandler {
 
 	@Override
 	public void finishSwap(String clientId) {
-		players.get(clientId).animating = false;
+		Player curPlayer = players.get(clientId);
+		curPlayer.updateComponents();
+		curPlayer.animating = false;
 	}
 }
