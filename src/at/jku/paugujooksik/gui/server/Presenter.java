@@ -1,17 +1,17 @@
 package at.jku.paugujooksik.gui.server;
 
-import static at.jku.paugujooksik.tools.Constants.*;
+import static at.jku.paugujooksik.tools.Constants.DISPLAY_DEVICES;
+import static at.jku.paugujooksik.tools.Constants.PLAYER_COLORS;
 import static at.jku.paugujooksik.tools.Constants.TITLE_FONT;
+import static at.jku.paugujooksik.tools.Constants.USE_ANIMATION;
 import static at.jku.paugujooksik.tools.ResourceLoader.ERROR_SND;
 import static at.jku.paugujooksik.tools.ResourceLoader.loadClip;
 
 import java.awt.Frame;
-import java.awt.GraphicsDevice;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Window;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -19,6 +19,7 @@ import java.util.Set;
 import javax.sound.sampled.Clip;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JWindow;
 
 import at.jku.paugujooksik.action.Action;
 import at.jku.paugujooksik.gui.AnimationListener;
@@ -32,46 +33,43 @@ public class Presenter extends Window implements CardSetHandler {
 	private static final long serialVersionUID = 8299211278767397214L;
 
 	private final Map<String, Player> players = new LinkedHashMap<>();
+	private final Configuration<?> config;
+	private final Set<String> registeredClients;
+	private final int playerCount;
 
 	private JFrame frame;
-	private Configuration<?> config;
-	private Set<String> registeredClients;
 
 	/**
 	 * Create the application.
 	 */
 	public Presenter(Frame owner, Configuration<?> config,
-			Set<String> registeredClients, GraphicsDevice device) {
+			Set<String> registeredClients, int deviceIndex) {
 		super(owner);
 		this.config = config;
 		this.registeredClients = registeredClients;
-		initialize();
-		setToFullScreen(device);
+		this.playerCount = registeredClients.size();
+
+		initialize(deviceIndex);
 	}
 
 	/**
 	 * Initialize the contents of the frame.
 	 */
-	private void initialize() {
-		final int rows = registeredClients.size();
-		int curRow = 1;
+	private void initialize(int deviceIndex) {
+		int xOffset = 0;
+		int yOffset = 60;
+		if (deviceIndex != 0) {
+			for (int i = 0; i < deviceIndex; i++)
+				xOffset += DISPLAY_DEVICES[i].getDisplayMode().getWidth();
+		}
 
 		frame = new JFrame();
-		frame.setBounds(100, 100, 600, 500);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		GridBagLayout gridBagLayout = new GridBagLayout();
-		int[] heights = new int[rows + 2];
-		double[] weights = new double[rows + 2];
-		{
-			heights[0] = 60;
-			Arrays.fill(weights, 1.0);
-			weights[0] = 0.0;
-			weights[rows + 1] = Double.MIN_VALUE;
-		}
 		gridBagLayout.columnWidths = new int[] { 0, 0 };
-		gridBagLayout.rowHeights = heights;
+		gridBagLayout.rowHeights = new int[] { yOffset, 0, 0 };
 		gridBagLayout.columnWeights = new double[] { 1.0, Double.MIN_VALUE };
-		gridBagLayout.rowWeights = weights;
+		gridBagLayout.rowWeights = new double[] { 0.0, 1.0, Double.MIN_VALUE };
 		frame.getContentPane().setLayout(gridBagLayout);
 
 		JLabel lblConfig = new JLabel(config.toString());
@@ -82,28 +80,40 @@ public class Presenter extends Window implements CardSetHandler {
 		gbcLblConfig.gridy = 0;
 		frame.getContentPane().add(lblConfig, gbcLblConfig);
 
+		// init background
+		frame.setUndecorated(true);
+		frame.setVisible(true);
+		frame.setLocation(xOffset, 0);
+		frame.setExtendedState(Frame.MAXIMIZED_BOTH);
+
+		// init players
+		final int displayWidth = DISPLAY_DEVICES[deviceIndex].getDisplayMode()
+				.getWidth();
+		final int displayHeight = DISPLAY_DEVICES[deviceIndex].getDisplayMode()
+				.getHeight();
+		final int inset = 10;
+		final int maxHeight = (displayHeight - yOffset) / playerCount;
+
+		int curRow = 1;
 		for (String name : registeredClients) {
-			GridBagConstraints gbcPnlRow = new GridBagConstraints();
-			gbcPnlRow.insets = new Insets(10, 10, 10, 10);
-			gbcPnlRow.fill = GridBagConstraints.BOTH;
-			gbcPnlRow.gridx = 0;
-			gbcPnlRow.gridy = curRow;
-			
 			CardSetContainerPanel cardSetPanel = new CardSetContainerPanel(
 					this, config.size, name, true, false);
 			cardSetPanel.setBackground(PLAYER_COLORS[curRow - 1]);
 			cardSetPanel.setTitle("Team '" + name + "'");
 			players.put(name, new Player(cardSetPanel, this));
-			frame.getContentPane().add(cardSetPanel, gbcPnlRow);
+
+			JWindow window = new JWindow();
+			{
+				window.add(cardSetPanel);
+				int x = xOffset + inset;
+				int y = yOffset + (curRow - 1) * maxHeight;
+				int width = displayWidth - 2 * inset;
+				int height = maxHeight - inset;
+				window.setBounds(x, y, width, height);
+				window.setVisible(true);
+			}
 			curRow++;
 		}
-	}
-
-	private void setToFullScreen(GraphicsDevice device) {
-		frame.dispose();
-		frame.setUndecorated(true);
-		frame.setVisible(true);
-		device.setFullScreenWindow(frame);
 	}
 
 	public Configuration<?> getConfig() {
@@ -173,6 +183,7 @@ public class Presenter extends Window implements CardSetHandler {
 		final Player curPlayer = players.get(clientId);
 		try {
 			curPlayer.cards.swapSelection();
+			curPlayer.updateStats();
 
 			int leftIndex = curPlayer.cards.getFirstSelectedIndex();
 			int rightIndex = curPlayer.cards.getSecondSelectedIndex();

@@ -5,6 +5,7 @@ import static at.jku.paugujooksik.tools.Constants.DEFAULT_FONT;
 import static at.jku.paugujooksik.tools.Constants.DEFAULT_FONT_BOLD;
 import static at.jku.paugujooksik.tools.Constants.DEFAULT_PORT;
 import static at.jku.paugujooksik.tools.Constants.DEFAULT_SIZE;
+import static at.jku.paugujooksik.tools.Constants.DISPLAY_DEVICES;
 import static at.jku.paugujooksik.tools.Constants.MAX_SIZE;
 import static at.jku.paugujooksik.tools.Constants.MIN_SIZE;
 import static at.jku.paugujooksik.tools.Constants.SHOW_IP6_ADDRESSES;
@@ -17,7 +18,6 @@ import java.awt.Dimension;
 import java.awt.DisplayMode;
 import java.awt.EventQueue;
 import java.awt.GraphicsDevice;
-import java.awt.GraphicsEnvironment;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -62,7 +62,6 @@ public class ServerGUI {
 	private static final Logger DEBUGLOG = Logger.getLogger("DEBUG");
 	private static final List<String> HOST_ADDRESSES = new LinkedList<>();
 	private static final List<String> AVAILABLE_DISPLAYS = new LinkedList<>();
-	private static final GraphicsDevice[] DISPLAY_DEVICES;
 
 	private final JFrame frame = new JFrame();
 	private final Set<String> registeredClients = new LinkedHashSet<>();
@@ -100,9 +99,6 @@ public class ServerGUI {
 		}
 
 		// list all available monitors
-		DISPLAY_DEVICES = GraphicsEnvironment
-				.getLocalGraphicsEnvironment().getScreenDevices();
-
 		for (int i = 0; i < DISPLAY_DEVICES.length; i++) {
 			GraphicsDevice device = DISPLAY_DEVICES[i];
 			DisplayMode mode = device.getDisplayMode();
@@ -115,7 +111,7 @@ public class ServerGUI {
 	 * Create the application.
 	 */
 	public ServerGUI() {
-		setupRegistry();
+		initRegistry();
 		initialize();
 	}
 
@@ -344,6 +340,16 @@ public class ServerGUI {
 		frame.setJMenuBar(menuBar);
 	}
 
+	private void initRegistry() {
+		try {
+			ServerControl p = new ServerControlImpl(this);
+			Registry reg = LocateRegistry.createRegistry(DEFAULT_PORT);
+			reg.bind(BINDING_ID, p);
+		} catch (RemoteException | AlreadyBoundException e) {
+			DEBUGLOG.severe("Could not share object!");
+		}
+	}
+
 	private void updatePlayerList() {
 		final StringBuilder sb = new StringBuilder();
 		for (String c : registeredClients) {
@@ -361,22 +367,12 @@ public class ServerGUI {
 		txtPlayers.setText(sb.toString());
 	}
 
-	private void setupRegistry() {
-		try {
-			ServerControl p = new ServerControlImpl(this);
-			Registry reg = LocateRegistry.createRegistry(DEFAULT_PORT);
-			reg.bind(BINDING_ID, p);
-		} catch (RemoteException | AlreadyBoundException e) {
-			DEBUGLOG.severe("Could not share object!");
-		}
-	}
-
 	public Presenter getPresenter() {
 		return presenter;
 	}
 
 	public boolean isJoinable() {
-		return joinable ;
+		return joinable;
 	}
 
 	public boolean isRunning() {
@@ -432,16 +428,14 @@ public class ServerGUI {
 						type, sortIdx, size);
 
 				// compute used screen
-				int dspDix = cbxDisplay.getSelectedIndex();
-				if (dspDix < 0)
-					dspDix = 0;
-				final GraphicsDevice device = DISPLAY_DEVICES[dspDix];
+				assert cbxDisplay.getSelectedIndex() >= 0;
+				final int dspDix = cbxDisplay.getSelectedIndex();
 
 				EventQueue.invokeLater(new Runnable() {
 					public void run() {
 						try {
 							presenter = new Presenter(frame, config,
-									registeredClients, device);
+									registeredClients, dspDix);
 						} catch (Exception e) {
 							e.printStackTrace();
 						}

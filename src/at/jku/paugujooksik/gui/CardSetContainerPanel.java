@@ -5,7 +5,6 @@ import static at.jku.paugujooksik.tools.Constants.ERROR_BACKGROUND_COLOR;
 import static at.jku.paugujooksik.tools.Constants.ERROR_LABEL;
 import static at.jku.paugujooksik.tools.Constants.ERROR_LINE_COLOR;
 import static at.jku.paugujooksik.tools.Constants.PLAYER_BORDER_COLOR;
-import static at.jku.paugujooksik.tools.Constants.PLAYER_BORDER_ISROUNDED;
 import static at.jku.paugujooksik.tools.Constants.PLAYER_BORDER_THICKNESS;
 import static at.jku.paugujooksik.tools.Constants.STAT_BACKGROUND_COLOR;
 import static at.jku.paugujooksik.tools.Constants.STAT_FONT;
@@ -38,7 +37,7 @@ public class CardSetContainerPanel extends JPanel {
 
 		if (border)
 			setBorder(new LineBorder(PLAYER_BORDER_COLOR,
-					PLAYER_BORDER_THICKNESS, PLAYER_BORDER_ISROUNDED));
+					PLAYER_BORDER_THICKNESS));
 
 		GridBagLayout gblPnlRow = new GridBagLayout();
 		gblPnlRow.columnWidths = new int[] { 0, 0, 0, 0, 0 };
