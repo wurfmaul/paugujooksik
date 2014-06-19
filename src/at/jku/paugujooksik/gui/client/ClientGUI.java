@@ -423,21 +423,19 @@ public class ClientGUI implements CardSetHandler {
 	@Override
 	public void performSwap(String clientId) {
 		try {
-
+			Action action = cards.swapSelection();
+			reportActionToPresenter(action);
+			
 			int leftIndex = cards.getFirstSelectedIndex();
 			int rightIndex = cards.getSecondSelectedIndex();
 			CardPanel cardLeft = pnlCards.cardSet.get(leftIndex);
 			CardPanel cardRight = pnlCards.cardSet.get(rightIndex);
 			
-			Action action = cards.swapSelection();
-			pnlCards.cardSet.updateCards(cards);
-			reportActionToPresenter(action);
-			
-			animating = true;
 			if (USE_ANIMATION)
 				new AnimationListener(cardLeft, cardRight, this, clientId).start();
 			else
 				finishSwap(clientId);
+			animating = true;
 		} catch (SelectionException ex) {
 			reportError(ex);
 		}
@@ -445,8 +443,6 @@ public class ClientGUI implements CardSetHandler {
 
 	@Override
 	public void finishSwap(String clientId) {
-		updateStats();
-//		pnlCards.cardSet.updateCards(cards);
 		animating = false;
 	}
 

@@ -1,6 +1,6 @@
 package at.jku.paugujooksik.gui.server;
 
-import static at.jku.paugujooksik.tools.Constants.PLAYER_COLORS;
+import static at.jku.paugujooksik.tools.Constants.*;
 import static at.jku.paugujooksik.tools.Constants.TITLE_FONT;
 import static at.jku.paugujooksik.tools.ResourceLoader.ERROR_SND;
 import static at.jku.paugujooksik.tools.ResourceLoader.loadClip;
@@ -181,26 +181,17 @@ public class Presenter extends Window implements CardSetHandler {
 
 			CardPanel btnLeft = curPlayer.panel.cardSet.get(leftIndex);
 			CardPanel btnRight = curPlayer.panel.cardSet.get(rightIndex);
-			
-			
-			
-			new AnimationListener(btnLeft, btnRight, this, clientId).start();
+			if (USE_ANIMATION)
+				new AnimationListener(btnLeft, btnRight, this, clientId).start();
+			else
+				finishSwap(clientId);
 			curPlayer.animating = true;
 		} catch (SelectionException ex) {
 		}
-		curPlayer.updateStats();
-		curPlayer.updateComponents();
 	}
 
 	@Override
 	public void finishSwap(String clientId) {
-		final Player curPlayer = players.get(clientId);
-		try {
-			curPlayer.cards.swapSelection();
-		} catch (SelectionException ex) {
-		}
-		curPlayer.updateStats();
-		curPlayer.updateComponents();
-		curPlayer.animating = false;
+		players.get(clientId).animating = false;
 	}
 }

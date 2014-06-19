@@ -63,6 +63,7 @@ public class Player {
 					}
 				}
 			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
 		}
 

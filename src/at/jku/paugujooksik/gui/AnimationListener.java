@@ -48,13 +48,6 @@ public class AnimationListener implements ActionListener {
 	}
 
 	public void start() {
-		// swapping does the trick
-//		Point leftLocation = leftCard.getLocation();
-//		leftCard.setLocation(rightCard.getLocation());
-//		rightCard.setLocation(leftLocation);
-//		leftCard.repaint();
-//		rightCard.repaint();
-
 		timer.start();
 	}
 
