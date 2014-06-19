@@ -23,6 +23,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 
 import javax.sound.sampled.Clip;
 import javax.swing.ButtonGroup;
@@ -37,7 +38,6 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
-import javax.swing.WindowConstants;
 
 import at.jku.paugujooksik.action.Action;
 import at.jku.paugujooksik.gui.AnimationListener;
@@ -104,10 +104,10 @@ public class ClientGUI implements CardSetHandler {
 		DEBUGLOG.info("Exiting game...");
 		try {
 			controler.unregister(name);
+			UnicastRemoteObject.unexportObject(controler, true);
 		} catch (RemoteException | NullPointerException e) {
 		}
 		frame.dispose();
-		System.exit(0);
 	}
 
 	public void setController(ServerControl controller) {
@@ -261,19 +261,19 @@ public class ClientGUI implements CardSetHandler {
 		frame.setBounds(100, 100, 700, 450);
 		frame.setMinimumSize(new Dimension(500, 450));
 		frame.setTitle("Sort the Cards!");
-		frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		frame.addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent we) {
+				quit();
+			}
+		});
 		GridBagLayout gblFrame = new GridBagLayout();
 		gblFrame.columnWidths = new int[] { 0, 0 };
 		gblFrame.rowHeights = new int[] { 260, 90, 0, 0 };
 		gblFrame.columnWeights = new double[] { 1.0, Double.MIN_VALUE };
 		gblFrame.rowWeights = new double[] { 0.0, 0.0, 1.0, Double.MIN_VALUE };
 		frame.getContentPane().setLayout(gblFrame);
-		frame.addWindowListener(new WindowAdapter() {
-			@Override
-			public void windowClosed(WindowEvent e) {
-				quit();
-			}
-		});
 	}
 
 	private void initMenuBar() {
@@ -332,7 +332,7 @@ public class ClientGUI implements CardSetHandler {
 
 			mnConfig.add(new JSeparator());
 
-			JMenu mnSize = new JMenu("Size");
+			JMenu mnSize = new JMenu("Number of cards");
 			{
 				ButtonGroup sizeGroup = new ButtonGroup();
 				for (int i = MIN_SIZE; i <= MAX_SIZE; i++) {
@@ -356,7 +356,7 @@ public class ClientGUI implements CardSetHandler {
 			}
 			mnConfig.add(mnSize);
 
-			JMenu mnType = new JMenu("Type");
+			JMenu mnType = new JMenu("Value type");
 			{
 				final ButtonGroup typeGroup = new ButtonGroup();
 				final ValueType[] types = ValueType.values();
@@ -381,7 +381,7 @@ public class ClientGUI implements CardSetHandler {
 			}
 			mnConfig.add(mnType);
 
-			JMenu mnMode = new JMenu("Mode");
+			JMenu mnMode = new JMenu("Values");
 			{
 				final ButtonGroup kindGroup = new ButtonGroup();
 				final ValueMode[] modes = ValueMode.values();

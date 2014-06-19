@@ -1,19 +1,17 @@
 package at.jku.paugujooksik.model;
 
+import static at.jku.paugujooksik.tools.Constants.DEBUGLOG;
 import static at.jku.paugujooksik.tools.Constants.MOVE_MARK_ON_SWAP;
 import static at.jku.paugujooksik.tools.Constants.MOVE_PIN_ON_SWAP;
 
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import at.jku.paugujooksik.action.Action;
 import at.jku.paugujooksik.gui.SelectionException;
 
 public class Cards<T extends Comparable<T>> {
-	private static final Logger DEBUGLOG = Logger.getLogger("DEBUG");
-
 	private final Statistics stat = new Statistics();
 	private final List<Card<T>> cardList = new LinkedList<>();
 	private final Configuration<T> config;

@@ -1,6 +1,7 @@
 package at.jku.paugujooksik.gui.server;
 
 import static at.jku.paugujooksik.tools.Constants.BINDING_ID;
+import static at.jku.paugujooksik.tools.Constants.DEBUGLOG;
 import static at.jku.paugujooksik.tools.Constants.DEFAULT_FONT;
 import static at.jku.paugujooksik.tools.Constants.DEFAULT_FONT_BOLD;
 import static at.jku.paugujooksik.tools.Constants.DEFAULT_PORT;
@@ -23,21 +24,24 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.rmi.AlreadyBoundException;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.Enumeration;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
@@ -59,7 +63,6 @@ import at.jku.paugujooksik.server.ServerControl;
 import at.jku.paugujooksik.server.ServerControlImpl;
 
 public class ServerGUI {
-	private static final Logger DEBUGLOG = Logger.getLogger("DEBUG");
 	private static final List<String> HOST_ADDRESSES = new LinkedList<>();
 	private static final List<String> AVAILABLE_DISPLAYS = new LinkedList<>();
 
@@ -75,6 +78,8 @@ public class ServerGUI {
 	private JComboBox<ValueType> cbxCfgType;
 	private JComboBox<ValueMode> cbxCfgMode;
 	private JSlider sldrCfgSize;
+	private ServerControl remoteControl;
+	private Registry remoteRegistry;
 
 	public ServerGUI() {
 		initRegistry();
@@ -112,7 +117,14 @@ public class ServerGUI {
 		frame.setBounds(100, 100, 700, 520);
 		frame.setMinimumSize(new Dimension(500, 520));
 		frame.setTitle("Paugujooksik - Presenter Mode");
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		frame.addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent we) {
+				quit();
+			}
+		});
+
 		GridBagLayout gblFrame = new GridBagLayout();
 		gblFrame.columnWidths = new int[] { 175, 175, 175, 175, 0 };
 		gblFrame.rowHeights = new int[] { 50, 40, 40, 50, 40, 50, 40, 40, 40,
@@ -245,7 +257,7 @@ public class ServerGUI {
 		gbcCbxCfgAlgo.gridy = 6;
 		frame.getContentPane().add(cbxCfgAlgo, gbcCbxCfgAlgo);
 
-		JLabel lblCfgType = new JLabel("Type: ");
+		JLabel lblCfgType = new JLabel("Value type: ");
 		GridBagConstraints gbcLblCfgType = new GridBagConstraints();
 		gbcLblCfgType.fill = GridBagConstraints.HORIZONTAL;
 		gbcLblCfgType.insets = new Insets(0, 10, 5, 5);
@@ -261,7 +273,7 @@ public class ServerGUI {
 		gbcCbxCfgType.gridy = 7;
 		frame.getContentPane().add(cbxCfgType, gbcCbxCfgType);
 
-		JLabel lblCfgMode = new JLabel("Mode: ");
+		JLabel lblCfgMode = new JLabel("Values: ");
 		GridBagConstraints gbcLblCfgMode = new GridBagConstraints();
 		gbcLblCfgMode.fill = GridBagConstraints.HORIZONTAL;
 		gbcLblCfgMode.insets = new Insets(0, 10, 5, 5);
@@ -277,7 +289,7 @@ public class ServerGUI {
 		gbcCbxCfgMode.gridy = 8;
 		frame.getContentPane().add(cbxCfgMode, gbcCbxCfgMode);
 
-		JLabel lblCfgSize = new JLabel("Size: ");
+		JLabel lblCfgSize = new JLabel("Number of cards: ");
 		GridBagConstraints gbcLblCfgSize = new GridBagConstraints();
 		gbcLblCfgSize.fill = GridBagConstraints.HORIZONTAL;
 		gbcLblCfgSize.insets = new Insets(0, 10, 0, 5);
@@ -285,13 +297,12 @@ public class ServerGUI {
 		gbcLblCfgSize.gridy = 9;
 		frame.getContentPane().add(lblCfgSize, gbcLblCfgSize);
 
-		sldrCfgSize = new JSlider();
-		sldrCfgSize.setMajorTickSpacing(1);
+		sldrCfgSize = new JSlider(MIN_SIZE, MAX_SIZE, DEFAULT_SIZE);
 		sldrCfgSize.setSnapToTicks(true);
+		sldrCfgSize.setMinorTickSpacing(1);
+		sldrCfgSize.setMajorTickSpacing(2);
 		sldrCfgSize.setPaintTicks(true);
-		sldrCfgSize.setValue(DEFAULT_SIZE);
-		sldrCfgSize.setMinimum(MIN_SIZE);
-		sldrCfgSize.setMaximum(MAX_SIZE);
+		sldrCfgSize.setPaintLabels(true);
 		GridBagConstraints gbcSldrSize = new GridBagConstraints();
 		gbcSldrSize.fill = GridBagConstraints.HORIZONTAL;
 		gbcSldrSize.insets = new Insets(0, 0, 0, 5);
@@ -323,8 +334,7 @@ public class ServerGUI {
 			mntmExit.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					DEBUGLOG.info("Exiting server");
-					frame.dispose();
+					quit();
 				}
 			});
 			mnFile.add(mntmExit);
@@ -335,11 +345,22 @@ public class ServerGUI {
 
 	private void initRegistry() {
 		try {
-			ServerControl p = new ServerControlImpl(this);
-			Registry reg = LocateRegistry.createRegistry(DEFAULT_PORT);
-			reg.bind(BINDING_ID, p);
+			remoteControl = new ServerControlImpl(this);
+			remoteRegistry = LocateRegistry.createRegistry(DEFAULT_PORT);
+			remoteRegistry.bind(BINDING_ID, remoteControl);
 		} catch (RemoteException | AlreadyBoundException e) {
 			DEBUGLOG.severe("Could not share object!");
+		}
+	}
+
+	private void quit() {
+		DEBUGLOG.info("Exiting server");
+		try {
+			remoteRegistry.unbind(BINDING_ID);
+			UnicastRemoteObject.unexportObject(remoteControl, true);
+			frame.dispose();
+			presenter.quit();
+		} catch (RemoteException | NotBoundException | NullPointerException e) {
 		}
 	}
 
@@ -440,11 +461,11 @@ public class ServerGUI {
 				});
 				joinable = false;
 			} else {
+				joinable = true;
 				registeredClients.clear();
 				updatePlayerList();
 				presenter.quit();
 				presenter = null;
-				joinable = true;
 			}
 		}
 	}

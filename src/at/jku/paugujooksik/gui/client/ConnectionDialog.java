@@ -217,19 +217,19 @@ public class ConnectionDialog extends JDialog {
 
 				try {
 					Registry reg = LocateRegistry.getRegistry(host, Integer.parseInt(port));
-					final ServerControl p = (ServerControl) reg
+					final ServerControl remoteControl = (ServerControl) reg
 							.lookup(BINDING_ID);
 					if (name.equals("")) {
 						JOptionPane.showMessageDialog(ConnectionDialog.this,
 								"Please enter your name!", "Naming error",
 								JOptionPane.ERROR_MESSAGE);
 						sourceBtn.setSelected(false);
-					} else if (!p.isJoinable()) {
+					} else if (!remoteControl.isJoinable()) {
 						JOptionPane.showMessageDialog(ConnectionDialog.this,
 								"The selected server is busy!", "Network error",
 								JOptionPane.ERROR_MESSAGE);
 						sourceBtn.setSelected(false);
-					} else if (!p.register(name)) {
+					} else if (!remoteControl.register(name)) {
 						JOptionPane.showMessageDialog(ConnectionDialog.this,
 								"Please choose another name!", "Naming error",
 								JOptionPane.ERROR_MESSAGE);
@@ -241,19 +241,19 @@ public class ConnectionDialog extends JDialog {
 						lblTitle.setText("Waiting for host...");
 
 						target.setName(name);
-						target.setController(p);
+						target.setController(remoteControl);
 
 						registerThread = new Thread(new Runnable() {
 							@Override
 							public void run() {
 								try {
-									while (!p.isRunning()) {
+									while (!remoteControl.isRunning()) {
 										Thread.sleep(500);
 									}
 									ConnectionDialog.this.dispose();
 								} catch (InterruptedException | RemoteException e) {
 									try {
-										p.unregister(name);
+										remoteControl.unregister(name);
 									} catch (RemoteException e1) {
 									}
 								}
