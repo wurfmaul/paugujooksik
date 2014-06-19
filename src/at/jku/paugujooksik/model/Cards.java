@@ -86,7 +86,7 @@ public class Cards<T extends Comparable<T>> {
 		}
 
 		Action action = Action.open(index);
-		checkAction(action, false);
+		checkAction(action);
 
 		if (twoSelected()) {
 			Card<T> left = cardList.get(getFirstSelectedIndex());
@@ -100,7 +100,7 @@ public class Cards<T extends Comparable<T>> {
 		switch (getSelection().size()) {
 		case 1:
 			action = Action.open(index, getSelectedIndex());
-			checkAction(action, false);
+			checkAction(action);
 			stat.compareCount++;
 		case 0:
 			cardList.get(index).selected = true;
@@ -112,15 +112,13 @@ public class Cards<T extends Comparable<T>> {
 		return action;
 	}
 
-	public Action swapSelection(boolean dryRun) {
+	public Action swapSelection() {
 		if (!twoSelected())
 			throw new SelectionException("Two cards need to be open.");
 
 		final Action action = Action.swap(getFirstSelectedIndex(),
 				getSecondSelectedIndex());
-		checkAction(action, dryRun);
-		if (dryRun)
-			return action;
+		checkAction(action);
 
 		// FIXME following 4 lines are evil!
 		final Card<T> left = cardList.get(getFirstSelectedIndex());
@@ -146,7 +144,7 @@ public class Cards<T extends Comparable<T>> {
 	public Action togglePin(int index) {
 		final Action action = Action.pin(index);
 		if (pinIndex == -1 || pinIndex != index) {
-			checkAction(action, false);
+			checkAction(action);
 			if (pinIndex != -1)
 				cardList.get(pinIndex).pinned = false;
 			cardList.get(index).pinned = true;
@@ -248,7 +246,7 @@ public class Cards<T extends Comparable<T>> {
 		return sel;
 	}
 
-	private void checkAction(Action action, boolean dryRun) {
+	private void checkAction(Action action) {
 		if (curAction < expectedActions.size()) {
 			final Action exp = expectedActions.get(curAction);
 			DEBUGLOG.fine("Expected: '" + exp + "'; actual: '" + action + "' "
@@ -256,7 +254,7 @@ public class Cards<T extends Comparable<T>> {
 					+ "compatible>" + "<" + (!exp.equals(action) ? "not " : "")
 					+ "equal>");
 			if (exp.isCompatibleTo(action)) {
-				if (exp.equals(action) && !dryRun) {
+				if (exp.equals(action)) {
 					curAction++;
 				}
 			} else {

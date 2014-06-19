@@ -1,5 +1,9 @@
 package at.jku.paugujooksik.model;
 
+import static at.jku.paugujooksik.tools.Constants.DEFAULT_MODE;
+import static at.jku.paugujooksik.tools.Constants.DEFAULT_SIZE;
+import static at.jku.paugujooksik.tools.Constants.DEFAULT_TYPE;
+
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -19,12 +23,6 @@ public class Configuration<T extends Comparable<T>> implements Serializable {
 	private static final Logger DEBUGLOG = Logger.getLogger("DEBUG");
 	private static final boolean PRINT_VALUES = false;
 	
-	public static final int MIN_SIZE = 7;
-	public static final int MAX_SIZE = 15;
-	public static final int DEFAULT_SIZE = 7;
-	public static final ValueType DEFAULT_TYPE = ValueType.NUMBERS;
-	public static final ValueMode DEFAULT_MODE = ValueMode.SMALL;
-
 	private final List<SortAlgorithm<T>> algorithms = new LinkedList<>();
 	private int algorithmIndex;
 	
@@ -43,10 +41,10 @@ public class Configuration<T extends Comparable<T>> implements Serializable {
 		
 		Collections.shuffle(this.values);
 		
+		algorithms.add(new PlayMode<T>());
 		algorithms.add(new BubbleSort<T>());
 		algorithms.add(new InsertionSort<T>());
 		algorithms.add(new SelectionSort<T>());
-		algorithms.add(new PlayMode<T>());
 	}
 
 	public SortAlgorithm<T> get(int index) {
@@ -83,7 +81,7 @@ public class Configuration<T extends Comparable<T>> implements Serializable {
 			break;
 		}
 		DEBUGLOG.severe("Unknown mode: '" + mode + "' or type: '" + type + "'");
-		return null; // TODO exception system?
+		return null;
 	}
 	
 	@Override

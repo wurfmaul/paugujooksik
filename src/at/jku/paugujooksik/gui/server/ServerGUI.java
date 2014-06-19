@@ -1,12 +1,12 @@
 package at.jku.paugujooksik.gui.server;
 
-import static at.jku.paugujooksik.model.Configuration.DEFAULT_SIZE;
-import static at.jku.paugujooksik.model.Configuration.MAX_SIZE;
-import static at.jku.paugujooksik.model.Configuration.MIN_SIZE;
 import static at.jku.paugujooksik.tools.Constants.BINDING_ID;
 import static at.jku.paugujooksik.tools.Constants.DEFAULT_FONT;
 import static at.jku.paugujooksik.tools.Constants.DEFAULT_FONT_BOLD;
 import static at.jku.paugujooksik.tools.Constants.DEFAULT_PORT;
+import static at.jku.paugujooksik.tools.Constants.DEFAULT_SIZE;
+import static at.jku.paugujooksik.tools.Constants.MAX_SIZE;
+import static at.jku.paugujooksik.tools.Constants.MIN_SIZE;
 import static at.jku.paugujooksik.tools.Constants.SHOW_IP6_ADDRESSES;
 import static at.jku.paugujooksik.tools.ResourceLoader.PLAY_ICON;
 import static at.jku.paugujooksik.tools.ResourceLoader.STOP_ICON;

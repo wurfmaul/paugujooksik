@@ -7,6 +7,9 @@ import static at.jku.paugujooksik.tools.ResourceLoader.loadFonts;
 import java.awt.Color;
 import java.awt.Font;
 
+import at.jku.paugujooksik.model.ValueGenerator.ValueMode;
+import at.jku.paugujooksik.model.ValueGenerator.ValueType;
+
 public class Constants {
 	public static final Color[] PLAYER_COLORS;
 
@@ -44,12 +47,19 @@ public class Constants {
 	public static final int PLAYER_BORDER_THICKNESS = 3;
 	public static final int DEFAULT_BUTTON_SIZE = 25;
 	public static final int DEFAULT_PORT = 1099;
-	public static final int ANIMATION_SPEED = 15;
+	public static final int ANIMATION_SPEED = 8;
+	public static final int MIN_SIZE = 7;
+	public static final int MAX_SIZE = 15;
+	public static final int DEFAULT_SIZE = 7;
 
 	public static final boolean PLAYER_BORDER_ISROUNDED = true;
 	public static final boolean MOVE_PIN_ON_SWAP = true;
 	public static final boolean MOVE_MARK_ON_SWAP = true;
 	public static final boolean SHOW_IP6_ADDRESSES = false;
+	public static final boolean USE_ANIMATION = true;
+	
+	public static final ValueType DEFAULT_TYPE = ValueType.NUMBERS;
+	public static final ValueMode DEFAULT_MODE = ValueMode.SMALL;
 
 	static {
 		if (loadFonts()) {

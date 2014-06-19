@@ -40,7 +40,7 @@ public class SwapPanel extends AbstractPanel {
 		}
 	}
 
-	public void showButton(boolean show) {
+	public void updateButton(boolean show) {
 		removeAll();
 		if (show) {
 			SwapButton btn = new SwapButton();
@@ -52,7 +52,7 @@ public class SwapPanel extends AbstractPanel {
 	private int getCenter() {
 		final int left = target.getLeftReference();
 		final int right = target.getRightReference();
-		return left + Math.abs(right - left) / 2;
+		return Math.min(left, right) + Math.abs(right - left) / 2;
 	}
 
 	private class SwapButton extends JButton {

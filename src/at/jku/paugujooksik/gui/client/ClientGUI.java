@@ -1,8 +1,6 @@
 package at.jku.paugujooksik.gui.client;
 
-import static at.jku.paugujooksik.model.Configuration.MAX_SIZE;
-import static at.jku.paugujooksik.model.Configuration.MIN_SIZE;
-import static at.jku.paugujooksik.tools.Constants.HINT_FONT;
+import static at.jku.paugujooksik.tools.Constants.*;
 import static at.jku.paugujooksik.tools.Constants.NEGATIVE_HINT_COLOR;
 import static at.jku.paugujooksik.tools.Constants.POSITIVE_HINT_COLOR;
 import static at.jku.paugujooksik.tools.ResourceLoader.ERROR_SND;
@@ -88,6 +86,7 @@ public class ClientGUI implements CardSetHandler {
 	}
 
 	private void reset() {
+		clearErrors();
 		cards.reset(true);
 		checkComponents();
 		updateStats();
@@ -335,7 +334,7 @@ public class ClientGUI implements CardSetHandler {
 
 	private void updateComponents() {
 		pnlCards.cardSet.updateCards(cards);
-		pnlSwap.showButton(cards.twoSelected());
+		pnlSwap.updateButton(cards.twoSelected());
 		pnlCards.setTitle(config.toString());
 		frame.repaint();
 	}
@@ -424,36 +423,30 @@ public class ClientGUI implements CardSetHandler {
 	@Override
 	public void performSwap(String clientId) {
 		try {
-			Action action = cards.swapSelection(true);
-			reportActionToPresenter(action);
 
 			int leftIndex = cards.getFirstSelectedIndex();
 			int rightIndex = cards.getSecondSelectedIndex();
-
-			// FIXME bring the cards in between to back
-			// pnlCards.cardSet.set(size, this, clientId, true, rightIndex);
-
-			CardPanel btnLeft = pnlCards.cardSet.get(leftIndex);
-			CardPanel btnRight = pnlCards.cardSet.get(rightIndex);
-			new AnimationListener(btnLeft, btnRight, this, clientId).start();
+			CardPanel cardLeft = pnlCards.cardSet.get(leftIndex);
+			CardPanel cardRight = pnlCards.cardSet.get(rightIndex);
+			
+			Action action = cards.swapSelection();
+			pnlCards.cardSet.updateCards(cards);
+			reportActionToPresenter(action);
+			
 			animating = true;
+			if (USE_ANIMATION)
+				new AnimationListener(cardLeft, cardRight, this, clientId).start();
+			else
+				finishSwap(clientId);
 		} catch (SelectionException ex) {
 			reportError(ex);
 		}
-		checkComponents();
 	}
 
 	@Override
 	public void finishSwap(String clientId) {
-		try {
-			cards.swapSelection(false);
-			clearErrors();
-			updateStats();
-		} catch (SelectionException ex) {
-			reportError(ex);
-		}
-		pnlCards.cardSet.updateCards(cards);
-		checkFinish();
+		updateStats();
+//		pnlCards.cardSet.updateCards(cards);
 		animating = false;
 	}
 

@@ -2,7 +2,6 @@ package at.jku.paugujooksik.gui;
 
 import static at.jku.paugujooksik.tools.Constants.ANIMATION_SPEED;
 
-import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -13,8 +12,8 @@ public class AnimationListener implements ActionListener {
 	private final CardSetHandler target;
 	private final CardPanel leftCard;
 	private final CardPanel rightCard;
-	private final Point leftDest;
-	private final Point rightDest;
+	private final int leftDestX;
+	private final int rightDestY;
 	private final String clientId;
 	private final Timer timer;
 
@@ -24,33 +23,38 @@ public class AnimationListener implements ActionListener {
 		this.rightCard = rightCard;
 		this.target = target;
 		this.clientId = clientId;
-		timer = new Timer(40, this);
-		leftDest = rightCard.getLocation();
-		rightDest = leftCard.getLocation();
+		
+		this.leftDestX = rightCard.getLocation().x;
+		this.rightDestY = leftCard.getLocation().x;
+		this.timer = new Timer(40, this);
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		Point leftLoc = leftCard.getLocation();
-		Point rightLoc = rightCard.getLocation();
-		if (leftLoc.equals(leftDest) || rightLoc.equals(rightDest)) {
+		int leftX = leftCard.getLocation().x;
+		int rightX = rightCard.getLocation().x;
+		int leftY = leftCard.getLocation().y;
+		int rightY = rightCard.getLocation().y;
+
+		if (leftX == leftDestX || rightX == rightDestY) {
 			timer.stop();
 			target.finishSwap(clientId);
 			return;
 		}
 
-		leftCard.setLocation(Math.min(leftLoc.x + ANIMATION_SPEED, leftDest.x),
-				leftLoc.y);
-		rightCard
-				.setLocation(
-						Math.max(rightLoc.x - ANIMATION_SPEED, rightDest.x),
-						rightLoc.y);
-
-		leftCard.repaint();
-		rightCard.repaint();
+		leftCard.setLocation(Math.min(leftX + ANIMATION_SPEED, leftDestX), leftY);
+		rightCard.setLocation(Math.max(rightX - ANIMATION_SPEED, rightDestY),
+				rightY);
 	}
 
 	public void start() {
+		// swapping does the trick
+//		Point leftLocation = leftCard.getLocation();
+//		leftCard.setLocation(rightCard.getLocation());
+//		rightCard.setLocation(leftLocation);
+//		leftCard.repaint();
+//		rightCard.repaint();
+
 		timer.start();
 	}
 

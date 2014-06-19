@@ -171,7 +171,7 @@ public class Presenter extends Window implements CardSetHandler {
 	public void performSwap(String clientId) {
 		final Player curPlayer = players.get(clientId);
 		try {
-			curPlayer.cards.swapSelection(true); // FIXME animation also here!
+			curPlayer.cards.swapSelection();
 
 			int leftIndex = curPlayer.cards.getFirstSelectedIndex();
 			int rightIndex = curPlayer.cards.getSecondSelectedIndex();
@@ -181,6 +181,9 @@ public class Presenter extends Window implements CardSetHandler {
 
 			CardPanel btnLeft = curPlayer.panel.cardSet.get(leftIndex);
 			CardPanel btnRight = curPlayer.panel.cardSet.get(rightIndex);
+			
+			
+			
 			new AnimationListener(btnLeft, btnRight, this, clientId).start();
 			curPlayer.animating = true;
 		} catch (SelectionException ex) {
@@ -193,7 +196,7 @@ public class Presenter extends Window implements CardSetHandler {
 	public void finishSwap(String clientId) {
 		final Player curPlayer = players.get(clientId);
 		try {
-			curPlayer.cards.swapSelection(false);
+			curPlayer.cards.swapSelection();
 		} catch (SelectionException ex) {
 		}
 		curPlayer.updateStats();
