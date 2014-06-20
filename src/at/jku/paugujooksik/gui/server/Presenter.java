@@ -165,7 +165,7 @@ public class Presenter extends Window implements CardSetHandler {
 
 		frame = new JFrame("Presenter window");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setBounds(bounds.x, bounds.y, bounds.width, bounds.height);
+		frame.setBounds(bounds.x, bounds.y, bounds.width, titleHeight);
 		frame.getContentPane().setLayout(new BorderLayout());
 		frame.getContentPane().add(lblConfig, BorderLayout.NORTH);
 		frame.setUndecorated(true);
@@ -204,7 +204,7 @@ public class Presenter extends Window implements CardSetHandler {
 			int width = bounds.width;
 			int height = maxHeight;
 
-			JWindow borderWindow = new JWindow(frame);
+			JWindow borderWindow = new JWindow();
 			borderWindow.setBounds(x, y, width, height);
 			borderWindow.getContentPane().setLayout(gridBagLayout);
 			borderWindow.getContentPane().add(cardSetPanel, gridBagConstraints);

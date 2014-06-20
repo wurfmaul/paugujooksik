@@ -20,7 +20,7 @@ public class Constants {
 	/** The global logger */
 	public static final Logger DEBUGLOG = Logger.getLogger("DEBUG");
 	/** The {@link Level} of the global logger. */
-	public static final Level LOGLEVEL = Level.CONFIG;
+	public static final Level LOGLEVEL = Level.SEVERE;
 	/** The default font that should be used everywhere. */
 	public static final Font DEFAULT_FONT;
 	/** The default font in bold version. */
