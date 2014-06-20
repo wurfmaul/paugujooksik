@@ -1,6 +1,7 @@
 package at.jku.paugujooksik.gui.server;
 
 import static at.jku.paugujooksik.tools.Constants.DEBUGLOG;
+import static at.jku.paugujooksik.tools.Constants.QUEUE_DELAY;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -60,6 +61,7 @@ public class Player {
 					while (animating) {
 						Thread.sleep(200);
 					}
+					Thread.sleep(QUEUE_DELAY);
 				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();

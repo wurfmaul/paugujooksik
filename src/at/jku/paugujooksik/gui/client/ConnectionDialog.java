@@ -5,7 +5,6 @@ import static at.jku.paugujooksik.tools.Constants.DEFAULT_FONT;
 import static at.jku.paugujooksik.tools.Constants.DEFAULT_FONT_BOLD;
 import static at.jku.paugujooksik.tools.Constants.DEFAULT_HOST;
 import static at.jku.paugujooksik.tools.Constants.DEFAULT_PORT;
-import static at.jku.paugujooksik.tools.Constants.HISTORY_FILE_DELIM;
 import static at.jku.paugujooksik.tools.Constants.TITLE_FONT;
 import static at.jku.paugujooksik.tools.ResourceLoader.PLAY_ICON_SMALL;
 import static at.jku.paugujooksik.tools.ResourceLoader.STOP_ICON_SMALL;
@@ -46,6 +45,7 @@ import at.jku.paugujooksik.server.ServerControl;
 
 public class ConnectionDialog extends JDialog {
 	private static final long serialVersionUID = 1513880741540102732L;
+	private static final String HISTORY_FILE_DELIM = ";";
 
 	private final JComboBox<String> cbxCfgAddress;
 	private final JComboBox<String> cbxCfgPort;
@@ -206,7 +206,8 @@ public class ConnectionDialog extends JDialog {
 			if (sourceBtn.isSelected()) {
 				final String host = cbxCfgAddress.getEditor().getItem()
 						.toString().trim();
-				final String port = cbxCfgPort.getEditor().getItem().toString().trim();
+				final String port = cbxCfgPort.getEditor().getItem().toString()
+						.trim();
 				final String name = cbxCfgName.getEditor().getItem().toString()
 						.trim();
 
@@ -216,7 +217,8 @@ public class ConnectionDialog extends JDialog {
 				cbxCfgName.addItem(name);
 
 				try {
-					Registry reg = LocateRegistry.getRegistry(host, Integer.parseInt(port));
+					Registry reg = LocateRegistry.getRegistry(host,
+							Integer.parseInt(port));
 					final ServerControl remoteControl = (ServerControl) reg
 							.lookup(BINDING_ID);
 					if (name.equals("")) {
@@ -226,8 +228,8 @@ public class ConnectionDialog extends JDialog {
 						sourceBtn.setSelected(false);
 					} else if (!remoteControl.isJoinable()) {
 						JOptionPane.showMessageDialog(ConnectionDialog.this,
-								"The selected server is busy!", "Network error",
-								JOptionPane.ERROR_MESSAGE);
+								"The selected server is busy!",
+								"Network error", JOptionPane.ERROR_MESSAGE);
 						sourceBtn.setSelected(false);
 					} else if (!remoteControl.register(name)) {
 						JOptionPane.showMessageDialog(ConnectionDialog.this,
