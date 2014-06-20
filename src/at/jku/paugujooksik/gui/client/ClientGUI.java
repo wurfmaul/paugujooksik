@@ -109,7 +109,7 @@ public class ClientGUI implements CardSetHandler {
 			try {
 				controler.unregister(name);
 				UnicastRemoteObject.unexportObject(controler, true);
-			} catch (RemoteException e) {
+			} catch (Exception e) {
 			}
 		}
 		frame.dispose();

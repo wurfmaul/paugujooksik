@@ -53,7 +53,7 @@ public class Constants {
 	public static final int PLAYER_BORDER_THICKNESS = 3;
 	public static final int DEFAULT_BUTTON_SIZE = 25;
 	public static final int DEFAULT_PORT = 1099;
-	public static final int ANIMATION_SPEED = 8;
+	public static final int ANIMATION_SPEED = 20;
 	public static final int MIN_SIZE = 7;
 	public static final int MAX_SIZE = 15;
 	public static final int DEFAULT_SIZE = 7;

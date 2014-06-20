@@ -7,10 +7,12 @@ import static at.jku.paugujooksik.tools.Constants.USE_ANIMATION;
 import static at.jku.paugujooksik.tools.ResourceLoader.ERROR_SND;
 import static at.jku.paugujooksik.tools.ResourceLoader.loadClip;
 
+import java.awt.BorderLayout;
 import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.Rectangle;
 import java.awt.Window;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -21,6 +23,7 @@ import javax.sound.sampled.Clip;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JWindow;
+import javax.swing.border.EmptyBorder;
 
 import at.jku.paugujooksik.action.Action;
 import at.jku.paugujooksik.gui.AnimationListener;
@@ -34,9 +37,9 @@ public class Presenter extends Window implements CardSetHandler {
 	private static final long serialVersionUID = 8299211278767397214L;
 
 	public final Configuration<?> config;
-	
+
 	private final Map<String, Player> players = new LinkedHashMap<>();
-	private final Set<JWindow> playerWindows = new LinkedHashSet<>();
+	private final Set<Window> playerWindows = new LinkedHashSet<>();
 	private final Set<String> registeredClients;
 	private final int playerCount;
 	private JFrame frame;
@@ -69,7 +72,7 @@ public class Presenter extends Window implements CardSetHandler {
 	}
 
 	public void quit() {
-		for (JWindow window : playerWindows) {
+		for (Window window : playerWindows) {
 			window.dispose();
 		}
 		frame.dispose();
@@ -151,63 +154,64 @@ public class Presenter extends Window implements CardSetHandler {
 	 * Initialize the contents of the frame.
 	 */
 	private void initialize(int deviceIndex) {
-		int xOffset = 0;
-		int yOffset = 60;
-		if (deviceIndex != 0) {
-			for (int i = 0; i < deviceIndex; i++)
-				xOffset += DISPLAY_DEVICES[i].getDisplayMode().getWidth();
-		}
-	
-		frame = new JFrame();
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		GridBagLayout gridBagLayout = new GridBagLayout();
-		gridBagLayout.columnWidths = new int[] { 0, 0 };
-		gridBagLayout.rowHeights = new int[] { yOffset, 0, 0 };
-		gridBagLayout.columnWeights = new double[] { 1.0, Double.MIN_VALUE };
-		gridBagLayout.rowWeights = new double[] { 0.0, 1.0, Double.MIN_VALUE };
-		frame.getContentPane().setLayout(gridBagLayout);
-	
+		final int titleHeight = 60;
+		final Rectangle bounds = DISPLAY_DEVICES[deviceIndex]
+				.getDefaultConfiguration().getBounds();
+
+		// init background
 		JLabel lblConfig = new JLabel(config.toString());
 		lblConfig.setFont(TITLE_FONT);
-		GridBagConstraints gbcLblConfig = new GridBagConstraints();
-		gbcLblConfig.insets = new Insets(10, 10, 10, 10);
-		gbcLblConfig.gridx = 0;
-		gbcLblConfig.gridy = 0;
-		frame.getContentPane().add(lblConfig, gbcLblConfig);
-	
-		// init background
+		lblConfig.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+		frame = new JFrame("Presenter window");
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setBounds(bounds.x, bounds.y, bounds.width, bounds.height);
+		frame.getContentPane().setLayout(new BorderLayout());
+		frame.getContentPane().add(lblConfig, BorderLayout.NORTH);
 		frame.setUndecorated(true);
 		frame.setVisible(true);
-		frame.setLocation(xOffset, 0);
-		frame.setExtendedState(Frame.MAXIMIZED_BOTH);
-	
+
 		// init players
-		final int displayWidth = DISPLAY_DEVICES[deviceIndex].getDisplayMode()
-				.getWidth();
-		final int displayHeight = DISPLAY_DEVICES[deviceIndex].getDisplayMode()
-				.getHeight();
+		final int maxHeight = (bounds.height - titleHeight) / playerCount;
 		final int inset = 10;
-		final int maxHeight = (displayHeight - yOffset) / playerCount;
-	
-		int curRow = 1;
+		int curRow = 0;
+
+		final GridBagLayout gridBagLayout = new GridBagLayout();
+		{
+			gridBagLayout.columnWidths = new int[] { 0, 0 };
+			gridBagLayout.rowHeights = new int[] { 0, 0 };
+			gridBagLayout.columnWeights = new double[] { 1.0, Double.MIN_VALUE };
+			gridBagLayout.rowWeights = new double[] { 1.0, Double.MIN_VALUE };
+		}
+
+		final GridBagConstraints gridBagConstraints = new GridBagConstraints();
+		{
+			gridBagConstraints.insets = new Insets(0, inset, inset, inset);
+			gridBagConstraints.fill = GridBagConstraints.BOTH;
+			gridBagConstraints.gridx = 0;
+			gridBagConstraints.gridy = 0;
+		}
+
 		for (String name : registeredClients) {
 			CardSetContainerPanel cardSetPanel = new CardSetContainerPanel(
 					this, config.size, name, true, false);
-			cardSetPanel.setBackground(PLAYER_COLORS[curRow - 1]);
-			cardSetPanel.setTitle("Team '" + name + "'");
+			cardSetPanel.setBackground(PLAYER_COLORS[curRow]);
+			cardSetPanel.setTitle(name);
 			players.put(name, new Player(cardSetPanel, this));
-	
-			JWindow window = new JWindow();
-			{
-				window.add(cardSetPanel);
-				int x = xOffset + inset;
-				int y = yOffset + (curRow - 1) * maxHeight;
-				int width = displayWidth - 2 * inset;
-				int height = maxHeight - inset;
-				window.setBounds(x, y, width, height);
-				window.setVisible(true);
-				playerWindows.add(window);
-			}
+
+			int x = bounds.x;
+			int y = titleHeight + curRow * maxHeight;
+			int width = bounds.width;
+			int height = maxHeight;
+
+			JWindow borderWindow = new JWindow(frame);
+			borderWindow.setBounds(x, y, width, height);
+			borderWindow.getContentPane().setLayout(gridBagLayout);
+			borderWindow.getContentPane().add(cardSetPanel, gridBagConstraints);
+			borderWindow.setVisible(true);
+			
+			playerWindows.add(borderWindow);
+
 			curRow++;
 		}
 	}

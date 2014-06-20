@@ -254,7 +254,7 @@ public class ConnectionDialog extends JDialog {
 								} catch (InterruptedException | RemoteException e) {
 									try {
 										remoteControl.unregister(name);
-									} catch (RemoteException e1) {
+									} catch (Exception e1) {
 									}
 								}
 							}
