@@ -15,7 +15,6 @@ import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.Window;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -39,7 +38,6 @@ public class Presenter extends Window implements CardSetHandler {
 	public final Configuration<?> config;
 
 	private final Map<String, Player> players = new LinkedHashMap<>();
-	private final Set<Window> playerWindows = new LinkedHashSet<>();
 	private final Set<String> registeredClients;
 	private final int playerCount;
 	private JFrame frame;
@@ -72,9 +70,6 @@ public class Presenter extends Window implements CardSetHandler {
 	}
 
 	public void quit() {
-		for (Window window : playerWindows) {
-			window.dispose();
-		}
 		frame.dispose();
 	}
 
@@ -155,7 +150,7 @@ public class Presenter extends Window implements CardSetHandler {
 	 */
 	private void initialize(int deviceIndex) {
 		final int titleHeight = 60;
-		final Rectangle bounds = DISPLAY_DEVICES[deviceIndex]
+		final Rectangle display = DISPLAY_DEVICES[deviceIndex]
 				.getDefaultConfiguration().getBounds();
 
 		// init background
@@ -165,14 +160,14 @@ public class Presenter extends Window implements CardSetHandler {
 
 		frame = new JFrame("Presenter window");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setBounds(bounds.x, bounds.y, bounds.width, titleHeight);
+		frame.setBounds(display); //.x, display.y, display.width, titleHeight);
 		frame.getContentPane().setLayout(new BorderLayout());
 		frame.getContentPane().add(lblConfig, BorderLayout.NORTH);
 		frame.setUndecorated(true);
 		frame.setVisible(true);
 
 		// init players
-		final int maxHeight = (bounds.height - titleHeight) / playerCount;
+		final int maxHeight = (display.height - titleHeight) / playerCount;
 		final int inset = 10;
 		int curRow = 0;
 
@@ -193,24 +188,23 @@ public class Presenter extends Window implements CardSetHandler {
 		}
 
 		for (String name : registeredClients) {
-			CardSetContainerPanel cardSetPanel = new CardSetContainerPanel(
+			final CardSetContainerPanel cardSetPanel = new CardSetContainerPanel(
 					this, config.size, name, true, false);
 			cardSetPanel.setBackground(PLAYER_COLORS[curRow]);
 			cardSetPanel.setTitle(name);
 			players.put(name, new Player(cardSetPanel, this));
 
-			int x = bounds.x;
-			int y = titleHeight + curRow * maxHeight;
-			int width = bounds.width;
-			int height = maxHeight;
+			final int x = display.x;
+			final int y = display.y + titleHeight + curRow * maxHeight;
+			final int width = display.width;
+			final int height = maxHeight;
 
-			JWindow borderWindow = new JWindow();
+			final JWindow borderWindow = new JWindow(frame);
 			borderWindow.setBounds(x, y, width, height);
 			borderWindow.getContentPane().setLayout(gridBagLayout);
 			borderWindow.getContentPane().add(cardSetPanel, gridBagConstraints);
+			borderWindow.setAlwaysOnTop(true);
 			borderWindow.setVisible(true);
-			
-			playerWindows.add(borderWindow);
 
 			curRow++;
 		}
