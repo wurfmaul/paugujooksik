@@ -18,7 +18,6 @@ public class Cards<T extends Comparable<T>> {
 	private final List<T> values;
 	private final List<T> sortedValues;
 	private int curAction;
-	private int pinIndex = -1;
 	private List<Action> expectedActions;
 	private Action lastAction = null;
 
@@ -41,26 +40,22 @@ public class Cards<T extends Comparable<T>> {
 		return cardList.get(index);
 	}
 
-	public int getSelectedIndex() {
-		if (!oneSelected())
-			throw new SelectionException("One button must be selected");
-		return getSelection().get(0);
-	}
-
 	public int getFirstSelectedIndex() {
 		if (!twoSelected())
 			throw new SelectionException("Two buttons must be selected!");
 		return getSelection().get(0);
 	}
-
+	
 	public int getSecondSelectedIndex() {
 		if (!twoSelected())
 			throw new SelectionException("Two buttons must be selected!");
 		return getSelection().get(1);
 	}
 
-	public void incErrorCount() {
-		stat.errorCount++;
+	public int getSelectedIndex() {
+		if (!oneSelected())
+			throw new SelectionException("One button must be selected");
+		return getSelection().get(0);
 	}
 
 	public int getErrorCount() {
@@ -73,6 +68,53 @@ public class Cards<T extends Comparable<T>> {
 
 	public int getCompareCount() {
 		return stat.compareCount;
+	}
+
+	public void incErrorCount() {
+		stat.errorCount++;
+	}
+
+	public boolean isMarked(int index) {
+		return cardList.get(index).marked;
+	}
+
+	public boolean isOnRightPosition(int index) {
+		return cardList.get(index).value.equals(sortedValues.get(index));
+	}
+
+	public boolean isPinned(int index) {
+		return cardList.get(index).pinned;
+	}
+
+	public boolean isSelected(int index) {
+		return cardList.get(index).selected;
+	}
+
+	public boolean isSorted() {
+		for (int i = 0; i < values.size(); i++) {
+			if (!isOnRightPosition(i))
+				return false;
+		}
+		return true;
+	}
+
+	public boolean oneSelected() {
+		return getSelection().size() == 1;
+	}
+
+	public void reset(boolean shuffleValues) {
+		if (shuffleValues) {
+			Collections.shuffle(values);
+			DEBUGLOG.fine("Generated values: " + values);
+		}
+		cardList.clear();
+		for (T value : values) {
+			cardList.add(new Card<>(value));
+		}
+		expectedActions = config.getAlgorithm().getActions(values);
+		curAction = 0;
+		lastAction = null;
+		stat.reset();
 	}
 
 	public Action select(int index) {
@@ -108,9 +150,16 @@ public class Cards<T extends Comparable<T>> {
 			break;
 
 		default:
-			throw new SelectionException("Invalid index: " + index);
+			DEBUGLOG.severe("Invalid index: " + index);
 		}
 		return action;
+	}
+
+	public void selectAll() {
+		assert allMarked();
+		for (Card<T> c : cardList) {
+			c.selected = true;
+		}
 	}
 
 	public Action swapSelection() {
@@ -121,11 +170,11 @@ public class Cards<T extends Comparable<T>> {
 				getSecondSelectedIndex());
 		checkAction(action);
 
-		// FIXME following 4 lines are evil!
 		final Card<T> left = cardList.get(getFirstSelectedIndex());
 		final Card<T> right = cardList.get(getSecondSelectedIndex());
 		cardList.set(getFirstSelectedIndex(), right);
 		cardList.set(getSecondSelectedIndex(), left);
+		
 		if (!MOVE_PIN_ON_SWAP) {
 			boolean leftPinned = left.pinned;
 			boolean rightPinned = right.pinned;
@@ -142,21 +191,6 @@ public class Cards<T extends Comparable<T>> {
 		return action;
 	}
 
-	public Action togglePin(int index) {
-		final Action action = Action.pin(index);
-		if (pinIndex == -1 || pinIndex != index) {
-			checkAction(action);
-			if (pinIndex != -1)
-				cardList.get(pinIndex).pinned = false;
-			cardList.get(index).pinned = true;
-			pinIndex = index;
-		} else {
-			cardList.get(pinIndex).pinned = false;
-			pinIndex = -1;
-		}
-		return action;
-	}
-
 	public Action toggleMark(int index) {
 		final Card<T> card = cardList.get(index);
 		Action action;
@@ -170,81 +204,16 @@ public class Cards<T extends Comparable<T>> {
 		return action;
 	}
 
-	public boolean isMarked(int index) {
-		return cardList.get(index).marked;
-	}
-
-	public boolean isOnRightPosition(int index) {
-		return cardList.get(index).value.equals(sortedValues.get(index));
-	}
-
-	public boolean isPinned(int index) {
-		return cardList.get(index).pinned;
-	}
-
-	public boolean isSelected(int index) {
-		return cardList.get(index).selected;
-	}
-
-	public boolean isSorted() {
-		for (int i = 0; i < values.size(); i++) {
-			if (!isOnRightPosition(i))
-				return false;
-		}
-		return true;
-	}
-
-	public boolean zeroSelected() {
-		return getSelection().size() == 0;
-	}
-
-	public boolean oneSelected() {
-		return getSelection().size() == 1;
+	public Action togglePin(int index) {
+		return getCard(index).pinned ? unpin(index) : pin(index);
 	}
 
 	public boolean twoSelected() {
 		return getSelection().size() == 2;
 	}
-
-	public void selectAll() {
-		assert allMarked();
-		for (Card<T> c : cardList) {
-			c.selected = true;
-		}
-	}
-
-	public void reset(boolean shuffleValues) {
-		if (shuffleValues) {
-			Collections.shuffle(values);
-			DEBUGLOG.fine("Generated values: " + values);
-		}
-		cardList.clear();
-		for (T value : values) {
-			cardList.add(new Card<>(value));
-		}
-		expectedActions = config.getAlgorithm().getActions(values);
-		curAction = 0;
-		lastAction = null;
-		stat.reset();
-	}
-
-	private List<T> getSortedCopy(List<T> values) {
-		final List<T> sorted = new LinkedList<>();
-		for (T e : values) {
-			sorted.add(e);
-		}
-		Collections.sort(sorted);
-		return Collections.unmodifiableList(sorted);
-	}
-
-	private List<Integer> getSelection() {
-		final List<Integer> sel = new LinkedList<>();
-		for (int i = 0; i < cardList.size(); i++) {
-			if (cardList.get(i).selected) {
-				sel.add(i);
-			}
-		}
-		return sel;
+	
+	public boolean zeroSelected() {
+		return getSelection().size() == 0;
 	}
 
 	private void checkAction(Action action) {
@@ -271,6 +240,61 @@ public class Cards<T extends Comparable<T>> {
 		} else if (!config.getAlgorithm().allowsMoreActions()) {
 			throw new SelectionException("No more actions necessary!");
 		}
+	}
+
+	private Card<T> getPinnedCard() {
+		for (Card<T> card : cardList) {
+			if (card.pinned)
+				return card;
+		}
+		return null;
+	}
+
+	private List<Integer> getSelection() {
+		final List<Integer> sel = new LinkedList<>();
+		for (int i = 0; i < cardList.size(); i++) {
+			if (cardList.get(i).selected) {
+				sel.add(i);
+			}
+		}
+		return sel;
+	}
+
+	private List<T> getSortedCopy(List<T> values) {
+		final List<T> sorted = new LinkedList<>();
+		for (T e : values) {
+			sorted.add(e);
+		}
+		Collections.sort(sorted);
+		return Collections.unmodifiableList(sorted);
+	}
+
+	private Action pin(int index) {
+		final Action action = Action.pin(index);
+		checkAction(action);
+		
+		final Card<T> curPinned = getPinnedCard();
+		final Card<T> newPinned = cardList.get(index);
+		
+		if (curPinned == null) {
+			// no card was pinned before -> pin card
+			newPinned.pinned = true;
+		} else if (curPinned.equals(newPinned)) {
+			// same card is pinned again -> unpin card
+			newPinned.pinned = false;
+		} else {
+			// other card is pinned -> toggle pins
+			curPinned.pinned = false;
+			newPinned.pinned = true;
+		}
+		return action;
+	}
+
+	private Action unpin(int index) {
+		final Action action = Action.unpin(index);
+		checkAction(action);
+		cardList.get(index).pinned = false;
+		return action;
 	}
 
 	private class Statistics {

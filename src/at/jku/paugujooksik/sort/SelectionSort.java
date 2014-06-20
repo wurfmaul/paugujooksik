@@ -2,6 +2,7 @@ package at.jku.paugujooksik.sort;
 
 import static at.jku.paugujooksik.tools.Constants.DEBUGLOG;
 
+import java.util.BitSet;
 import java.util.List;
 
 import at.jku.paugujooksik.action.Action;
@@ -9,12 +10,14 @@ import at.jku.paugujooksik.action.BinaryAction;
 
 public class SelectionSort<T extends Comparable<T>> extends SortAlgorithm<T> {
 	private static final long serialVersionUID = -7852418811785446942L;
-	int pinned;
+	private int pinned;
+	private BitSet opened;
 
 	@Override
 	public List<Action> getActions(List<T> values) {
 		setup(values);
 		pinned = -1;
+		opened = new BitSet(values.size());
 
 		int iMin;
 		for (int j = 0; j < n - 1; j++) {
@@ -33,6 +36,7 @@ public class SelectionSort<T extends Comparable<T>> extends SortAlgorithm<T> {
 				actionOpen(j, iMin);
 				actionSwap(iMin, j);
 			}
+			actionUnpin();
 		}
 
 		DEBUGLOG.fine("SelectionSort sorted the values " + values);
@@ -40,7 +44,15 @@ public class SelectionSort<T extends Comparable<T>> extends SortAlgorithm<T> {
 		return actions;
 	}
 
+	private void actionUnpin() {
+		if (pinned >= 0) {
+			actions.add(Action.unpin(pinned));
+			pinned = -1;
+		}
+	}
+
 	private void actionSwap(int i, int j) {
+		pinned = (pinned == i) ? j : i;
 		actions.add(Action.swap(i, j));
 	}
 
@@ -52,9 +64,12 @@ public class SelectionSort<T extends Comparable<T>> extends SortAlgorithm<T> {
 	}
 
 	private void actionOpen(int i, int j) {
-		final BinaryAction openAction = Action.open(i, j);
-		if (actions.size() < 1
-				|| !actions.get(actions.size() - 1).equals(openAction))
+		if (!opened.get(i) || !opened.get(j)) {
+			final BinaryAction openAction = Action.open(i, j);
+			opened.clear();
+			opened.set(i);
+			opened.set(j);
 			actions.add(openAction);
+		}
 	}
 }

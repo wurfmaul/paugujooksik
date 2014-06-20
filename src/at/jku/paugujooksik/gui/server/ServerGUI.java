@@ -358,10 +358,11 @@ public class ServerGUI {
 		try {
 			remoteRegistry.unbind(BINDING_ID);
 			UnicastRemoteObject.unexportObject(remoteControl, true);
-			frame.dispose();
 			presenter.quit();
 		} catch (RemoteException | NotBoundException | NullPointerException e) {
 		}
+		frame.dispose();
+		System.exit(0);
 	}
 
 	private void updatePlayerList() {

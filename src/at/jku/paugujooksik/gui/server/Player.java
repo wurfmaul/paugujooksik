@@ -72,10 +72,10 @@ public class Player {
 				target.performSelect(clientId, action.index);
 				break;
 			case MARK:
-			case UNMARK:
 				target.performMark(clientId, action.index);
 				break;
 			case PIN:
+			case UNPIN:
 				target.performPin(clientId, action.index);
 				break;
 			default:

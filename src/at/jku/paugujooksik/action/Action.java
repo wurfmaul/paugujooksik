@@ -4,6 +4,7 @@ import static at.jku.paugujooksik.action.ActionType.MARK;
 import static at.jku.paugujooksik.action.ActionType.OPEN;
 import static at.jku.paugujooksik.action.ActionType.PIN;
 import static at.jku.paugujooksik.action.ActionType.SWAP;
+import static at.jku.paugujooksik.action.ActionType.UNPIN;
 
 import java.io.Serializable;
 
@@ -38,6 +39,10 @@ public abstract class Action implements Serializable {
 
 	public static BinaryAction swap(int left, int right) {
 		return new BinaryAction(SWAP, left, right);
+	}
+
+	public static UnaryAction unpin(int index) {
+		return new UnaryAction(UNPIN, index);
 	}
 
 }

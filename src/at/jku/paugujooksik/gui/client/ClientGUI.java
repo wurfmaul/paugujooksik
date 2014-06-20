@@ -78,10 +78,13 @@ public class ClientGUI implements CardSetHandler {
 		} else {
 			config = Configuration.generateDefault();
 		}
+		
+		if (config != null) {
 		size = config.size;
 		cards = new Cards<>(config);
 		initFrame();
 		initialize();
+		}
 	}
 
 	public int getLeftReference() {
@@ -102,12 +105,15 @@ public class ClientGUI implements CardSetHandler {
 
 	public void quit() {
 		DEBUGLOG.info("Exiting game...");
-		try {
-			controler.unregister(name);
-			UnicastRemoteObject.unexportObject(controler, true);
-		} catch (RemoteException | NullPointerException e) {
+		if (controler != null) {
+			try {
+				controler.unregister(name);
+				UnicastRemoteObject.unexportObject(controler, true);
+			} catch (RemoteException e) {
+			}
 		}
 		frame.dispose();
+		System.exit(0);
 	}
 
 	public void setController(ServerControl controller) {

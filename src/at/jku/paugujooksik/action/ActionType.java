@@ -1,7 +1,7 @@
 package at.jku.paugujooksik.action;
 
 public enum ActionType {
-	MARK, OPEN, PIN, SWAP, UNMARK;
+	MARK, OPEN, PIN, SWAP, UNPIN;
 
 	@Override
 	public String toString() {

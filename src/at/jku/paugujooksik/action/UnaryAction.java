@@ -26,10 +26,6 @@ public final class UnaryAction extends Action {
 
 	@Override
 	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		sb.append(type);
-		sb.append(" of card ");
-		sb.append(index + 1);
-		return sb.toString();
+		return String.format("%s card %d", type, index + 1);
 	}
 }
