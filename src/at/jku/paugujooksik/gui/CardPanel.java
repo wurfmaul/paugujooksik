@@ -79,6 +79,7 @@ public class CardPanel extends AbstractPanel {
 		{
 			JPanel pnlFin = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 			fin.setBorderPainted(false);
+			fin.setVisible(enableMouseActions);
 			fin.setFocusable(false);
 			fin.setOpaque(false);
 			fin.setIcon(loadIcon(GRAY_CHECK_ICON));
