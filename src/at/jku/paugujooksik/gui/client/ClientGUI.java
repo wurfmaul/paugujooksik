@@ -280,6 +280,8 @@ public class ClientGUI implements CardSetHandler {
 		gblFrame.columnWeights = new double[] { 1.0, Double.MIN_VALUE };
 		gblFrame.rowWeights = new double[] { 0.0, 0.0, 1.0, Double.MIN_VALUE };
 		frame.getContentPane().setLayout(gblFrame);
+		frame.setVisible(true);
+		frame.toFront();
 	}
 
 	private void initMenuBar() {
@@ -500,8 +502,7 @@ public class ClientGUI implements CardSetHandler {
 				} catch (Exception e) {
 				}
 				try {
-					ClientGUI window = new ClientGUI(remoteConfig);
-					window.frame.setVisible(true);
+					new ClientGUI(remoteConfig);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
