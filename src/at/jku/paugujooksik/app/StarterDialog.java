@@ -17,6 +17,7 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
+import javax.swing.WindowConstants;
 import javax.swing.border.EmptyBorder;
 
 import at.jku.paugujooksik.gui.client.ClientGUI;
@@ -31,7 +32,7 @@ public class StarterDialog extends JDialog {
 		} catch (Exception e) {
 		}
 
-		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		setBounds(100, 100, 450, 300);
 		setTitle("Choose a mode!");
 		setResizable(false);

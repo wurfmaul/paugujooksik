@@ -14,35 +14,43 @@ import at.jku.paugujooksik.model.Cards;
 
 public class Player {
 	public final Cards<?> cards;
-	public final CardSetContainerPanel panel;
 	public boolean animating;
 
 	private final BlockingQueue<QueuedAction> actionQueue = new LinkedBlockingDeque<>();
 	private final QueueWorker queueWorker = new QueueWorker();
 	private final Presenter target;
+	private CardSetContainerPanel panel;
 
 	public Player(CardSetContainerPanel panel, Presenter target) {
 		this.target = target;
 		this.cards = new Cards<>(target.config);
-		this.panel = panel;
+		this.setPanel(panel);
 		queueWorker.start();
+	}
+
+	public CardSetContainerPanel getPanel() {
+		return panel;
 	}
 
 	public void queueAction(String clientId, Action action) {
 		actionQueue.add(new QueuedAction(clientId, action));
 	}
 
+	public void setPanel(CardSetContainerPanel panel) {
+		this.panel = panel;
+	}
+
 	public void updateComponents() {
-		panel.cardSet.updateCards(cards);
-		if (cards.allMarked()) {
+		getPanel().cardSet.updateCards(cards);
+		if (cards.allMarked() && cards.isFinished()) {
 			cards.selectAll();
-			panel.cardSet.updateCards(cards);
-			panel.cardSet.finishCards(cards);
+			getPanel().cardSet.updateCards(cards);
+			getPanel().cardSet.finishCards(cards);
 		}
 	}
 
 	public void updateStats() {
-		panel.setStats(cards.getCompareCount(), cards.getSwapCount(),
+		getPanel().setStats(cards.getCompareCount(), cards.getSwapCount(),
 				cards.getErrorCount());
 	}
 

@@ -26,6 +26,7 @@ import java.awt.event.MouseEvent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JToggleButton;
+import javax.swing.SwingConstants;
 import javax.swing.border.SoftBevelBorder;
 
 import at.jku.paugujooksik.model.Card;
@@ -53,7 +54,7 @@ public class CardPanel extends AbstractPanel {
 		setBackground(DEFAULT_COLOR);
 		setBorder(new CardBorder(false));
 		addMouseListener(cardMouseAdapter);
-		label = new JLabel(DEFAULT_CARD_TEXT, JLabel.CENTER);
+		label = new JLabel(DEFAULT_CARD_TEXT, SwingConstants.CENTER);
 		{
 			label.setFont(CARD_LABEL_FONT_ONECHAR);
 			add(label, BorderLayout.CENTER);

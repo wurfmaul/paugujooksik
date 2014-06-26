@@ -1,7 +1,6 @@
 package at.jku.paugujooksik.gui.client;
 
-import static at.jku.paugujooksik.tools.ResourceLoader.SWAP_ICON_SMALL;
-import static at.jku.paugujooksik.tools.ResourceLoader.loadIcon;
+import static at.jku.paugujooksik.tools.Constants.*;
 
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -62,8 +61,8 @@ public class SwapPanel extends AbstractPanel {
 		private static final int HEIGHT = 50;
 
 		public SwapButton() {
-			super(loadIcon(SWAP_ICON_SMALL));
-
+			super(SWAP_LABEL);
+			setFont(SWAP_FONT);
 			setBounds(getCenter() - WIDTH / 2, OFFSET_Y, WIDTH, HEIGHT);
 			addMouseListener(new MouseAdapter() {
 				@Override

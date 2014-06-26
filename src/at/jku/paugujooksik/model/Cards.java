@@ -19,7 +19,7 @@ public class Cards<T extends Comparable<T>> {
 	private final List<T> sortedValues;
 	private int curAction;
 	private List<Action> expectedActions;
-	private Action lastAction = null;
+	private Action prevAction = null;
 
 	public Cards(Configuration<T> config) {
 		this.config = config;
@@ -45,7 +45,7 @@ public class Cards<T extends Comparable<T>> {
 			throw new SelectionException("Two buttons must be selected!");
 		return getSelection().get(0);
 	}
-	
+
 	public int getSecondSelectedIndex() {
 		if (!twoSelected())
 			throw new SelectionException("Two buttons must be selected!");
@@ -72,6 +72,10 @@ public class Cards<T extends Comparable<T>> {
 
 	public void incErrorCount() {
 		stat.errorCount++;
+	}
+
+	public boolean isFinished() {
+		return curAction == expectedActions.size();
 	}
 
 	public boolean isMarked(int index) {
@@ -113,7 +117,7 @@ public class Cards<T extends Comparable<T>> {
 		}
 		expectedActions = config.getAlgorithm().getActions(values);
 		curAction = 0;
-		lastAction = null;
+		prevAction = null;
 		stat.reset();
 	}
 
@@ -174,7 +178,7 @@ public class Cards<T extends Comparable<T>> {
 		final Card<T> right = cardList.get(getSecondSelectedIndex());
 		cardList.set(getFirstSelectedIndex(), right);
 		cardList.set(getSecondSelectedIndex(), left);
-		
+
 		if (!MOVE_PIN_ON_SWAP) {
 			boolean leftPinned = left.pinned;
 			boolean rightPinned = right.pinned;
@@ -211,7 +215,7 @@ public class Cards<T extends Comparable<T>> {
 	public boolean twoSelected() {
 		return getSelection().size() == 2;
 	}
-	
+
 	public boolean zeroSelected() {
 		return getSelection().size() == 0;
 	}
@@ -226,12 +230,13 @@ public class Cards<T extends Comparable<T>> {
 			if (exp.isCompatibleTo(action)) {
 				if (exp.equals(action)) {
 					curAction++;
+					prevAction = null;
 				}
 			} else {
 				String message = "You should " + exp + " instead!";
 				// don't count if the same wrong action is performed twice!
-				if (lastAction == null || !lastAction.equals(action)) {
-					lastAction = action;
+				if (prevAction == null || !prevAction.equals(action)) {
+					prevAction = action;
 					stat.errorCount++;
 					throw new SelectionException(message);
 				}
@@ -272,10 +277,10 @@ public class Cards<T extends Comparable<T>> {
 	private Action pin(int index) {
 		final Action action = Action.pin(index);
 		checkAction(action);
-		
+
 		final Card<T> curPinned = getPinnedCard();
 		final Card<T> newPinned = cardList.get(index);
-		
+
 		if (curPinned == null) {
 			// no card was pinned before -> pin card
 			newPinned.pinned = true;

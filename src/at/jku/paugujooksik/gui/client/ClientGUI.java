@@ -1,6 +1,7 @@
 package at.jku.paugujooksik.gui.client;
 
 import static at.jku.paugujooksik.tools.Constants.DEBUGLOG;
+import static at.jku.paugujooksik.tools.Constants.DEFAULT_HINT_COLOR;
 import static at.jku.paugujooksik.tools.Constants.HINT_FONT;
 import static at.jku.paugujooksik.tools.Constants.INSET;
 import static at.jku.paugujooksik.tools.Constants.MAX_SIZE;
@@ -38,6 +39,7 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
+import javax.swing.WindowConstants;
 
 import at.jku.paugujooksik.action.Action;
 import at.jku.paugujooksik.gui.AnimationListener;
@@ -78,12 +80,12 @@ public class ClientGUI implements CardSetHandler {
 		} else {
 			config = Configuration.generateDefault();
 		}
-		
+
 		if (config != null) {
-		size = config.size;
-		cards = new Cards<>(config);
-		initFrame();
-		initialize();
+			size = config.size;
+			cards = new Cards<>(config);
+			initFrame();
+			initialize();
 		}
 	}
 
@@ -243,6 +245,7 @@ public class ClientGUI implements CardSetHandler {
 		lblHint = new JLabel();
 		{
 			lblHint.setFont(HINT_FONT);
+			lblHint.setForeground(DEFAULT_HINT_COLOR);
 			lblHint.setHorizontalAlignment(SwingConstants.CENTER);
 			lblHint.setVerticalAlignment(SwingConstants.TOP);
 			GridBagConstraints gbcLblHint = new GridBagConstraints();
@@ -267,7 +270,7 @@ public class ClientGUI implements CardSetHandler {
 		frame.setBounds(100, 100, 700, 450);
 		frame.setMinimumSize(new Dimension(500, 450));
 		frame.setTitle("Sort the Cards!");
-		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent we) {
@@ -450,9 +453,13 @@ public class ClientGUI implements CardSetHandler {
 
 		if (!e.isDuplicate()) {
 			if (!clientMode) {
-				Clip clip = loadClip(ERROR_SND);
-				if (clip != null)
-					clip.start();
+				try {
+					final Clip clip = loadClip(ERROR_SND);
+					if (clip != null)
+						clip.start();
+				} catch (Exception ex) {
+					DEBUGLOG.warning(ex.getMessage());
+				}
 			}
 
 			updateStats();
@@ -468,17 +475,22 @@ public class ClientGUI implements CardSetHandler {
 
 	private void updateCardsIfFinished() {
 		if (cards.allMarked()) {
-			if (cards.isSorted()) {
-				lblHint.setForeground(POSITIVE_HINT_COLOR);
-				lblHint.setText("Congratulations!");
+			if (cards.isFinished()) {
+				if (cards.isSorted()) {
+					lblHint.setForeground(POSITIVE_HINT_COLOR);
+					lblHint.setText("Congratulations!");
+				} else {
+					lblHint.setForeground(NEGATIVE_HINT_COLOR);
+					lblHint.setText("There is something wrong!");
+				}
+				pnlSwap.removeAll();
+				cards.selectAll();
+				updateComponents();
+				pnlCards.cardSet.finishCards(cards);
 			} else {
-				lblHint.setForeground(NEGATIVE_HINT_COLOR);
-				lblHint.setText("There is something wrong!");
+				lblHint.setForeground(DEFAULT_HINT_COLOR);
+				lblHint.setText("The algorithm is not finished yet!");
 			}
-			pnlSwap.removeAll();
-			cards.selectAll();
-			updateComponents();
-			pnlCards.cardSet.finishCards(cards);
 		}
 	}
 
@@ -495,6 +507,7 @@ public class ClientGUI implements CardSetHandler {
 
 	public static void initAndRun(final boolean remoteConfig) {
 		EventQueue.invokeLater(new Runnable() {
+			@Override
 			public void run() {
 				try {
 					UIManager.setLookAndFeel(UIManager

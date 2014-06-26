@@ -25,8 +25,7 @@ public class ResourceLoader {
 
 	public static final String BLACK_CHECK_ICON = "check.png";
 	public static final String BLACK_PIN_ICON = "pin.png";
-	public static final String COMPARE_ICON = "compare.png";
-	public static final String ERROR_ICON = "error.png";
+	public static final String FULLSCREEN_ICON = "fullscreen.png";
 	public static final String GRAY_PIN_ICON = "pin-grey.png";
 	public static final String GRAY_CHECK_ICON = "check-gray.png";
 	public static final String PLAY_ICON = "play.png";
@@ -34,8 +33,6 @@ public class ResourceLoader {
 	public static final String ROTATED_PIN_ICON = "pin-rot.png";
 	public static final String STOP_ICON = "stop.png";
 	public static final String STOP_ICON_SMALL = "stop_small.png";
-	public static final String SWAP_ICON = "swap.png";
-	public static final String SWAP_ICON_SMALL = "swap_small.png";
 
 	public static final String SANS_FONT = "DejaVuSans";
 	public static final String BOLD_SANS_FONT = "DejaVuSans-Bold";

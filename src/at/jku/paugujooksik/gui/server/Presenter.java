@@ -1,19 +1,26 @@
 package at.jku.paugujooksik.gui.server;
 
+import static at.jku.paugujooksik.tools.Constants.DEBUGLOG;
 import static at.jku.paugujooksik.tools.Constants.DISPLAY_DEVICES;
 import static at.jku.paugujooksik.tools.Constants.PLAYER_COLORS;
 import static at.jku.paugujooksik.tools.Constants.TITLE_FONT;
 import static at.jku.paugujooksik.tools.Constants.USE_ANIMATION;
 import static at.jku.paugujooksik.tools.ResourceLoader.ERROR_SND;
+import static at.jku.paugujooksik.tools.ResourceLoader.FULLSCREEN_ICON;
 import static at.jku.paugujooksik.tools.ResourceLoader.loadClip;
+import static at.jku.paugujooksik.tools.ResourceLoader.loadIcon;
 
-import java.awt.BorderLayout;
 import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.Window;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -21,8 +28,8 @@ import java.util.Set;
 import javax.sound.sampled.Clip;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JWindow;
-import javax.swing.border.EmptyBorder;
+import javax.swing.JToggleButton;
+import javax.swing.WindowConstants;
 
 import at.jku.paugujooksik.action.Action;
 import at.jku.paugujooksik.gui.AnimationListener;
@@ -39,7 +46,6 @@ public class Presenter extends Window implements CardSetHandler {
 
 	private final Map<String, Player> players = new LinkedHashMap<>();
 	private final Set<String> registeredClients;
-	private final int playerCount;
 	private JFrame frame;
 
 	/**
@@ -50,9 +56,8 @@ public class Presenter extends Window implements CardSetHandler {
 		super(owner);
 		this.config = config;
 		this.registeredClients = registeredClients;
-		this.playerCount = registeredClients.size();
 
-		initialize(deviceIndex);
+		initialize(deviceIndex, true);
 	}
 
 	public void incErrorCount(String clientId) {
@@ -60,9 +65,13 @@ public class Presenter extends Window implements CardSetHandler {
 		curPlayers.cards.incErrorCount();
 		curPlayers.updateStats();
 
-		Clip clip = loadClip(ERROR_SND);
-		if (clip != null)
-			clip.start();
+		try {
+			final Clip clip = loadClip(ERROR_SND);
+			if (clip != null)
+				clip.start();
+		} catch (Exception e) {
+			DEBUGLOG.warning(e.getMessage());
+		}
 	}
 
 	public void queueAction(String clientId, Action action) {
@@ -74,7 +83,7 @@ public class Presenter extends Window implements CardSetHandler {
 	}
 
 	public void unregister(String clientId) {
-		players.get(clientId).panel.setTitle(clientId + " (gone)");
+		players.get(clientId).getPanel().setTitle(clientId + " (gone)");
 	}
 
 	@Override
@@ -122,12 +131,9 @@ public class Presenter extends Window implements CardSetHandler {
 
 			int leftIndex = curPlayer.cards.getFirstSelectedIndex();
 			int rightIndex = curPlayer.cards.getSecondSelectedIndex();
-
-			// FIXME bring the cards in between to back
-			// pnlCards.cardSet.set(size, this, clientId, true, rightIndex);
-
-			CardPanel btnLeft = curPlayer.panel.cardSet.get(leftIndex);
-			CardPanel btnRight = curPlayer.panel.cardSet.get(rightIndex);
+			CardPanel btnLeft = curPlayer.getPanel().cardSet.get(leftIndex);
+			CardPanel btnRight = curPlayer.getPanel().cardSet.get(rightIndex);
+			
 			if (USE_ANIMATION)
 				new AnimationListener(btnLeft, btnRight, this, clientId)
 						.start();
@@ -148,64 +154,119 @@ public class Presenter extends Window implements CardSetHandler {
 	/**
 	 * Initialize the contents of the frame.
 	 */
-	private void initialize(int deviceIndex) {
-		final int titleHeight = 60;
+	private void initialize(final int deviceIndex, boolean fullscreen) {
 		final Rectangle display = DISPLAY_DEVICES[deviceIndex]
 				.getDefaultConfiguration().getBounds();
-
-		// init background
-		JLabel lblConfig = new JLabel(config.toString());
-		lblConfig.setFont(TITLE_FONT);
-		lblConfig.setBorder(new EmptyBorder(10, 10, 10, 10));
+		final int inset = 10;
+		final Insets insets = new Insets(inset, inset, inset, inset);
+		final int totalRows = registeredClients.size();
 
 		frame = new JFrame("Presenter window");
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setBounds(display.x, display.y, display.width, titleHeight);
-		frame.getContentPane().setLayout(new BorderLayout());
-		frame.getContentPane().add(lblConfig, BorderLayout.NORTH);
-		frame.setUndecorated(true);
-		frame.setVisible(true);
+		frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+		frame.addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent we) {
+				quit();
+			}
+		});
+		frame.setBounds(display);
 
-		// init players
-		final int maxHeight = (display.height - titleHeight) / playerCount;
-		final int inset = 10;
-		int curRow = 0;
-
+		// init layout
 		final GridBagLayout gridBagLayout = new GridBagLayout();
 		{
-			gridBagLayout.columnWidths = new int[] { 0, 0 };
-			gridBagLayout.rowHeights = new int[] { 0, 0 };
-			gridBagLayout.columnWeights = new double[] { 1.0, Double.MIN_VALUE };
-			gridBagLayout.rowWeights = new double[] { 1.0, Double.MIN_VALUE };
+			int[] colHeights = new int[totalRows + 2];
+			double[] colWeights = new double[totalRows + 2];
+			{
+				colHeights[0] = 60;
+				Arrays.fill(colWeights, 1.0);
+				colWeights[0] = 0.0;
+				colWeights[totalRows + 1] = Double.MIN_VALUE;
+			}
+			gridBagLayout.columnWidths = new int[] { 0, 60, 0 };
+			gridBagLayout.columnWeights = new double[] { 1.0, 0.0,
+					Double.MIN_VALUE };
+			gridBagLayout.rowHeights = colHeights;
+			gridBagLayout.rowWeights = colWeights;
+		}
+		frame.getContentPane().setLayout(gridBagLayout);
+
+		// init title row
+		JLabel lblConfig = new JLabel(config.toString());
+		{
+			lblConfig.setFont(TITLE_FONT);
+
+			GridBagConstraints titleConstraints = new GridBagConstraints();
+			{
+				titleConstraints.insets = insets;
+				titleConstraints.fill = GridBagConstraints.BOTH;
+				titleConstraints.gridx = 0;
+				titleConstraints.gridy = 0;
+			}
+
+			frame.getContentPane().add(lblConfig, titleConstraints);
 		}
 
-		final GridBagConstraints gridBagConstraints = new GridBagConstraints();
+		JToggleButton btnFullscreen = new JToggleButton();
 		{
-			gridBagConstraints.insets = new Insets(0, inset, inset, inset);
-			gridBagConstraints.fill = GridBagConstraints.BOTH;
-			gridBagConstraints.gridx = 0;
-			gridBagConstraints.gridy = 0;
+			btnFullscreen.setIcon(loadIcon(FULLSCREEN_ICON));
+			btnFullscreen.setSelected(fullscreen);
+			btnFullscreen.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					JToggleButton source = (JToggleButton) e.getSource();
+
+					frame.dispose();
+					initialize(deviceIndex, source.isSelected());
+					frame.setBounds(display);
+
+					for (Player p : players.values()) {
+						p.updateComponents();
+						p.updateStats();
+					}
+				}
+			});
+
+			GridBagConstraints constraints = new GridBagConstraints();
+			{
+				constraints.insets = insets;
+				constraints.fill = GridBagConstraints.BOTH;
+				constraints.gridx = 1;
+				constraints.gridy = 0;
+			}
+
+			frame.getContentPane().add(btnFullscreen, constraints);
 		}
+
+		// init players
+		int curRow = 0;
 
 		for (String name : registeredClients) {
 			final CardSetContainerPanel cardSetPanel = new CardSetContainerPanel(
 					this, config.size, name, true, false);
-			cardSetPanel.setBackground(PLAYER_COLORS[curRow]);
+
+			final GridBagConstraints gridBagConstraints = new GridBagConstraints();
+			{
+				gridBagConstraints.gridwidth = 2;
+				gridBagConstraints.insets = new Insets(0, inset, inset, inset);
+				gridBagConstraints.fill = GridBagConstraints.BOTH;
+				gridBagConstraints.gridx = 0;
+				gridBagConstraints.gridy = curRow + 1;
+			}
+
+			cardSetPanel.setBackground(PLAYER_COLORS[curRow % totalRows]);
 			cardSetPanel.setTitle(name);
-			players.put(name, new Player(cardSetPanel, this));
+			if (players.containsKey(name)) {
+				players.get(name).setPanel(cardSetPanel);
+			} else {
+				players.put(name, new Player(cardSetPanel, this));
+			}
 
-			final int x = display.x;
-			final int y = display.y + titleHeight + curRow * maxHeight;
-			final int width = display.width;
-			final int height = maxHeight;
-
-			final JWindow borderWindow = new JWindow(frame);
-			borderWindow.setBounds(x, y, width, height);
-			borderWindow.getContentPane().setLayout(gridBagLayout);
-			borderWindow.getContentPane().add(cardSetPanel, gridBagConstraints);
-			borderWindow.setVisible(true);
+			frame.getContentPane().add(cardSetPanel, gridBagConstraints);
 
 			curRow++;
 		}
+
+		frame.setUndecorated(fullscreen);
+		frame.setVisible(true);
 	}
 }

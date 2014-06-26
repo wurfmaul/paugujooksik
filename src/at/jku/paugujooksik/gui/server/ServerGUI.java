@@ -54,6 +54,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.UIManager;
+import javax.swing.WindowConstants;
 import javax.swing.border.BevelBorder;
 
 import at.jku.paugujooksik.model.Configuration;
@@ -117,7 +118,7 @@ public class ServerGUI {
 		frame.setBounds(100, 100, 700, 520);
 		frame.setMinimumSize(new Dimension(500, 520));
 		frame.setTitle("Paugujooksik - Presenter Mode");
-		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent we) {
@@ -418,6 +419,7 @@ public class ServerGUI {
 
 	public static void initAndRun() {
 		EventQueue.invokeLater(new Runnable() {
+			@Override
 			public void run() {
 				try {
 					UIManager.setLookAndFeel(UIManager
@@ -451,6 +453,7 @@ public class ServerGUI {
 				final int dspDix = cbxDisplay.getSelectedIndex();
 
 				EventQueue.invokeLater(new Runnable() {
+					@Override
 					public void run() {
 						try {
 							presenter = new Presenter(frame, config,

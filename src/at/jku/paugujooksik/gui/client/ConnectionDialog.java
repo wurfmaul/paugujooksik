@@ -40,6 +40,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JToggleButton;
 import javax.swing.UIManager;
+import javax.swing.WindowConstants;
 
 import at.jku.paugujooksik.server.ServerControl;
 
@@ -187,7 +188,7 @@ public class ConnectionDialog extends JDialog {
 		}
 		try {
 			ConnectionDialog dialog = new ConnectionDialog(parent, target);
-			dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+			dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 			dialog.setVisible(true);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -201,6 +202,7 @@ public class ConnectionDialog extends JDialog {
 			this.target = target;
 		}
 
+		@Override
 		public void actionPerformed(ActionEvent e) {
 			final JToggleButton sourceBtn = (JToggleButton) e.getSource();
 			if (sourceBtn.isSelected()) {
@@ -215,6 +217,8 @@ public class ConnectionDialog extends JDialog {
 				cbxCfgAddress.addItem(host);
 				cbxCfgPort.addItem(port);
 				cbxCfgName.addItem(name);
+				
+				System.out.printf("Host=%s, Port=%s, Name=%s\n", host, port, name); // FIXME remove output
 
 				try {
 					Registry reg = LocateRegistry.getRegistry(host,
@@ -268,6 +272,7 @@ public class ConnectionDialog extends JDialog {
 							"Host cannot be found!", "Network error",
 							JOptionPane.ERROR_MESSAGE);
 					sourceBtn.setSelected(false);
+					ex.printStackTrace(); // FIXME hide exception
 				}
 			} else {
 				registerThread.interrupt();
