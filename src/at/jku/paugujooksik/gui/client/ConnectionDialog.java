@@ -63,10 +63,8 @@ public class ConnectionDialog extends JDialog {
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWidths = new int[] { 120, 120, 60, 0 };
 		gridBagLayout.rowHeights = new int[] { 50, 40, 40, 40, 0 };
-		gridBagLayout.columnWeights = new double[] { 1.0, 1.0, 1.0,
-				Double.MIN_VALUE };
-		gridBagLayout.rowWeights = new double[] { 1.0, 1.0, 1.0, 1.0,
-				Double.MIN_VALUE };
+		gridBagLayout.columnWeights = new double[] { 1.0, 1.0, 1.0, Double.MIN_VALUE };
+		gridBagLayout.rowWeights = new double[] { 1.0, 1.0, 1.0, 1.0, Double.MIN_VALUE };
 		getContentPane().setLayout(gridBagLayout);
 		{
 			lblTitle = new JLabel("Connect to host...");
@@ -206,39 +204,29 @@ public class ConnectionDialog extends JDialog {
 		public void actionPerformed(ActionEvent e) {
 			final JToggleButton sourceBtn = (JToggleButton) e.getSource();
 			if (sourceBtn.isSelected()) {
-				final String host = cbxCfgAddress.getEditor().getItem()
-						.toString().trim();
-				final String port = cbxCfgPort.getEditor().getItem().toString()
-						.trim();
-				final String name = cbxCfgName.getEditor().getItem().toString()
-						.trim();
+				final String host = cbxCfgAddress.getEditor().getItem().toString().trim();
+				final String port = cbxCfgPort.getEditor().getItem().toString().trim();
+				final String name = cbxCfgName.getEditor().getItem().toString().trim();
 
 				ConfigHistory.addEntry(host, port, name);
 				cbxCfgAddress.addItem(host);
 				cbxCfgPort.addItem(port);
 				cbxCfgName.addItem(name);
-				
-				System.out.printf("Host=%s, Port=%s, Name=%s\n", host, port, name); // FIXME remove output
 
 				try {
-					Registry reg = LocateRegistry.getRegistry(host,
-							Integer.parseInt(port));
-					final ServerControl remoteControl = (ServerControl) reg
-							.lookup(BINDING_ID);
+					Registry reg = LocateRegistry.getRegistry(host, Integer.parseInt(port));
+					final ServerControl remoteControl = (ServerControl) reg.lookup(BINDING_ID);
 					if (name.equals("")) {
-						JOptionPane.showMessageDialog(ConnectionDialog.this,
-								"Please enter your name!", "Naming error",
+						JOptionPane.showMessageDialog(ConnectionDialog.this, "Please enter your name!", "Naming error",
 								JOptionPane.ERROR_MESSAGE);
 						sourceBtn.setSelected(false);
 					} else if (!remoteControl.isJoinable()) {
-						JOptionPane.showMessageDialog(ConnectionDialog.this,
-								"The selected server is busy!",
+						JOptionPane.showMessageDialog(ConnectionDialog.this, "The selected server is busy!",
 								"Network error", JOptionPane.ERROR_MESSAGE);
 						sourceBtn.setSelected(false);
 					} else if (!remoteControl.register(name)) {
-						JOptionPane.showMessageDialog(ConnectionDialog.this,
-								"Please choose another name!", "Naming error",
-								JOptionPane.ERROR_MESSAGE);
+						JOptionPane.showMessageDialog(ConnectionDialog.this, "Please choose another name!",
+								"Naming error", JOptionPane.ERROR_MESSAGE);
 						sourceBtn.setSelected(false);
 					} else {
 						cbxCfgAddress.setEnabled(false);
@@ -268,8 +256,7 @@ public class ConnectionDialog extends JDialog {
 						registerThread.start();
 					}
 				} catch (RemoteException | NotBoundException ex) {
-					JOptionPane.showMessageDialog(ConnectionDialog.this,
-							"Host cannot be found!", "Network error",
+					JOptionPane.showMessageDialog(ConnectionDialog.this, "Host cannot be found!", "Network error",
 							JOptionPane.ERROR_MESSAGE);
 					sourceBtn.setSelected(false);
 					ex.printStackTrace(); // FIXME hide exception

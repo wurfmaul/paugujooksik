@@ -128,12 +128,9 @@ public class ServerGUI {
 
 		GridBagLayout gblFrame = new GridBagLayout();
 		gblFrame.columnWidths = new int[] { 175, 175, 175, 175, 0 };
-		gblFrame.rowHeights = new int[] { 50, 40, 40, 50, 40, 50, 40, 40, 40,
-				40, 0 };
-		gblFrame.columnWeights = new double[] { 1.0, 1.0, 1.0, 1.0,
-				Double.MIN_VALUE };
-		gblFrame.rowWeights = new double[] { 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-				1.0, 1.0, 1.0, Double.MIN_VALUE };
+		gblFrame.rowHeights = new int[] { 50, 40, 40, 50, 40, 50, 40, 40, 40, 40, 0 };
+		gblFrame.columnWeights = new double[] { 1.0, 1.0, 1.0, 1.0, Double.MIN_VALUE };
+		gblFrame.rowWeights = new double[] { 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, Double.MIN_VALUE };
 		frame.getContentPane().setLayout(gblFrame);
 
 		JLabel lblConnTitle = new JLabel("Connection");
@@ -146,13 +143,13 @@ public class ServerGUI {
 		gbcLblConnTitle.gridy = 0;
 		frame.getContentPane().add(lblConnTitle, gbcLblConnTitle);
 
-		JLabel lblCfgIp = new JLabel("Host address: ");
-		GridBagConstraints gbcLblFfgIp = new GridBagConstraints();
-		gbcLblFfgIp.anchor = GridBagConstraints.WEST;
-		gbcLblFfgIp.insets = new Insets(0, 10, 5, 5);
-		gbcLblFfgIp.gridx = 0;
-		gbcLblFfgIp.gridy = 1;
-		frame.getContentPane().add(lblCfgIp, gbcLblFfgIp);
+		JLabel lblCfgHost = new JLabel("Host address: ");
+		GridBagConstraints gbcLblFfgHost = new GridBagConstraints();
+		gbcLblFfgHost.anchor = GridBagConstraints.WEST;
+		gbcLblFfgHost.insets = new Insets(0, 10, 5, 5);
+		gbcLblFfgHost.gridx = 0;
+		gbcLblFfgHost.gridy = 1;
+		frame.getContentPane().add(lblCfgHost, gbcLblFfgHost);
 
 		cbxCfgHost = new JComboBox<>(HOST_ADDRESSES.toArray());
 		GridBagConstraints gbcTxtCfgIp = new GridBagConstraints();
@@ -346,11 +343,17 @@ public class ServerGUI {
 
 	private void initRegistry() {
 		try {
+			final String host = (String) HOST_ADDRESSES.get(0);
+			System.setProperty("java.rmi.server.hostname", host);
 			remoteControl = new ServerControlImpl(this);
 			remoteRegistry = LocateRegistry.createRegistry(DEFAULT_PORT);
 			remoteRegistry.bind(BINDING_ID, remoteControl);
 		} catch (RemoteException | AlreadyBoundException e) {
-			DEBUGLOG.severe("Could not share object!");
+			DEBUGLOG.severe("Could not share object! Is there another server instance running?");
+			quit();
+		} catch (Exception e) {
+			DEBUGLOG.severe("Could not setup server. Check remote configuration!");
+			quit();
 		}
 	}
 
@@ -390,8 +393,7 @@ public class ServerGUI {
 	static {
 		// compute host addresses
 		try {
-			Enumeration<NetworkInterface> interfaces = NetworkInterface
-					.getNetworkInterfaces();
+			Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
 			while (interfaces.hasMoreElements()) {
 				NetworkInterface iface = interfaces.nextElement();
 				if (iface.isLoopback() || !iface.isUp())
@@ -412,8 +414,7 @@ public class ServerGUI {
 		for (int i = 0; i < DISPLAY_DEVICES.length; i++) {
 			GraphicsDevice device = DISPLAY_DEVICES[i];
 			DisplayMode mode = device.getDisplayMode();
-			AVAILABLE_DISPLAYS.add(String.format("%d: [%dx%d]", i,
-					mode.getWidth(), mode.getHeight()));
+			AVAILABLE_DISPLAYS.add(String.format("%d: [%dx%d]", i, mode.getWidth(), mode.getHeight()));
 		}
 	}
 
@@ -422,8 +423,7 @@ public class ServerGUI {
 			@Override
 			public void run() {
 				try {
-					UIManager.setLookAndFeel(UIManager
-							.getSystemLookAndFeelClassName());
+					UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 				} catch (Exception e) {
 				}
 				try {
@@ -445,8 +445,7 @@ public class ServerGUI {
 				final ValueType type = (ValueType) cbxCfgType.getSelectedItem();
 				final int sortIdx = cbxCfgAlgo.getSelectedIndex();
 				final int size = sldrCfgSize.getValue();
-				final Configuration<?> config = Configuration.generate(mode,
-						type, sortIdx, size);
+				final Configuration<?> config = Configuration.generate(mode, type, sortIdx, size);
 
 				// compute used screen
 				assert cbxDisplay.getSelectedIndex() >= 0;
@@ -456,8 +455,7 @@ public class ServerGUI {
 					@Override
 					public void run() {
 						try {
-							presenter = new Presenter(frame, config,
-									registeredClients, dspDix);
+							presenter = new Presenter(frame, config, registeredClients, dspDix);
 						} catch (Exception e) {
 							e.printStackTrace();
 						}
