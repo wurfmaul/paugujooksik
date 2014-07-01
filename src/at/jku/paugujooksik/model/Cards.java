@@ -170,8 +170,7 @@ public class Cards<T extends Comparable<T>> {
 		if (!twoSelected())
 			throw new SelectionException("Two cards need to be open.");
 
-		final Action action = Action.swap(getFirstSelectedIndex(),
-				getSecondSelectedIndex());
+		final Action action = Action.swap(getFirstSelectedIndex(), getSecondSelectedIndex());
 		checkAction(action);
 
 		final Card<T> left = cardList.get(getFirstSelectedIndex());
@@ -223,10 +222,9 @@ public class Cards<T extends Comparable<T>> {
 	private void checkAction(Action action) {
 		if (curAction < expectedActions.size()) {
 			final Action exp = expectedActions.get(curAction);
-			DEBUGLOG.fine("Expected: '" + exp + "'; actual: '" + action + "' "
-					+ "<" + (!exp.isCompatibleTo(action) ? "not " : "")
-					+ "compatible>" + "<" + (!exp.equals(action) ? "not " : "")
-					+ "equal>");
+			DEBUGLOG.fine("Expected: '" + exp + "'; actual: '" + action + "' " + "<"
+					+ (!exp.isCompatibleTo(action) ? "not " : "") + "compatible>" + "<"
+					+ (!exp.equals(action) ? "not " : "") + "equal>");
 			if (exp.isCompatibleTo(action)) {
 				if (exp.equals(action)) {
 					curAction++;

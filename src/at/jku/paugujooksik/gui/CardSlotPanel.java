@@ -14,8 +14,7 @@ public class CardSlotPanel extends AbstractPanel {
 	public CardSlotPanel(int index) {
 		super(new BorderLayout());
 		setOpaque(false);
-		final TitledBorder border = new TitledBorder(new EtchedBorder(
-				EtchedBorder.RAISED));
+		final TitledBorder border = new TitledBorder(new EtchedBorder(EtchedBorder.RAISED));
 		{
 			border.setTitle(Integer.toString(index + 1));
 			border.setTitlePosition(TitledBorder.TOP);

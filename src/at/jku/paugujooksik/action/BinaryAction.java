@@ -17,8 +17,7 @@ public final class BinaryAction extends Action {
 		if (obj instanceof BinaryAction) {
 			final BinaryAction other = (BinaryAction) obj;
 			return type.equals(other.type)
-					&& (indexLeft == other.indexLeft
-							&& indexRight == other.indexRight || indexLeft == other.indexRight
+					&& (indexLeft == other.indexLeft && indexRight == other.indexRight || indexLeft == other.indexRight
 							&& indexRight == other.indexLeft);
 		}
 		return false;
@@ -36,7 +35,6 @@ public final class BinaryAction extends Action {
 
 	@Override
 	public String toString() {
-		return String.format("%s cards %d and %d", type, indexLeft + 1,
-				indexRight + 1);
+		return String.format("%s cards %d and %d", type, indexLeft + 1, indexRight + 1);
 	}
 }

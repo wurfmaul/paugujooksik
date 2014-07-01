@@ -90,8 +90,7 @@ public class ClientGUI implements CardSetHandler {
 	}
 
 	public int getLeftReference() {
-		final JComponent comp = pnlCards.cardSet.get(cards
-				.getFirstSelectedIndex());
+		final JComponent comp = pnlCards.cardSet.get(cards.getFirstSelectedIndex());
 		return comp.getLocation().x + comp.getWidth() / 2 + INSET;
 	}
 
@@ -100,8 +99,7 @@ public class ClientGUI implements CardSetHandler {
 	}
 
 	public int getRightReference() {
-		final Component comp = pnlCards.cardSet.get(cards
-				.getSecondSelectedIndex());
+		final Component comp = pnlCards.cardSet.get(cards.getSecondSelectedIndex());
 		return comp.getLocation().x + comp.getWidth() / 2 + INSET;
 	}
 
@@ -187,8 +185,7 @@ public class ClientGUI implements CardSetHandler {
 			CardPanel cardRight = pnlCards.cardSet.get(rightIndex);
 
 			if (USE_ANIMATION)
-				new AnimationListener(cardLeft, cardRight, this, clientId)
-						.start();
+				new AnimationListener(cardLeft, cardRight, this, clientId).start();
 			else
 				performSwapStop(clientId);
 			animating = true;
@@ -209,8 +206,7 @@ public class ClientGUI implements CardSetHandler {
 
 	private void displayErrorMessageDialog() {
 		DEBUGLOG.severe("Connection to server lost!");
-		JOptionPane.showMessageDialog(frame,
-				"Connection to server lost! Shutting down.", "Network error",
+		JOptionPane.showMessageDialog(frame, "Connection to server lost! Shutting down.", "Network error",
 				JOptionPane.ERROR_MESSAGE);
 		quit();
 	}
@@ -328,11 +324,9 @@ public class ClientGUI implements CardSetHandler {
 				item.addActionListener(new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent e) {
-						DEBUGLOG.config("Set algorithm to "
-								+ config.getAllAlgorithms().get(index));
+						DEBUGLOG.config("Set algorithm to " + config.getAllAlgorithms().get(index));
 
-						config = Configuration.deriveWithNewSortIdx(config,
-								index);
+						config = Configuration.deriveWithNewSortIdx(config, index);
 						initCards();
 						reset();
 					}
@@ -348,15 +342,13 @@ public class ClientGUI implements CardSetHandler {
 				ButtonGroup sizeGroup = new ButtonGroup();
 				for (int i = MIN_SIZE; i <= MAX_SIZE; i++) {
 					final int newSize = i;
-					JMenuItem item = new JRadioButtonMenuItem(
-							Integer.toString(newSize));
+					JMenuItem item = new JRadioButtonMenuItem(Integer.toString(newSize));
 					item.setSelected(i == size);
 					item.addActionListener(new ActionListener() {
 						@Override
 						public void actionPerformed(ActionEvent e) {
 							DEBUGLOG.config("Changed size to " + newSize);
-							config = Configuration.deriveWithNewSize(config,
-									newSize);
+							config = Configuration.deriveWithNewSize(config, newSize);
 							initCards();
 							initialize();
 						}
@@ -380,8 +372,7 @@ public class ClientGUI implements CardSetHandler {
 						@Override
 						public void actionPerformed(ActionEvent e) {
 							DEBUGLOG.config("Changed type to " + type);
-							config = Configuration.deriveWithNewType(config,
-									type);
+							config = Configuration.deriveWithNewType(config, type);
 							initCards();
 							initialize();
 						}
@@ -405,8 +396,7 @@ public class ClientGUI implements CardSetHandler {
 						@Override
 						public void actionPerformed(ActionEvent e) {
 							DEBUGLOG.config("Changed mode to " + mode);
-							config = Configuration.deriveWithNewMode(config,
-									mode);
+							config = Configuration.deriveWithNewMode(config, mode);
 							initCards();
 							initialize();
 						}
@@ -501,8 +491,7 @@ public class ClientGUI implements CardSetHandler {
 	}
 
 	private void updateStats() {
-		pnlCards.setStats(cards.getCompareCount(), cards.getSwapCount(),
-				cards.getErrorCount());
+		pnlCards.setStats(cards.getCompareCount(), cards.getSwapCount(), cards.getErrorCount());
 	}
 
 	public static void initAndRun(final boolean remoteConfig) {
@@ -510,8 +499,7 @@ public class ClientGUI implements CardSetHandler {
 			@Override
 			public void run() {
 				try {
-					UIManager.setLookAndFeel(UIManager
-							.getSystemLookAndFeelClassName());
+					UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 				} catch (Exception e) {
 				}
 				try {

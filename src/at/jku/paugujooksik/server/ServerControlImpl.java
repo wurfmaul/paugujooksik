@@ -7,8 +7,7 @@ import at.jku.paugujooksik.action.Action;
 import at.jku.paugujooksik.gui.server.ServerGUI;
 import at.jku.paugujooksik.model.Configuration;
 
-public class ServerControlImpl extends UnicastRemoteObject implements
-		ServerControl {
+public class ServerControlImpl extends UnicastRemoteObject implements ServerControl {
 	private static final long serialVersionUID = -53275326117633745L;
 	private ServerGUI server;
 
@@ -38,8 +37,7 @@ public class ServerControlImpl extends UnicastRemoteObject implements
 	}
 
 	@Override
-	public void performAction(String clientId, Action action)
-			throws RemoteException {
+	public void performAction(String clientId, Action action) throws RemoteException {
 		server.getPresenter().queueAction(clientId, action);
 	}
 

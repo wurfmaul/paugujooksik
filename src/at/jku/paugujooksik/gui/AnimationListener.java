@@ -16,8 +16,7 @@ public class AnimationListener implements ActionListener {
 	private final String clientId;
 	private final Timer timer;
 
-	public AnimationListener(CardPanel leftCard, CardPanel rightCard,
-			CardSetHandler target, String clientId) {
+	public AnimationListener(CardPanel leftCard, CardPanel rightCard, CardSetHandler target, String clientId) {
 		this.leftCard = leftCard;
 		this.rightCard = rightCard;
 		this.target = target;
@@ -35,10 +34,8 @@ public class AnimationListener implements ActionListener {
 		int leftY = leftCard.getLocation().y;
 		int rightY = rightCard.getLocation().y;
 
-		leftCard.setLocation(Math.min(leftX + ANIMATION_SPEED, leftDestX),
-				leftY);
-		rightCard.setLocation(Math.max(rightX - ANIMATION_SPEED, rightDestY),
-				rightY);
+		leftCard.setLocation(Math.min(leftX + ANIMATION_SPEED, leftDestX), leftY);
+		rightCard.setLocation(Math.max(rightX - ANIMATION_SPEED, rightDestY), rightY);
 
 		if (leftX == leftDestX || rightX == rightDestY) {
 			timer.stop();

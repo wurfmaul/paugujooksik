@@ -31,18 +31,16 @@ public class CardSetContainerPanel extends JPanel {
 	private final JLabel lblSwapCount;
 	private JLabel lblTitle;
 
-	public CardSetContainerPanel(CardSetHandler target, int size, String name,
-			boolean border, boolean enableMouseActions) {
+	public CardSetContainerPanel(CardSetHandler target, int size, String name, boolean border,
+			boolean enableMouseActions) {
 
 		if (border)
-			setBorder(new LineBorder(PLAYER_BORDER_COLOR,
-					PLAYER_BORDER_THICKNESS));
+			setBorder(new LineBorder(PLAYER_BORDER_COLOR, PLAYER_BORDER_THICKNESS));
 
 		GridBagLayout gblPnlRow = new GridBagLayout();
 		gblPnlRow.columnWidths = new int[] { 0, 0, 0, 0, 0 };
 		gblPnlRow.rowHeights = new int[] { 0, 0, 0 };
-		gblPnlRow.columnWeights = new double[] { 1.0, 0.0, 0.0, 0.0,
-				Double.MIN_VALUE };
+		gblPnlRow.columnWeights = new double[] { 1.0, 0.0, 0.0, 0.0, Double.MIN_VALUE };
 		gblPnlRow.rowWeights = new double[] { 0.0, 1.0, Double.MIN_VALUE };
 		setLayout(gblPnlRow);
 

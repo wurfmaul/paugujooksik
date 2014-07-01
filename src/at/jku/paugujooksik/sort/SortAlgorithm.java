@@ -6,8 +6,7 @@ import java.util.List;
 
 import at.jku.paugujooksik.action.Action;
 
-public abstract class SortAlgorithm<T extends Comparable<T>> implements
-		Serializable {
+public abstract class SortAlgorithm<T extends Comparable<T>> implements Serializable {
 	private static final long serialVersionUID = -7013695126248089403L;
 
 	protected final List<Action> actions = new LinkedList<>();

@@ -41,14 +41,12 @@ public class ResourceLoader {
 
 	public static boolean loadFonts() {
 		final String[] fonts = new String[] { SANS_FONT, BOLD_SANS_FONT };
-		final GraphicsEnvironment ge = GraphicsEnvironment
-				.getLocalGraphicsEnvironment();
+		final GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
 
 		for (String s : fonts) {
 			try {
 				URL res = ClientGUI.class.getResource(FONTDIR + s + ".ttf");
-				ge.registerFont(Font.createFont(Font.TRUETYPE_FONT,
-						res.openStream()));
+				ge.registerFont(Font.createFont(Font.TRUETYPE_FONT, res.openStream()));
 			} catch (FontFormatException | IOException e) {
 				DEBUGLOG.severe("Could not load font '" + s + "'!");
 				return false;
@@ -79,8 +77,7 @@ public class ResourceLoader {
 			Clip clip = AudioSystem.getClip();
 			clip.open(AudioSystem.getAudioInputStream(url));
 			return clip;
-		} catch (LineUnavailableException | IOException
-				| UnsupportedAudioFileException e) {
+		} catch (LineUnavailableException | IOException | UnsupportedAudioFileException e) {
 			DEBUGLOG.severe("Could not load sound '" + filename + "'!");
 			return null;
 		}

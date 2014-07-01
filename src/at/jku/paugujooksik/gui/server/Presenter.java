@@ -51,8 +51,7 @@ public class Presenter extends Window implements CardSetHandler {
 	/**
 	 * Create the application.
 	 */
-	public Presenter(Frame owner, Configuration<?> config,
-			Set<String> registeredClients, int deviceIndex) {
+	public Presenter(Frame owner, Configuration<?> config, Set<String> registeredClients, int deviceIndex) {
 		super(owner);
 		this.config = config;
 		this.registeredClients = registeredClients;
@@ -133,10 +132,9 @@ public class Presenter extends Window implements CardSetHandler {
 			int rightIndex = curPlayer.cards.getSecondSelectedIndex();
 			CardPanel btnLeft = curPlayer.getPanel().cardSet.get(leftIndex);
 			CardPanel btnRight = curPlayer.getPanel().cardSet.get(rightIndex);
-			
+
 			if (USE_ANIMATION)
-				new AnimationListener(btnLeft, btnRight, this, clientId)
-						.start();
+				new AnimationListener(btnLeft, btnRight, this, clientId).start();
 			else
 				performSwapStop(clientId);
 			curPlayer.animating = true;
@@ -155,8 +153,7 @@ public class Presenter extends Window implements CardSetHandler {
 	 * Initialize the contents of the frame.
 	 */
 	private void initialize(final int deviceIndex, boolean fullscreen) {
-		final Rectangle display = DISPLAY_DEVICES[deviceIndex]
-				.getDefaultConfiguration().getBounds();
+		final Rectangle display = DISPLAY_DEVICES[deviceIndex].getDefaultConfiguration().getBounds();
 		final int inset = 10;
 		final Insets insets = new Insets(inset, inset, inset, inset);
 		final int totalRows = registeredClients.size();
@@ -183,8 +180,7 @@ public class Presenter extends Window implements CardSetHandler {
 				colWeights[totalRows + 1] = Double.MIN_VALUE;
 			}
 			gridBagLayout.columnWidths = new int[] { 0, 60, 0 };
-			gridBagLayout.columnWeights = new double[] { 1.0, 0.0,
-					Double.MIN_VALUE };
+			gridBagLayout.columnWeights = new double[] { 1.0, 0.0, Double.MIN_VALUE };
 			gridBagLayout.rowHeights = colHeights;
 			gridBagLayout.rowWeights = colWeights;
 		}
@@ -241,8 +237,7 @@ public class Presenter extends Window implements CardSetHandler {
 		int curRow = 0;
 
 		for (String name : registeredClients) {
-			final CardSetContainerPanel cardSetPanel = new CardSetContainerPanel(
-					this, config.size, name, true, false);
+			final CardSetContainerPanel cardSetPanel = new CardSetContainerPanel(this, config.size, name, true, false);
 
 			final GridBagConstraints gridBagConstraints = new GridBagConstraints();
 			{

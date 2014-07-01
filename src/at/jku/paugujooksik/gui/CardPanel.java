@@ -43,8 +43,7 @@ public class CardPanel extends AbstractPanel {
 	private MouseAdapter pinMouseAdapter;
 	private MouseAdapter finMouseAdapter;
 
-	public CardPanel(final int index, CardSetHandler target, String clientId,
-			boolean enableMouseActions) {
+	public CardPanel(final int index, CardSetHandler target, String clientId, boolean enableMouseActions) {
 		super(new BorderLayout());
 		this.target = target;
 		this.clientId = clientId;
@@ -69,8 +68,7 @@ public class CardPanel extends AbstractPanel {
 			pin.setIcon(loadIcon(GRAY_PIN_ICON));
 			pin.setRolloverIcon(loadIcon(BLACK_PIN_ICON));
 			pin.setSelectedIcon(loadIcon(ROTATED_PIN_ICON));
-			pin.setPreferredSize(new Dimension(DEFAULT_BUTTON_SIZE,
-					DEFAULT_BUTTON_SIZE));
+			pin.setPreferredSize(new Dimension(DEFAULT_BUTTON_SIZE, DEFAULT_BUTTON_SIZE));
 			pin.addMouseListener(pinMouseAdapter);
 			pnlPin.setOpaque(false);
 			pnlPin.add(pin);
@@ -86,8 +84,7 @@ public class CardPanel extends AbstractPanel {
 			fin.setIcon(loadIcon(GRAY_CHECK_ICON));
 			fin.setSelectedIcon(loadIcon(BLACK_CHECK_ICON));
 			fin.setRolloverIcon(loadIcon(BLACK_CHECK_ICON));
-			fin.setPreferredSize(new Dimension(DEFAULT_BUTTON_SIZE,
-					DEFAULT_BUTTON_SIZE));
+			fin.setPreferredSize(new Dimension(DEFAULT_BUTTON_SIZE, DEFAULT_BUTTON_SIZE));
 			fin.addMouseListener(finMouseAdapter);
 			pnlFin.setOpaque(false);
 			pnlFin.add(fin);
@@ -109,8 +106,7 @@ public class CardPanel extends AbstractPanel {
 		pin.setSelected(c.pinned);
 		fin.setSelected(c.marked);
 		setOpaque(true);
-		setBackground(c.marked ? MARK_COLOR : c.selected ? SELECTED_COLOR
-				: DEFAULT_COLOR);
+		setBackground(c.marked ? MARK_COLOR : c.selected ? SELECTED_COLOR : DEFAULT_COLOR);
 	}
 
 	private void initMouseListeners(final int index) {

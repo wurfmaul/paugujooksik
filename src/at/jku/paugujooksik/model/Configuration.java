@@ -30,8 +30,7 @@ public class Configuration<T extends Comparable<T>> implements Serializable {
 	private final List<SortAlgorithm<T>> algorithms = new LinkedList<>();
 	private int algorithmIndex;
 
-	private Configuration(int algorithmIndex, ValueMode mode, int size,
-			ValueType type, List<T> values) {
+	private Configuration(int algorithmIndex, ValueMode mode, int size, ValueType type, List<T> values) {
 		this.algorithmIndex = algorithmIndex;
 		this.mode = mode;
 		this.size = size;
@@ -65,32 +64,25 @@ public class Configuration<T extends Comparable<T>> implements Serializable {
 	@Override
 	public String toString() {
 		if (PRINT_VALUES)
-			return String.format("%s (%d %s %s) %s", getAlgorithm(), size,
-					mode, type, values);
+			return String.format("%s (%d %s %s) %s", getAlgorithm(), size, mode, type, values);
 		else
-			return String.format("%s (%d %s %s)", getAlgorithm(), size, mode,
-					type);
+			return String.format("%s (%d %s %s)", getAlgorithm(), size, mode, type);
 	}
 
-	public static Configuration<?> generate(ValueMode mode, ValueType type,
-			int sortIdx, int size) {
+	public static Configuration<?> generate(ValueMode mode, ValueType type, int sortIdx, int size) {
 		switch (mode) {
 		case SMALL:
 			if (type == ValueType.NUMBERS) {
-				return new Configuration<>(sortIdx, mode, size, type,
-						ValueGenerator.smallIntValues(size));
+				return new Configuration<>(sortIdx, mode, size, type, ValueGenerator.smallIntValues(size));
 			} else if (type == ValueType.LETTERS) {
-				return new Configuration<>(sortIdx, mode, size, type,
-						ValueGenerator.smallStringValues(size));
+				return new Configuration<>(sortIdx, mode, size, type, ValueGenerator.smallStringValues(size));
 			}
 			break;
 		case RANDOM:
 			if (type == ValueType.NUMBERS) {
-				return new Configuration<>(sortIdx, mode, size, type,
-						ValueGenerator.randomIntValues(size));
+				return new Configuration<>(sortIdx, mode, size, type, ValueGenerator.randomIntValues(size));
 			} else if (type == ValueType.LETTERS) {
-				return new Configuration<>(sortIdx, mode, size, type,
-						ValueGenerator.randomStringValues(size));
+				return new Configuration<>(sortIdx, mode, size, type, ValueGenerator.randomStringValues(size));
 			}
 			break;
 		}
@@ -106,23 +98,19 @@ public class Configuration<T extends Comparable<T>> implements Serializable {
 		return generateDefault().getAllAlgorithms().toArray();
 	}
 
-	public static Configuration<?> deriveWithNewSortIdx(Configuration<?> proto,
-			int sortIdx) {
+	public static Configuration<?> deriveWithNewSortIdx(Configuration<?> proto, int sortIdx) {
 		return generate(proto.mode, proto.type, sortIdx, proto.size);
 	}
 
-	public static Configuration<?> deriveWithNewMode(Configuration<?> proto,
-			ValueMode mode) {
+	public static Configuration<?> deriveWithNewMode(Configuration<?> proto, ValueMode mode) {
 		return generate(mode, proto.type, proto.getAlgorithmIndex(), proto.size);
 	}
 
-	public static Configuration<?> deriveWithNewType(Configuration<?> proto,
-			ValueType type) {
+	public static Configuration<?> deriveWithNewType(Configuration<?> proto, ValueType type) {
 		return generate(proto.mode, type, proto.getAlgorithmIndex(), proto.size);
 	}
 
-	public static Configuration<?> deriveWithNewSize(Configuration<?> proto,
-			int size) {
+	public static Configuration<?> deriveWithNewSize(Configuration<?> proto, int size) {
 		return generate(proto.mode, proto.type, proto.getAlgorithmIndex(), size);
 	}
 }

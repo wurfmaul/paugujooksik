@@ -144,13 +144,10 @@ public class Constants {
 		HINT_FONT = DEFAULT_FONT_BOLD.deriveFont(24f);
 		SWAP_FONT = DEFAULT_FONT.deriveFont(36f);
 
-		PLAYER_COLORS = new Color[] { new Color(153, 204, 204),
-				new Color(204, 153, 204), new Color(204, 204, 153),
-				new Color(204, 153, 153), new Color(153, 204, 153),
-				new Color(153, 153, 204), new Color(255, 153, 153),
+		PLAYER_COLORS = new Color[] { new Color(153, 204, 204), new Color(204, 153, 204), new Color(204, 204, 153),
+				new Color(204, 153, 153), new Color(153, 204, 153), new Color(153, 153, 204), new Color(255, 153, 153),
 				new Color(153, 255, 153), new Color(153, 153, 255) };
 
-		DISPLAY_DEVICES = GraphicsEnvironment.getLocalGraphicsEnvironment()
-				.getScreenDevices();
+		DISPLAY_DEVICES = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices();
 	}
 }

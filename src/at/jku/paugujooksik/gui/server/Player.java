@@ -50,8 +50,7 @@ public class Player {
 	}
 
 	public void updateStats() {
-		getPanel().setStats(cards.getCompareCount(), cards.getSwapCount(),
-				cards.getErrorCount());
+		getPanel().setStats(cards.getCompareCount(), cards.getSwapCount(), cards.getErrorCount());
 	}
 
 	private class QueueWorker extends Thread {
@@ -61,11 +60,9 @@ public class Player {
 				while (true) {
 					QueuedAction qAction = actionQueue.take();
 					if (qAction.action instanceof UnaryAction)
-						performAction(qAction.clientId,
-								(UnaryAction) qAction.action);
+						performAction(qAction.clientId, (UnaryAction) qAction.action);
 					else if (qAction.action instanceof BinaryAction)
-						performAction(qAction.clientId,
-								(BinaryAction) qAction.action);
+						performAction(qAction.clientId, (BinaryAction) qAction.action);
 					while (animating) {
 						Thread.sleep(200);
 					}

@@ -2,8 +2,7 @@ package at.jku.paugujooksik.model;
 
 import java.io.Serializable;
 
-public class Card<T extends Comparable<T>> implements Comparable<Card<T>>,
-		Serializable {
+public class Card<T extends Comparable<T>> implements Comparable<Card<T>>, Serializable {
 	private static final long serialVersionUID = 8151077928442901008L;
 
 	public final T value;

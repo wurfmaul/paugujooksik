@@ -18,8 +18,7 @@ public class CardSetPanel extends JPanel {
 
 	private final List<CardPanel> cardBtns = new LinkedList<>();
 
-	public CardSetPanel(int size, CardSetHandler target, String clientId,
-			boolean enableMouseActions) {
+	public CardSetPanel(int size, CardSetHandler target, String clientId, boolean enableMouseActions) {
 		set(size, target, clientId, enableMouseActions);
 		setOpaque(false);
 	}
@@ -34,8 +33,7 @@ public class CardSetPanel extends JPanel {
 		}
 	}
 
-	public void set(int size, CardSetHandler target, String clientId,
-			boolean enableMouseActions) {
+	public void set(int size, CardSetHandler target, String clientId, boolean enableMouseActions) {
 		final GridBagLayout gblPnlCards = new GridBagLayout();
 		{
 			gblPnlCards.columnWidths = new int[size + 1];
@@ -54,8 +52,7 @@ public class CardSetPanel extends JPanel {
 		cardBtns.clear();
 
 		for (int i = 0; i < size; i++) {
-			final CardPanel card = new CardPanel(i, target, clientId,
-					enableMouseActions);
+			final CardPanel card = new CardPanel(i, target, clientId, enableMouseActions);
 			final GridBagConstraints gbcCard = new GridBagConstraints();
 			{
 				gbcCard.fill = GridBagConstraints.BOTH;

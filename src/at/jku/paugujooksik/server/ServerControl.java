@@ -15,8 +15,7 @@ public interface ServerControl extends Remote {
 
 	public boolean isRunning() throws RemoteException;
 
-	public void performAction(String clientId, Action action)
-			throws RemoteException;
+	public void performAction(String clientId, Action action) throws RemoteException;
 
 	public boolean register(String name) throws RemoteException;
 
