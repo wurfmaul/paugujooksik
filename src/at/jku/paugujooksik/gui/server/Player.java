@@ -47,6 +47,9 @@ public class Player {
 			getPanel().cardSet.updateCards(cards);
 			getPanel().cardSet.finishCards(cards);
 		}
+		// in order to balance the animation trick (see CardSetContainerPanel.validateTree()), 
+		// we have to validate manually here 
+		panel.validate();
 	}
 
 	public void updateStats() {

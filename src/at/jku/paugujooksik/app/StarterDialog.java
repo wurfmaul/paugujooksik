@@ -23,6 +23,11 @@ import javax.swing.border.EmptyBorder;
 import at.jku.paugujooksik.gui.client.ClientGUI;
 import at.jku.paugujooksik.gui.server.ServerGUI;
 
+/**
+ * Provides a small user interface that allows choosing the running mode.
+ * 
+ * @author Wolfgang Kuellinger (0955711), 2014
+ */
 public class StarterDialog extends JDialog {
 	private static final long serialVersionUID = 7372737145331671762L;
 

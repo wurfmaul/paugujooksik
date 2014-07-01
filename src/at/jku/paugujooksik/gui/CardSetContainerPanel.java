@@ -29,11 +29,17 @@ public class CardSetContainerPanel extends JPanel {
 	private final JLabel lblCompareCount;
 	private final JLabel lblErrorCount;
 	private final JLabel lblSwapCount;
+	private final CardSetHandler target;
+	private final String name;
 	private JLabel lblTitle;
+
 
 	public CardSetContainerPanel(CardSetHandler target, int size, String name, boolean border,
 			boolean enableMouseActions) {
 
+		this.target = target;
+		this.name = name;
+		
 		if (border)
 			setBorder(new LineBorder(PLAYER_BORDER_COLOR, PLAYER_BORDER_THICKNESS));
 
@@ -123,6 +129,9 @@ public class CardSetContainerPanel extends JPanel {
 		gbc_panel.gridx = 0;
 		gbc_panel.gridy = 1;
 		add(cardSet, gbc_panel);
+		
+		// disable resizing when multiple players change card contents
+		setPreferredSize(getSize());
 	}
 
 	public void setStats(int compareCount, int swapCount, int errorCount) {
@@ -133,5 +142,12 @@ public class CardSetContainerPanel extends JPanel {
 
 	public void setTitle(String title) {
 		lblTitle.setText(title);
+	}
+	
+	@Override
+	protected void validateTree() {
+		// dirty trick to avoid repainting while animating
+		if (!target.isProcessing(name))
+			super.validateTree();
 	}
 }

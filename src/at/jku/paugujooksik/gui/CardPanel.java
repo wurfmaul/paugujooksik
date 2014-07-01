@@ -132,7 +132,7 @@ public class CardPanel extends AbstractPanel {
 			}
 		};
 	}
-
+	
 	private void updateText(Card<?> c) {
 		Font font = CARD_LABEL_FONT_ONECHAR;
 		String text = DEFAULT_CARD_TEXT;

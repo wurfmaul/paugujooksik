@@ -1,20 +1,17 @@
 package at.jku.paugujooksik.app;
 
 import static at.jku.paugujooksik.tools.Constants.DEBUGLOG;
-import static at.jku.paugujooksik.tools.Constants.LOGLEVEL;
-
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Handler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import at.jku.paugujooksik.gui.client.ClientGUI;
 import at.jku.paugujooksik.gui.server.ServerGUI;
 
+/**
+ * Starts the application if a command line parameter was chosen, brings up ui
+ * for choosing mode otherwise.
+ * 
+ * @author Wolfgang Kuellinger (0955711), 2014
+ */
 public class Paugujooksik {
 	public static void main(String[] args) {
-		configureLoggers();
-
 		if (args.length > 0) {
 			switch (args[0]) {
 			case "--server":
@@ -35,18 +32,5 @@ public class Paugujooksik {
 		} else {
 			new StarterDialog();
 		}
-	}
-
-	private static void configureLoggers() {
-		// deactivate root logger
-		final Logger rootLogger = Logger.getLogger("");
-		for (Handler h : rootLogger.getHandlers()) {
-			rootLogger.removeHandler(h);
-		}
-
-		final ConsoleHandler handler = new ConsoleHandler();
-		handler.setLevel(Level.ALL);
-		DEBUGLOG.addHandler(handler);
-		DEBUGLOG.setLevel(LOGLEVEL);
 	}
 }

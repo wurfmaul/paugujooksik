@@ -196,8 +196,8 @@ public class ClientGUI implements CardSetHandler {
 
 	@Override
 	public void performSwapStop(String clientId) {
-		pnlCards.cardSet.updateCards(cards);
 		animating = false;
+		pnlCards.cardSet.updateCards(cards);
 	}
 
 	private void clearErrorMessage() {

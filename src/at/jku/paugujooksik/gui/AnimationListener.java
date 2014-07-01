@@ -5,6 +5,7 @@ import static at.jku.paugujooksik.tools.Constants.ANIMATION_SPEED;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.RepaintManager;
 import javax.swing.Timer;
 
 public class AnimationListener implements ActionListener {
@@ -42,6 +43,7 @@ public class AnimationListener implements ActionListener {
 			target.performSwapStop(clientId);
 			return;
 		}
+		RepaintManager.currentManager(leftCard).markCompletelyClean(leftCard);
 	}
 
 	public void start() {

@@ -8,6 +8,8 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -149,5 +151,15 @@ public class Constants {
 				new Color(153, 255, 153), new Color(153, 153, 255) };
 
 		DISPLAY_DEVICES = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices();
+
+		// deactivate root logger
+		final Logger rootLogger = Logger.getLogger("");
+		for (Handler h : rootLogger.getHandlers()) {
+			rootLogger.removeHandler(h);
+		}
+
+		final ConsoleHandler handler = new ConsoleHandler();
+		handler.setLevel(Level.ALL);
+		DEBUGLOG.addHandler(handler);
 	}
 }

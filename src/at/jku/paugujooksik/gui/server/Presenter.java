@@ -145,8 +145,8 @@ public class Presenter extends Window implements CardSetHandler {
 	@Override
 	public void performSwapStop(String clientId) {
 		Player curPlayer = players.get(clientId);
-		curPlayer.updateComponents();
 		curPlayer.animating = false;
+		curPlayer.updateComponents();
 	}
 
 	/**

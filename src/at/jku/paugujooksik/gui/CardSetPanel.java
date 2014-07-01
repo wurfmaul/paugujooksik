@@ -82,5 +82,6 @@ public class CardSetPanel extends JPanel {
 		for (int i = 0; i < cardBtns.size(); i++) {
 			cardBtns.get(i).updateCard(cards.getCard(i));
 		}
+		validate();
 	}
 }
