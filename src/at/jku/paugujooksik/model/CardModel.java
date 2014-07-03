@@ -4,16 +4,16 @@ import static at.jku.paugujooksik.tools.Constants.DEBUGLOG;
 import static at.jku.paugujooksik.tools.Constants.MOVE_MARK_ON_SWAP;
 import static at.jku.paugujooksik.tools.Constants.MOVE_PIN_ON_SWAP;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import at.jku.paugujooksik.action.Action;
 import at.jku.paugujooksik.gui.SelectionException;
 
-public class Cards<T extends Comparable<T>> {
+public class CardModel<T extends Comparable<T>> {
 	private final Statistics stat = new Statistics();
-	private final List<Card<T>> cardList = new LinkedList<>();
+	private final List<Card> cardList = new LinkedList<>();
 	private final Configuration<T> config;
 	private final List<T> values;
 	private final List<T> sortedValues;
@@ -21,7 +21,7 @@ public class Cards<T extends Comparable<T>> {
 	private List<Action> expectedActions;
 	private Action prevAction = null;
 
-	public Cards(Configuration<T> config) {
+	public CardModel(Configuration<T> config) {
 		this.config = config;
 		this.values = config.values;
 		this.sortedValues = getSortedCopy(values);
@@ -29,14 +29,14 @@ public class Cards<T extends Comparable<T>> {
 	}
 
 	public boolean allMarked() {
-		for (Card<T> card : cardList) {
+		for (Card card : cardList) {
 			if (!card.marked)
 				return false;
 		}
 		return true;
 	}
 
-	public Card<T> getCard(int index) {
+	public Card getCard(int index) {
 		return cardList.get(index);
 	}
 
@@ -113,7 +113,7 @@ public class Cards<T extends Comparable<T>> {
 		}
 		cardList.clear();
 		for (T value : values) {
-			cardList.add(new Card<>(value));
+			cardList.add(new Card(value));
 		}
 		expectedActions = config.getAlgorithm().getActions(values);
 		curAction = 0;
@@ -127,8 +127,8 @@ public class Cards<T extends Comparable<T>> {
 
 		if (twoSelected()) {
 			// two cards already opened -> close unpinned ones!
-			Card<T> left = cardList.get(getFirstSelectedIndex());
-			Card<T> right = cardList.get(getSecondSelectedIndex());
+			Card left = cardList.get(getFirstSelectedIndex());
+			Card right = cardList.get(getSecondSelectedIndex());
 			if (!left.pinned)
 				left.selected = false;
 			if (!right.pinned)
@@ -161,7 +161,7 @@ public class Cards<T extends Comparable<T>> {
 
 	public void selectAll() {
 		assert allMarked();
-		for (Card<T> c : cardList) {
+		for (Card c : cardList) {
 			c.selected = true;
 		}
 	}
@@ -173,8 +173,8 @@ public class Cards<T extends Comparable<T>> {
 		final Action action = Action.swap(getFirstSelectedIndex(), getSecondSelectedIndex());
 		checkAction(action);
 
-		final Card<T> left = cardList.get(getFirstSelectedIndex());
-		final Card<T> right = cardList.get(getSecondSelectedIndex());
+		final Card left = cardList.get(getFirstSelectedIndex());
+		final Card right = cardList.get(getSecondSelectedIndex());
 		cardList.set(getFirstSelectedIndex(), right);
 		cardList.set(getSecondSelectedIndex(), left);
 
@@ -195,7 +195,7 @@ public class Cards<T extends Comparable<T>> {
 	}
 
 	public Action toggleMark(int index) {
-		final Card<T> card = cardList.get(index);
+		final Card card = cardList.get(index);
 		Action action;
 		if (card.marked) {
 			action = Action.mark(index);
@@ -222,9 +222,11 @@ public class Cards<T extends Comparable<T>> {
 	private void checkAction(Action action) {
 		if (curAction < expectedActions.size()) {
 			final Action exp = expectedActions.get(curAction);
+			
 			DEBUGLOG.fine("Expected: '" + exp + "'; actual: '" + action + "' " + "<"
 					+ (!exp.isCompatibleTo(action) ? "not " : "") + "compatible>" + "<"
 					+ (!exp.equals(action) ? "not " : "") + "equal>");
+			
 			if (exp.isCompatibleTo(action)) {
 				if (exp.equals(action)) {
 					curAction++;
@@ -245,8 +247,8 @@ public class Cards<T extends Comparable<T>> {
 		}
 	}
 
-	private Card<T> getPinnedCard() {
-		for (Card<T> card : cardList) {
+	private Card getPinnedCard() {
+		for (Card card : cardList) {
 			if (card.pinned)
 				return card;
 		}
@@ -276,8 +278,8 @@ public class Cards<T extends Comparable<T>> {
 		final Action action = Action.pin(index);
 		checkAction(action);
 
-		final Card<T> curPinned = getPinnedCard();
-		final Card<T> newPinned = cardList.get(index);
+		final Card curPinned = getPinnedCard();
+		final Card newPinned = cardList.get(index);
 
 		if (curPinned == null) {
 			// no card was pinned before -> pin card
@@ -298,6 +300,29 @@ public class Cards<T extends Comparable<T>> {
 		checkAction(action);
 		cardList.get(index).pinned = false;
 		return action;
+	}
+	
+	public class Card implements Comparable<Card>, Serializable {
+		private static final long serialVersionUID = 8151077928442901008L;
+
+		public final T value;
+		public boolean pinned = false;
+		public boolean marked = false;
+		public boolean selected = false;
+
+		public Card(T value) {
+			this.value = value;
+		}
+
+		@Override
+		public String toString() {
+			return value.toString();
+		}
+
+		@Override
+		public int compareTo(CardModel<T>.Card o) {
+			return value.compareTo(o.value);
+		}
 	}
 
 	private class Statistics {

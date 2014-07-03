@@ -3,7 +3,7 @@ package at.jku.paugujooksik.server;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-import at.jku.paugujooksik.action.Action;
+import at.jku.paugujooksik.model.Action;
 import at.jku.paugujooksik.model.Configuration;
 
 public interface ServerControl extends Remote {

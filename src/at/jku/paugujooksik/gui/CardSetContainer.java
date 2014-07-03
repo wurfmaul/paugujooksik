@@ -21,20 +21,20 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.border.LineBorder;
 
-public class CardSetContainerPanel extends JPanel {
+public class CardSetContainer extends JPanel {
 	public static final long serialVersionUID = 979482902923838043L;
 
-	public final CardSetPanel cardSet;
+	public final CardSet cardSet;
 
 	private final JLabel lblCompareCount;
 	private final JLabel lblErrorCount;
 	private final JLabel lblSwapCount;
-	private final CardSetHandler target;
+	private final PresentationView target;
 	private final String name;
 	private JLabel lblTitle;
 
 
-	public CardSetContainerPanel(CardSetHandler target, int size, String name, boolean border,
+	public CardSetContainer(PresentationView target, int size, String name, boolean border,
 			boolean enableMouseActions) {
 
 		this.target = target;
@@ -121,7 +121,7 @@ public class CardSetContainerPanel extends JPanel {
 			pnlError.add(lblErrorCount);
 		}
 
-		cardSet = new CardSetPanel(size, target, name, enableMouseActions);
+		cardSet = new CardSet(size, target, name, enableMouseActions);
 		GridBagConstraints gbc_panel = new GridBagConstraints();
 		gbc_panel.gridwidth = 5;
 		gbc_panel.insets = new Insets(5, 5, 5, 5);

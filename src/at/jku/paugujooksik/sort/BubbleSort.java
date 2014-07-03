@@ -4,7 +4,7 @@ import static at.jku.paugujooksik.tools.Constants.DEBUGLOG;
 
 import java.util.List;
 
-import at.jku.paugujooksik.action.Action;
+import at.jku.paugujooksik.model.Action;
 
 public class BubbleSort<T extends Comparable<T>> extends SortAlgorithm<T> {
 	private static final long serialVersionUID = -7956968455697337445L;

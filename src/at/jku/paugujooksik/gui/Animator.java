@@ -5,23 +5,33 @@ import static at.jku.paugujooksik.tools.Constants.ANIMATION_SPEED;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import javax.swing.RepaintManager;
 import javax.swing.Timer;
 
-public class AnimationListener implements ActionListener {
-	private final CardSetHandler target;
-	private final CardPanel leftCard;
-	private final CardPanel rightCard;
+/**
+ * The task of this class is to perform the animation once two cards are
+ * swapped.
+ * 
+ * @author Wolfgang Kuellinger (0955711), 2014
+ *
+ */
+public class Animator implements ActionListener {
+	private final Card leftCard;
+	private final Card rightCard;
 	private final int leftDestX;
 	private final int rightDestY;
-	private final String clientId;
 	private final Timer timer;
 
-	public AnimationListener(CardPanel leftCard, CardPanel rightCard, CardSetHandler target, String clientId) {
+	/**
+	 * Creates a new Animator.
+	 * 
+	 * @param leftCard
+	 *            The first card that is to be swapped.
+	 * @param rightCard
+	 *            The second card that is to be swapped.
+	 */
+	public Animator(Card leftCard, Card rightCard) {
 		this.leftCard = leftCard;
 		this.rightCard = rightCard;
-		this.target = target;
-		this.clientId = clientId;
 
 		this.leftDestX = rightCard.getLocation().x;
 		this.rightDestY = leftCard.getLocation().x;
@@ -40,12 +50,15 @@ public class AnimationListener implements ActionListener {
 
 		if (leftX == leftDestX || rightX == rightDestY) {
 			timer.stop();
-			target.performSwapStop(clientId);
+			// tell presenter that animation is done
+			leftCard.getView().performSwapStop(leftCard.getClientId());
 			return;
 		}
-		RepaintManager.currentManager(leftCard).markCompletelyClean(leftCard);
 	}
 
+	/**
+	 * Start the animation.
+	 */
 	public void start() {
 		timer.start();
 	}

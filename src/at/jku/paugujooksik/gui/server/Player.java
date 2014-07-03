@@ -6,29 +6,29 @@ import static at.jku.paugujooksik.tools.Constants.QUEUE_DELAY;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 
-import at.jku.paugujooksik.action.Action;
-import at.jku.paugujooksik.action.BinaryAction;
-import at.jku.paugujooksik.action.UnaryAction;
-import at.jku.paugujooksik.gui.CardSetContainerPanel;
-import at.jku.paugujooksik.model.Cards;
+import at.jku.paugujooksik.gui.CardSetContainer;
+import at.jku.paugujooksik.model.Action;
+import at.jku.paugujooksik.model.Action.BinaryAction;
+import at.jku.paugujooksik.model.Action.UnaryAction;
+import at.jku.paugujooksik.model.CardModel;
 
 public class Player {
-	public final Cards<?> cards;
+	public final CardModel<?> cards;
 	public boolean animating;
 
 	private final BlockingQueue<QueuedAction> actionQueue = new LinkedBlockingDeque<>();
 	private final QueueWorker queueWorker = new QueueWorker();
 	private final Presenter target;
-	private CardSetContainerPanel panel;
+	private CardSetContainer panel;
 
-	public Player(CardSetContainerPanel panel, Presenter target) {
+	public Player(CardSetContainer panel, Presenter target) {
 		this.target = target;
-		this.cards = new Cards<>(target.config);
+		this.cards = new CardModel<>(target.config);
 		this.setPanel(panel);
 		queueWorker.start();
 	}
 
-	public CardSetContainerPanel getPanel() {
+	public CardSetContainer getPanel() {
 		return panel;
 	}
 
@@ -36,7 +36,7 @@ public class Player {
 		actionQueue.add(new QueuedAction(clientId, action));
 	}
 
-	public void setPanel(CardSetContainerPanel panel) {
+	public void setPanel(CardSetContainer panel) {
 		this.panel = panel;
 	}
 

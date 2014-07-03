@@ -3,8 +3,8 @@ package at.jku.paugujooksik.server;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
-import at.jku.paugujooksik.action.Action;
 import at.jku.paugujooksik.gui.server.ServerGUI;
+import at.jku.paugujooksik.model.Action;
 import at.jku.paugujooksik.model.Configuration;
 
 public class ServerControlImpl extends UnicastRemoteObject implements ServerControl {

@@ -7,6 +7,12 @@ import java.awt.event.MouseListener;
 
 import javax.swing.JPanel;
 
+/**
+ * Superclass of all the used panels. It provides general useful methods.
+ * 
+ * @author Wolfgang Kuellinger (0955711), 2014
+ *
+ */
 public class AbstractPanel extends JPanel {
 	private static final long serialVersionUID = -7222954027988888359L;
 

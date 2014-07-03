@@ -2,7 +2,7 @@ package at.jku.paugujooksik.sort;
 
 import java.util.List;
 
-import at.jku.paugujooksik.action.Action;
+import at.jku.paugujooksik.model.Action;
 
 public class PlayMode<T extends Comparable<T>> extends SortAlgorithm<T> {
 	private static final long serialVersionUID = 8007175329327173679L;

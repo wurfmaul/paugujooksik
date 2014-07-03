@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 
-import at.jku.paugujooksik.action.Action;
+import at.jku.paugujooksik.model.Action;
 
 public abstract class SortAlgorithm<T extends Comparable<T>> implements Serializable {
 	private static final long serialVersionUID = -7013695126248089403L;

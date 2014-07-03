@@ -259,7 +259,6 @@ public class ConnectionDialog extends JDialog {
 					JOptionPane.showMessageDialog(ConnectionDialog.this, "Host cannot be found!", "Network error",
 							JOptionPane.ERROR_MESSAGE);
 					sourceBtn.setSelected(false);
-					ex.printStackTrace(); // FIXME hide exception
 				}
 			} else {
 				registerThread.interrupt();

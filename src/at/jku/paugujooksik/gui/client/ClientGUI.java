@@ -41,30 +41,30 @@ import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 
-import at.jku.paugujooksik.action.Action;
-import at.jku.paugujooksik.gui.AnimationListener;
-import at.jku.paugujooksik.gui.CardPanel;
-import at.jku.paugujooksik.gui.CardSetContainerPanel;
-import at.jku.paugujooksik.gui.CardSetHandler;
+import at.jku.paugujooksik.gui.Animator;
+import at.jku.paugujooksik.gui.Card;
+import at.jku.paugujooksik.gui.CardSetContainer;
+import at.jku.paugujooksik.gui.PresentationView;
 import at.jku.paugujooksik.gui.SelectionException;
-import at.jku.paugujooksik.model.Cards;
+import at.jku.paugujooksik.model.Action;
+import at.jku.paugujooksik.model.CardModel;
 import at.jku.paugujooksik.model.Configuration;
 import at.jku.paugujooksik.model.ValueGenerator.ValueMode;
 import at.jku.paugujooksik.model.ValueGenerator.ValueType;
 import at.jku.paugujooksik.server.ServerControl;
 import at.jku.paugujooksik.sort.SortAlgorithm;
 
-public class ClientGUI implements CardSetHandler {
+public class ClientGUI implements PresentationView {
 	private final boolean clientMode;
 	private final JFrame frame = new JFrame();
 	private boolean animating;
-	private CardSetContainerPanel pnlCards;
+	private CardSetContainer pnlCards;
 	private SwapPanel pnlSwap;
 	private JLabel lblHint;
 	private Configuration<?> config;
 	private String name;
 	private ServerControl controler;
-	private Cards<?> cards;
+	private CardModel<?> cards;
 	private int size;
 
 	private ClientGUI(boolean clientMode) {
@@ -83,7 +83,7 @@ public class ClientGUI implements CardSetHandler {
 
 		if (config != null) {
 			size = config.size;
-			cards = new Cards<>(config);
+			cards = new CardModel<>(config);
 			initFrame();
 			initialize();
 		}
@@ -181,11 +181,11 @@ public class ClientGUI implements CardSetHandler {
 
 			int leftIndex = cards.getFirstSelectedIndex();
 			int rightIndex = cards.getSecondSelectedIndex();
-			CardPanel cardLeft = pnlCards.cardSet.get(leftIndex);
-			CardPanel cardRight = pnlCards.cardSet.get(rightIndex);
+			Card cardLeft = pnlCards.cardSet.get(leftIndex);
+			Card cardRight = pnlCards.cardSet.get(rightIndex);
 
 			if (USE_ANIMATION)
-				new AnimationListener(cardLeft, cardRight, this, clientId).start();
+				new Animator(cardLeft, cardRight).start();
 			else
 				performSwapStop(clientId);
 			animating = true;
@@ -217,7 +217,7 @@ public class ClientGUI implements CardSetHandler {
 	private void initialize() {
 		frame.getContentPane().removeAll();
 
-		pnlCards = new CardSetContainerPanel(this, size, name, false, true);
+		pnlCards = new CardSetContainer(this, size, name, false, true);
 		{
 			pnlCards.setTitle(config.toString());
 			GridBagConstraints gbcPnlCards = new GridBagConstraints();
@@ -258,7 +258,7 @@ public class ClientGUI implements CardSetHandler {
 
 	private void initCards() {
 		size = config.size;
-		cards = new Cards<>(config);
+		cards = new CardModel<>(config);
 		pnlCards.cardSet.set(size, this, name, true);
 	}
 

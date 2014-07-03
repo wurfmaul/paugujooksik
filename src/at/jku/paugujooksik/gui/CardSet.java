@@ -11,29 +11,35 @@ import java.util.List;
 
 import javax.swing.JPanel;
 
-import at.jku.paugujooksik.model.Cards;
+import at.jku.paugujooksik.model.CardModel;
 
-public class CardSetPanel extends JPanel {
+/**
+ * Represents a set of cards.
+ * 
+ * @author Wolfgang Kuellinger (0955711), 2014
+ * @see Card details on the GUI architecture
+ */
+public class CardSet extends JPanel {
 	private static final long serialVersionUID = 8943110545308400878L;
 
-	private final List<CardPanel> cardBtns = new LinkedList<>();
+	private final List<Card> cardBtns = new LinkedList<>();
 
-	public CardSetPanel(int size, CardSetHandler target, String clientId, boolean enableMouseActions) {
+	public CardSet(int size, PresentationView target, String clientId, boolean enableMouseActions) {
 		set(size, target, clientId, enableMouseActions);
 		setOpaque(false);
 	}
 
-	public CardPanel get(int index) {
+	public Card get(int index) {
 		return cardBtns.get(index);
 	}
 
-	public void finishCards(Cards<?> cards) {
+	public void finishCards(CardModel<?> cards) {
 		for (int i = 0; i < cardBtns.size(); i++) {
 			cardBtns.get(i).finish(!cards.isOnRightPosition(i));
 		}
 	}
 
-	public void set(int size, CardSetHandler target, String clientId, boolean enableMouseActions) {
+	public void set(int size, PresentationView target, String clientId, boolean enableMouseActions) {
 		final GridBagLayout gblPnlCards = new GridBagLayout();
 		{
 			gblPnlCards.columnWidths = new int[size + 1];
@@ -52,7 +58,7 @@ public class CardSetPanel extends JPanel {
 		cardBtns.clear();
 
 		for (int i = 0; i < size; i++) {
-			final CardPanel card = new CardPanel(i, target, clientId, enableMouseActions);
+			final Card card = new Card(i, target, clientId, enableMouseActions);
 			final GridBagConstraints gbcCard = new GridBagConstraints();
 			{
 				gbcCard.fill = GridBagConstraints.BOTH;
@@ -65,7 +71,7 @@ public class CardSetPanel extends JPanel {
 		}
 
 		for (int i = 0; i < size; i++) {
-			final CardSlotPanel slot = new CardSlotPanel(i);
+			final CardSlot slot = new CardSlot(i);
 			final GridBagConstraints gbcSlot = new GridBagConstraints();
 			{
 				gbcSlot.fill = GridBagConstraints.BOTH;
@@ -78,7 +84,7 @@ public class CardSetPanel extends JPanel {
 
 	}
 
-	public void updateCards(Cards<?> cards) {
+	public void updateCards(CardModel<?> cards) {
 		for (int i = 0; i < cardBtns.size(); i++) {
 			cardBtns.get(i).updateCard(cards.getCard(i));
 		}

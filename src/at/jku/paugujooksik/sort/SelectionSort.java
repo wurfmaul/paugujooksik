@@ -5,8 +5,8 @@ import static at.jku.paugujooksik.tools.Constants.DEBUGLOG;
 import java.util.BitSet;
 import java.util.List;
 
-import at.jku.paugujooksik.action.Action;
-import at.jku.paugujooksik.action.BinaryAction;
+import at.jku.paugujooksik.model.Action;
+import at.jku.paugujooksik.model.Action.BinaryAction;
 
 public class SelectionSort<T extends Comparable<T>> extends SortAlgorithm<T> {
 	private static final long serialVersionUID = -7852418811785446942L;

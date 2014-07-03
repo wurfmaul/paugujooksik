@@ -1,6 +1,6 @@
 package at.jku.paugujooksik.gui;
 
-public interface CardSetHandler {
+public interface PresentationView {
 	public boolean isProcessing(String clientId);
 
 	public void performMark(String clientId, int index);

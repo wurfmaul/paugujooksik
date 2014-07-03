@@ -31,15 +31,15 @@ import javax.swing.JLabel;
 import javax.swing.JToggleButton;
 import javax.swing.WindowConstants;
 
-import at.jku.paugujooksik.action.Action;
-import at.jku.paugujooksik.gui.AnimationListener;
-import at.jku.paugujooksik.gui.CardPanel;
-import at.jku.paugujooksik.gui.CardSetContainerPanel;
-import at.jku.paugujooksik.gui.CardSetHandler;
+import at.jku.paugujooksik.gui.Animator;
+import at.jku.paugujooksik.gui.Card;
+import at.jku.paugujooksik.gui.CardSetContainer;
+import at.jku.paugujooksik.gui.PresentationView;
 import at.jku.paugujooksik.gui.SelectionException;
+import at.jku.paugujooksik.model.Action;
 import at.jku.paugujooksik.model.Configuration;
 
-public class Presenter extends Window implements CardSetHandler {
+public class Presenter extends Window implements PresentationView {
 	private static final long serialVersionUID = 8299211278767397214L;
 
 	public final Configuration<?> config;
@@ -130,11 +130,11 @@ public class Presenter extends Window implements CardSetHandler {
 
 			int leftIndex = curPlayer.cards.getFirstSelectedIndex();
 			int rightIndex = curPlayer.cards.getSecondSelectedIndex();
-			CardPanel btnLeft = curPlayer.getPanel().cardSet.get(leftIndex);
-			CardPanel btnRight = curPlayer.getPanel().cardSet.get(rightIndex);
+			Card btnLeft = curPlayer.getPanel().cardSet.get(leftIndex);
+			Card btnRight = curPlayer.getPanel().cardSet.get(rightIndex);
 
 			if (USE_ANIMATION)
-				new AnimationListener(btnLeft, btnRight, this, clientId).start();
+				new Animator(btnLeft, btnRight).start();
 			else
 				performSwapStop(clientId);
 			curPlayer.animating = true;
@@ -237,7 +237,7 @@ public class Presenter extends Window implements CardSetHandler {
 		int curRow = 0;
 
 		for (String name : registeredClients) {
-			final CardSetContainerPanel cardSetPanel = new CardSetContainerPanel(this, config.size, name, true, false);
+			final CardSetContainer cardSetPanel = new CardSetContainer(this, config.size, name, true, false);
 
 			final GridBagConstraints gridBagConstraints = new GridBagConstraints();
 			{

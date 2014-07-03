@@ -60,6 +60,7 @@ public class StarterDialog extends JDialog {
 			btnStandalone.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
+					// when pressing "play", simply start the standalone!
 					ClientGUI.initAndRun(false);
 					dispose();
 				}

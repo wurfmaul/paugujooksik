@@ -4,7 +4,7 @@ import static at.jku.paugujooksik.tools.Constants.DEBUGLOG;
 
 import java.util.List;
 
-import at.jku.paugujooksik.action.Action;
+import at.jku.paugujooksik.model.Action;
 
 public class InsertionSort<T extends Comparable<T>> extends SortAlgorithm<T> {
 	private static final long serialVersionUID = 2190148165959505555L;
