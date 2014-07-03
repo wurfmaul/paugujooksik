@@ -63,14 +63,30 @@ import at.jku.paugujooksik.model.ValueGenerator.ValueType;
 import at.jku.paugujooksik.network.ServerControl;
 import at.jku.paugujooksik.network.ServerControlImpl;
 
+/**
+ * This component provides all settings for a challenge between one or more
+ * players.
+ * 
+ * @author Wolfgang Kuellinger (0955711), 2014
+ */
 public class ServerGUI {
+	/** All available host addresses, excluding internal ones. */
 	private static final List<String> HOST_ADDRESSES = new LinkedList<>();
+	/** Provides a short description of all available displays. */
 	private static final List<String> AVAILABLE_DISPLAYS = new LinkedList<>();
 
 	private final JFrame frame = new JFrame();
+	/** A set of all the clients that registered at the server. */
 	private final Set<String> registeredClients = new LinkedHashSet<>();
+	/** Indicates whether the server is joinable at the moment. */
 	private boolean joinable = true;
+	/** The window that displays the players. */
 	private Presenter presenter;
+	/** The control interface that is used for client-server communication. */
+	private ServerControl remoteControl;
+	/** The device that establishes the client-server communication. */
+	private Registry remoteRegistry;
+
 	private JToggleButton btnPlay;
 	private JTextArea txtPlayers;
 	private JComboBox<Object> cbxDisplay;
@@ -79,26 +95,42 @@ public class ServerGUI {
 	private JComboBox<ValueType> cbxCfgType;
 	private JComboBox<ValueMode> cbxCfgMode;
 	private JSlider sldrCfgSize;
-	private ServerControl remoteControl;
-	private Registry remoteRegistry;
 
 	public ServerGUI() {
 		initRegistry();
 		initialize();
 	}
 
+	/**
+	 * @return {@link #presenter}.
+	 */
 	public Presenter getPresenter() {
 		return presenter;
 	}
 
+	/**
+	 * @return {@link #joinable}.
+	 */
 	public boolean isJoinable() {
 		return joinable;
 	}
 
+	/**
+	 * Indicates whether or not the server is in a game.
+	 * 
+	 * @return true if a game is currently running.
+	 */
 	public boolean isRunning() {
 		return presenter != null;
 	}
 
+	/**
+	 * Register a player with a specified name at the server.
+	 * 
+	 * @param name
+	 *            The name of the player.
+	 * @return false if the name has already been registered.
+	 */
 	public boolean register(String name) {
 		if (registeredClients.contains(name))
 			return false;
@@ -107,6 +139,12 @@ public class ServerGUI {
 		return true;
 	}
 
+	/**
+	 * Unregister a player from the server.
+	 * 
+	 * @param clientId
+	 *            The name of the player.
+	 */
 	public void unregister(String clientId) {
 		registeredClients.remove(clientId);
 		updatePlayerList();
@@ -320,11 +358,7 @@ public class ServerGUI {
 		btnPlay.addActionListener(new PresenterListener());
 		frame.getContentPane().add(btnPlay, gbcBtnPlay);
 
-		initMenuBar();
-		updatePlayerList();
-	}
-
-	private void initMenuBar() {
+		// init menu bar
 		JMenuBar menuBar = new JMenuBar();
 		JMenu mnFile = new JMenu("File");
 		{
@@ -339,12 +373,16 @@ public class ServerGUI {
 		}
 		menuBar.add(mnFile);
 		frame.setJMenuBar(menuBar);
+
+		updatePlayerList();
 	}
 
 	private void initRegistry() {
 		try {
+			// broadcast the host name of the server
 			final String host = (String) HOST_ADDRESSES.get(0);
 			System.setProperty("java.rmi.server.hostname", host);
+			// share common objects, establish control object
 			remoteControl = new ServerControlImpl(this);
 			remoteRegistry = LocateRegistry.createRegistry(DEFAULT_PORT);
 			remoteRegistry.bind(BINDING_ID, remoteControl);
@@ -436,11 +474,15 @@ public class ServerGUI {
 		});
 	}
 
+	/**
+	 * Takes the chosen configuration and starts a presenter window.
+	 */
 	private class PresenterListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			final JToggleButton sourceBtn = (JToggleButton) e.getSource();
 			if (sourceBtn.isSelected()) {
+				// collect config
 				final ValueMode mode = (ValueMode) cbxCfgMode.getSelectedItem();
 				final ValueType type = (ValueType) cbxCfgType.getSelectedItem();
 				final int sortIdx = cbxCfgAlgo.getSelectedIndex();
@@ -451,6 +493,7 @@ public class ServerGUI {
 				assert cbxDisplay.getSelectedIndex() >= 0;
 				final int dspDix = cbxDisplay.getSelectedIndex();
 
+				// start presenter
 				EventQueue.invokeLater(new Runnable() {
 					@Override
 					public void run() {
@@ -463,6 +506,7 @@ public class ServerGUI {
 				});
 				joinable = false;
 			} else {
+				// destroy session
 				joinable = true;
 				registeredClients.clear();
 				updatePlayerList();

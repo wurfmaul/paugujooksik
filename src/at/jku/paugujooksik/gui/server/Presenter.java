@@ -39,17 +39,35 @@ import at.jku.paugujooksik.model.Action;
 import at.jku.paugujooksik.model.Configuration;
 import at.jku.paugujooksik.model.SelectionException;
 
+/**
+ * This represents the server's presenter window.
+ * 
+ * @author Wolfgang Kuellinger (0955711), 2014
+ */
 public class Presenter extends Window implements PresentationView {
 	private static final long serialVersionUID = 8299211278767397214L;
 
+	/** The basic configuration of the game parameters. */
 	public final Configuration<?> config;
 
+	/** A mapping of player by its name. */
 	private final Map<String, Player> players = new LinkedHashMap<>();
+	/** A set of all the clients that have registered at the server. */
 	private final Set<String> registeredClients;
+
 	private JFrame frame;
 
 	/**
-	 * Create the application.
+	 * Create a new presenter object.
+	 * 
+	 * @param owner
+	 *            The owning frame, basically the server GUI
+	 * @param config
+	 *            See {@link #config}.
+	 * @param registeredClients
+	 *            See {@link #registeredClients}.
+	 * @param deviceIndex
+	 *            The index of the used display.
 	 */
 	public Presenter(Frame owner, Configuration<?> config, Set<String> registeredClients, int deviceIndex) {
 		super(owner);
@@ -59,12 +77,19 @@ public class Presenter extends Window implements PresentationView {
 		initialize(deviceIndex, true);
 	}
 
+	/**
+	 * Increment the error counter of the specified player.
+	 * 
+	 * @param clientId
+	 *            The player who's error counter is to be incremented.
+	 */
 	public void incErrorCount(String clientId) {
 		Player curPlayers = players.get(clientId);
-		curPlayers.cards.incErrorCount();
-		curPlayers.updateStats();
+		curPlayers.cardModel.incErrorCount();
+		curPlayers.synchronizeStats();
 
 		try {
+			// play a sound
 			final Clip clip = loadClip(ERROR_SND);
 			if (clip != null)
 				clip.start();
@@ -73,14 +98,31 @@ public class Presenter extends Window implements PresentationView {
 		}
 	}
 
+	/**
+	 * Perform an action. Basically a delegation to the player's queue.
+	 * 
+	 * @param clientId
+	 *            The players name.
+	 * @param action
+	 *            The performed action.
+	 */
 	public void queueAction(String clientId, Action action) {
 		players.get(clientId).queueAction(clientId, action);
 	}
 
+	/**
+	 * Exit this application. On dispose, the owner becomes active again.
+	 */
 	public void quit() {
 		frame.dispose();
 	}
 
+	/**
+	 * Unregister a player from the presenter. Removes the player from the list.
+	 * 
+	 * @param clientId
+	 *            The name of the player.
+	 */
 	public void unregister(String clientId) {
 		players.get(clientId).getPanel().setTitle(clientId + " (gone)");
 	}
@@ -94,42 +136,42 @@ public class Presenter extends Window implements PresentationView {
 	public void performPin(String clientId, int index) {
 		final Player curPlayer = players.get(clientId);
 		try {
-			curPlayer.cards.togglePin(index);
+			curPlayer.cardModel.togglePin(index);
 		} catch (SelectionException ex) {
 		}
-		curPlayer.updateComponents();
+		curPlayer.synchronizeComponents();
 	}
 
 	@Override
 	public void performMark(String clientId, int index) {
 		final Player curPlayer = players.get(clientId);
 		try {
-			curPlayer.cards.toggleMark(index);
+			curPlayer.cardModel.toggleMark(index);
 		} catch (SelectionException ex) {
 		}
-		curPlayer.updateComponents();
+		curPlayer.synchronizeComponents();
 	}
 
 	@Override
 	public void performSelect(String clientId, int index) {
 		final Player curPlayer = players.get(clientId);
 		try {
-			curPlayer.cards.select(index);
+			curPlayer.cardModel.select(index);
 		} catch (SelectionException ex) {
 		}
-		curPlayer.updateStats();
-		curPlayer.updateComponents();
+		curPlayer.synchronizeStats();
+		curPlayer.synchronizeComponents();
 	}
 
 	@Override
 	public void performSwapStart(String clientId) {
 		final Player curPlayer = players.get(clientId);
 		try {
-			curPlayer.cards.swapSelection();
-			curPlayer.updateStats();
+			curPlayer.cardModel.swapSelection();
+			curPlayer.synchronizeStats();
 
-			int leftIndex = curPlayer.cards.getFirstSelectedIndex();
-			int rightIndex = curPlayer.cards.getSecondSelectedIndex();
+			int leftIndex = curPlayer.cardModel.getFirstSelectedIndex();
+			int rightIndex = curPlayer.cardModel.getSecondSelectedIndex();
 			Card btnLeft = curPlayer.getPanel().cardSet.get(leftIndex);
 			Card btnRight = curPlayer.getPanel().cardSet.get(rightIndex);
 
@@ -146,13 +188,11 @@ public class Presenter extends Window implements PresentationView {
 	public void performSwapStop(String clientId) {
 		Player curPlayer = players.get(clientId);
 		curPlayer.animating = false;
-		curPlayer.updateComponents();
+		curPlayer.synchronizeComponents();
 	}
 
-	/**
-	 * Initialize the contents of the frame.
-	 */
 	private void initialize(final int deviceIndex, boolean fullscreen) {
+		// compute the bounds of the current display
 		final Rectangle display = DISPLAY_DEVICES[deviceIndex].getDefaultConfiguration().getBounds();
 		final int inset = 10;
 		final Insets insets = new Insets(inset, inset, inset, inset);
@@ -190,7 +230,6 @@ public class Presenter extends Window implements PresentationView {
 		JLabel lblConfig = new JLabel(config.toString());
 		{
 			lblConfig.setFont(TITLE_FONT);
-
 			GridBagConstraints titleConstraints = new GridBagConstraints();
 			{
 				titleConstraints.insets = insets;
@@ -198,7 +237,6 @@ public class Presenter extends Window implements PresentationView {
 				titleConstraints.gridx = 0;
 				titleConstraints.gridy = 0;
 			}
-
 			frame.getContentPane().add(lblConfig, titleConstraints);
 		}
 
@@ -210,14 +248,12 @@ public class Presenter extends Window implements PresentationView {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					JToggleButton source = (JToggleButton) e.getSource();
-
 					frame.dispose();
 					initialize(deviceIndex, source.isSelected());
 					frame.setBounds(display);
-
 					for (Player p : players.values()) {
-						p.updateComponents();
-						p.updateStats();
+						p.synchronizeComponents();
+						p.synchronizeStats();
 					}
 				}
 			});
@@ -250,6 +286,8 @@ public class Presenter extends Window implements PresentationView {
 
 			cardSetPanel.setBackground(PLAYER_COLORS[curRow % totalRows]);
 			cardSetPanel.setTitle(name);
+
+			// establish the mapping of the player's name to its delegate
 			if (players.containsKey(name)) {
 				players.get(name).setPanel(cardSetPanel);
 			} else {
@@ -257,7 +295,6 @@ public class Presenter extends Window implements PresentationView {
 			}
 
 			frame.getContentPane().add(cardSetPanel, gridBagConstraints);
-
 			curRow++;
 		}
 
