@@ -42,8 +42,14 @@ import javax.swing.JToggleButton;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 
-import at.jku.paugujooksik.server.ServerControl;
+import at.jku.paugujooksik.network.ServerControl;
 
+/**
+ * A small dialog that tries to establish a connection between client and
+ * server.
+ * 
+ * @author Wolfgang Kuellinger (0955711), 2014
+ */
 public class ConnectionDialog extends JDialog {
 	private static final long serialVersionUID = 1513880741540102732L;
 	private static final String HISTORY_FILE_DELIM = ";";
@@ -54,7 +60,7 @@ public class ConnectionDialog extends JDialog {
 	private final JLabel lblTitle;
 	private Thread registerThread;
 
-	public ConnectionDialog(final JFrame parent, final ClientGUI target) {
+	private ConnectionDialog(final JFrame parent, final ClientGUI client) {
 		super(parent, true);
 		setBounds(100, 100, 400, 200);
 		setTitle("Connection Assistant");
@@ -160,7 +166,7 @@ public class ConnectionDialog extends JDialog {
 			okButton.setRolloverIcon(loadIcon(PLAY_ICON_SMALL));
 			okButton.setSelectedIcon(loadIcon(STOP_ICON_SMALL));
 			okButton.setFocusable(false);
-			okButton.addActionListener(new ConnectionListener(target));
+			okButton.addActionListener(new ConnectionListener(client));
 		}
 		{
 			JButton cancelButton = new JButton("Cancel");
@@ -173,12 +179,20 @@ public class ConnectionDialog extends JDialog {
 			cancelButton.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					target.quit();
+					client.quit();
 				}
 			});
 		}
 	}
 
+	/**
+	 * Create and initialize a new connection dialog.
+	 * 
+	 * @param parent
+	 *            The parent frame.
+	 * @param target
+	 *            The client that is to be notified about the connection status.
+	 */
 	public static void init(JFrame parent, ClientGUI target) {
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -193,6 +207,9 @@ public class ConnectionDialog extends JDialog {
 		}
 	}
 
+	/**
+	 * This listener is activated once the "connect" button is pressed.
+	 */
 	private class ConnectionListener implements ActionListener {
 		private ClientGUI target;
 
@@ -204,39 +221,48 @@ public class ConnectionDialog extends JDialog {
 		public void actionPerformed(ActionEvent e) {
 			final JToggleButton sourceBtn = (JToggleButton) e.getSource();
 			if (sourceBtn.isSelected()) {
+				// if a connection should be established
 				final String host = cbxCfgAddress.getEditor().getItem().toString().trim();
 				final String port = cbxCfgPort.getEditor().getItem().toString().trim();
 				final String name = cbxCfgName.getEditor().getItem().toString().trim();
 
+				// save the current selection to the history
 				ConfigHistory.addEntry(host, port, name);
 				cbxCfgAddress.addItem(host);
 				cbxCfgPort.addItem(port);
 				cbxCfgName.addItem(name);
 
 				try {
-					Registry reg = LocateRegistry.getRegistry(host, Integer.parseInt(port));
+					// try to connect
+					final Registry reg = LocateRegistry.getRegistry(host, Integer.parseInt(port));
 					final ServerControl remoteControl = (ServerControl) reg.lookup(BINDING_ID);
+
 					if (name.equals("")) {
 						JOptionPane.showMessageDialog(ConnectionDialog.this, "Please enter your name!", "Naming error",
 								JOptionPane.ERROR_MESSAGE);
 						sourceBtn.setSelected(false);
 					} else if (!remoteControl.isJoinable()) {
+						// if the server does not want more connections
 						JOptionPane.showMessageDialog(ConnectionDialog.this, "The selected server is busy!",
 								"Network error", JOptionPane.ERROR_MESSAGE);
 						sourceBtn.setSelected(false);
 					} else if (!remoteControl.register(name)) {
+						// if the name was already chosen by somebody else
 						JOptionPane.showMessageDialog(ConnectionDialog.this, "Please choose another name!",
 								"Naming error", JOptionPane.ERROR_MESSAGE);
 						sourceBtn.setSelected(false);
 					} else {
+						// if everything worked correctly
 						cbxCfgAddress.setEnabled(false);
 						cbxCfgName.setEnabled(false);
 						cbxCfgPort.setEnabled(false);
 						lblTitle.setText("Waiting for host...");
 
+						// notify client about the connection details
 						target.setName(name);
 						target.setController(remoteControl);
 
+						// wait for server to start game
 						registerThread = new Thread(new Runnable() {
 							@Override
 							public void run() {
@@ -261,6 +287,7 @@ public class ConnectionDialog extends JDialog {
 					sourceBtn.setSelected(false);
 				}
 			} else {
+				// if the waiting for a connection should be discontinued
 				registerThread.interrupt();
 				cbxCfgAddress.setEnabled(true);
 				cbxCfgName.setEnabled(true);
@@ -270,6 +297,10 @@ public class ConnectionDialog extends JDialog {
 		}
 	}
 
+	/**
+	 * A very primitive history of entered data. Creates a text file that saves
+	 * the strings in comma separated lists.
+	 */
 	private static class ConfigHistory {
 		public static final File file = new File("ConnectionHistory.lst");
 
@@ -278,7 +309,7 @@ public class ConnectionDialog extends JDialog {
 		private static final int NAME_LINE = 2;
 
 		public static void addEntry(String address, String port, String name) {
-			Map<Integer, String> map = new LinkedHashMap<>();
+			final Map<Integer, String> map = new LinkedHashMap<>();
 
 			map.put(ADDRESS_LINE, createLine(ADDRESS_LINE, address));
 			map.put(PORT_LINE, createLine(PORT_LINE, port));

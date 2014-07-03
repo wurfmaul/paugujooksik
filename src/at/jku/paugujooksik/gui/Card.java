@@ -73,10 +73,8 @@ import at.jku.paugujooksik.model.CardModel;
 public class Card extends AbstractPanel {
 	private static final long serialVersionUID = 68959464664105468L;
 
-	/** The view that contains this card. */
-	private final PresentationView view;
-	/** The name of the player. */
-	private final String clientId;
+	/** The component that contains this card. */
+	public final CardSetContainer container;
 
 	/** The card's caption. */
 	private final JLabel label;
@@ -94,18 +92,16 @@ public class Card extends AbstractPanel {
 	 * 
 	 * @param index
 	 *            The index that is displayed above the card.
-	 * @param view
-	 *            See {@link #view}.
-	 * @param clientId
-	 *            See {@link #clientId}.
+	 * @param container
+	 *            The component that contains this card.
 	 * @param enableMouseActions
 	 *            If true, the buttons are clickable.
 	 */
-	public Card(final int index, PresentationView view, String clientId, boolean enableMouseActions) {
+	public Card(final int index, CardSetContainer container) {
 		super(new BorderLayout());
-		this.view = view;
-		this.clientId = clientId;
+		this.container = container;
 
+		final boolean enableMouseActions = container.mouseActionsEnabled;
 		if (enableMouseActions)
 			initMouseListeners(index);
 
@@ -166,25 +162,12 @@ public class Card extends AbstractPanel {
 	}
 
 	/**
-	 * @return the {@link #view}.
-	 */
-	public PresentationView getView() {
-		return view;
-	}
-
-	/**
-	 * @return the {@link #clientId}.
-	 */
-	public String getClientId() {
-		return clientId;
-	}
-
-	/**
 	 * Design the card's layout in order to match its model.
 	 * 
 	 * @param card
+	 *            The card's model. This is the basis for the update.
 	 */
-	public void updateCard(CardModel<?>.Card card) {
+	public void synchronize(CardModel<?>.Card card) {
 		setBorder(new CardBorder(card.selected));
 		updateText(card);
 		pinButton.setVisible(card.selected);
@@ -195,25 +178,28 @@ public class Card extends AbstractPanel {
 	}
 
 	private void initMouseListeners(final int index) {
+		final PresentationView view = container.view;
+		final String name = container.name;
+
 		cardMouseAdapter = new MouseAdapter() {
 			@Override
 			public void mouseReleased(MouseEvent e) {
-				if (!view.isProcessing(clientId) && staysInsideComponent(e))
-					view.performSelect(clientId, index);
+				if (!view.isProcessing(name) && staysInsideComponent(e))
+					view.performSelect(name, index);
 			}
 		};
 		pinMouseAdapter = new MouseAdapter() {
 			@Override
 			public void mouseReleased(MouseEvent e) {
-				if (!view.isProcessing(clientId) && staysInsideComponent(e))
-					view.performPin(clientId, index);
+				if (!view.isProcessing(name) && staysInsideComponent(e))
+					view.performPin(name, index);
 			}
 		};
 		finMouseAdapter = new MouseAdapter() {
 			@Override
 			public void mouseReleased(MouseEvent e) {
-				if (!view.isProcessing(clientId) && staysInsideComponent(e))
-					view.performMark(clientId, index);
+				if (!view.isProcessing(name) && staysInsideComponent(e))
+					view.performMark(name, index);
 			}
 		};
 	}

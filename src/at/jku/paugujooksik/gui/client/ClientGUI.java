@@ -45,34 +45,49 @@ import at.jku.paugujooksik.gui.Animator;
 import at.jku.paugujooksik.gui.Card;
 import at.jku.paugujooksik.gui.CardSetContainer;
 import at.jku.paugujooksik.gui.PresentationView;
-import at.jku.paugujooksik.gui.SelectionException;
 import at.jku.paugujooksik.model.Action;
 import at.jku.paugujooksik.model.CardModel;
 import at.jku.paugujooksik.model.Configuration;
+import at.jku.paugujooksik.model.SelectionException;
 import at.jku.paugujooksik.model.ValueGenerator.ValueMode;
 import at.jku.paugujooksik.model.ValueGenerator.ValueType;
-import at.jku.paugujooksik.server.ServerControl;
+import at.jku.paugujooksik.network.ServerControl;
 import at.jku.paugujooksik.sort.SortAlgorithm;
 
+/**
+ * This is the GUI for the standalone application as well as the client mode.
+ * 
+ * @author Wolfgang Kuellinger (0955711), 2014
+ */
 public class ClientGUI implements PresentationView {
 	private final boolean clientMode;
 	private final JFrame frame = new JFrame();
-	private boolean animating;
-	private CardSetContainer pnlCards;
+	private CardSetContainer cardContainer;
 	private SwapPanel pnlSwap;
 	private JLabel lblHint;
+	private boolean animating;
 	private Configuration<?> config;
 	private String name;
 	private ServerControl controler;
 	private CardModel<?> cards;
 	private int size;
 
+	/**
+	 * Create a new GUI object.
+	 * 
+	 * @param clientMode
+	 *            If true, define as client application. If false, bring up as
+	 *            standalone app.
+	 */
 	private ClientGUI(boolean clientMode) {
 		this.clientMode = clientMode;
 
 		if (clientMode) {
+			// setup and display the server-connection settings
 			ConnectionDialog.init(frame, this);
 			try {
+				// once the dialog finished successfully, the registry should be
+				// established.
 				config = controler.getConfig();
 			} catch (RemoteException | NullPointerException e) {
 				quit();
@@ -81,28 +96,40 @@ public class ClientGUI implements PresentationView {
 			config = Configuration.generateDefault();
 		}
 
-		if (config != null) {
-			size = config.size;
-			cards = new CardModel<>(config);
-			initFrame();
-			initialize();
-		}
+		assert config != null;
+
+		size = config.size;
+		cards = new CardModel<>(config);
+		initFrame();
+		initialize();
 	}
 
+	/**
+	 * @return the center x coordinate of the first selected card.
+	 */
 	public int getLeftReference() {
-		final JComponent comp = pnlCards.cardSet.get(cards.getFirstSelectedIndex());
+		final JComponent comp = cardContainer.cardSet.get(cards.getFirstSelectedIndex());
 		return comp.getLocation().x + comp.getWidth() / 2 + INSET;
 	}
 
+	/**
+	 * @return the center x coordinate of the second selected card.
+	 */
+	public int getRightReference() {
+		final Component comp = cardContainer.cardSet.get(cards.getSecondSelectedIndex());
+		return comp.getLocation().x + comp.getWidth() / 2 + INSET;
+	}
+
+	/**
+	 * @return the name of this player.
+	 */
 	public String getName() {
 		return name;
 	}
 
-	public int getRightReference() {
-		final Component comp = pnlCards.cardSet.get(cards.getSecondSelectedIndex());
-		return comp.getLocation().x + comp.getWidth() / 2 + INSET;
-	}
-
+	/**
+	 * Terminates the application.
+	 */
 	public void quit() {
 		DEBUGLOG.info("Exiting game...");
 		if (controler != null) {
@@ -116,14 +143,31 @@ public class ClientGUI implements PresentationView {
 		System.exit(0);
 	}
 
+	/**
+	 * After the {@link ConnectionDialog} established the connection to the
+	 * server, the communication path between client and server is updated by
+	 * this method.
+	 * 
+	 * @param controller
+	 *            The new controller object.
+	 */
 	public void setController(ServerControl controller) {
 		this.controler = controller;
 	}
 
+	/**
+	 * Set the client's name.
+	 * 
+	 * @param name
+	 *            The new name.
+	 */
 	public void setName(String name) {
 		this.name = name;
 	}
 
+	/**
+	 * @return true if the swap button should be displayed.
+	 */
 	public boolean showSwapButton() {
 		return cards.twoSelected();
 	}
@@ -138,7 +182,7 @@ public class ClientGUI implements PresentationView {
 		try {
 			Action action = cards.toggleMark(index);
 			clearErrorMessage();
-			reportActionToPresenter(action);
+			reportActionToServer(action);
 		} catch (SelectionException ex) {
 			showErrorMessage(ex);
 		}
@@ -151,7 +195,7 @@ public class ClientGUI implements PresentationView {
 			try {
 				Action action = cards.togglePin(index);
 				clearErrorMessage();
-				reportActionToPresenter(action);
+				reportActionToServer(action);
 			} catch (SelectionException e) {
 				showErrorMessage(e);
 			}
@@ -163,9 +207,9 @@ public class ClientGUI implements PresentationView {
 	public void performSelect(String clientId, int index) {
 		try {
 			Action action = cards.select(index);
-			updateStats();
+			synchronizeStats();
 			clearErrorMessage();
-			reportActionToPresenter(action);
+			reportActionToServer(action);
 		} catch (SelectionException ex) {
 			showErrorMessage(ex);
 		}
@@ -176,13 +220,13 @@ public class ClientGUI implements PresentationView {
 	public void performSwapStart(String clientId) {
 		try {
 			Action action = cards.swapSelection();
-			reportActionToPresenter(action);
-			updateStats();
+			reportActionToServer(action);
+			synchronizeStats();
 
 			int leftIndex = cards.getFirstSelectedIndex();
 			int rightIndex = cards.getSecondSelectedIndex();
-			Card cardLeft = pnlCards.cardSet.get(leftIndex);
-			Card cardRight = pnlCards.cardSet.get(rightIndex);
+			Card cardLeft = cardContainer.cardSet.get(leftIndex);
+			Card cardRight = cardContainer.cardSet.get(rightIndex);
 
 			if (USE_ANIMATION)
 				new Animator(cardLeft, cardRight).start();
@@ -197,7 +241,7 @@ public class ClientGUI implements PresentationView {
 	@Override
 	public void performSwapStop(String clientId) {
 		animating = false;
-		pnlCards.cardSet.updateCards(cards);
+		cardContainer.cardSet.synchronize(cards);
 	}
 
 	private void clearErrorMessage() {
@@ -212,23 +256,25 @@ public class ClientGUI implements PresentationView {
 	}
 
 	/**
-	 * Initialize the contents of the frame.
+	 * Initialize the contents of the frame. This method is called whenever the
+	 * configuration changes. That's why it is separated from
+	 * {@link #initFrame()}.
 	 */
 	private void initialize() {
 		frame.getContentPane().removeAll();
 
-		pnlCards = new CardSetContainer(this, size, name, false, true);
+		cardContainer = new CardSetContainer(this, size, name, false, true);
 		{
-			pnlCards.setTitle(config.toString());
+			cardContainer.setTitle(config.toString());
 			GridBagConstraints gbcPnlCards = new GridBagConstraints();
 			gbcPnlCards.fill = GridBagConstraints.BOTH;
 			gbcPnlCards.insets = new Insets(5, 5, 5, 5);
 			gbcPnlCards.gridx = 0;
 			gbcPnlCards.gridy = 0;
-			frame.getContentPane().add(pnlCards, gbcPnlCards);
+			frame.getContentPane().add(cardContainer, gbcPnlCards);
 		}
 
-		pnlSwap = new SwapPanel(this, name);
+		pnlSwap = new SwapPanel(this);
 		{
 			GridBagConstraints gbcPnlLines = new GridBagConstraints();
 			gbcPnlLines.insets = new Insets(0, 0, 5, 0);
@@ -253,13 +299,13 @@ public class ClientGUI implements PresentationView {
 		}
 
 		initMenuBar();
-		updateStats();
+		synchronizeStats();
 	}
 
 	private void initCards() {
 		size = config.size;
 		cards = new CardModel<>(config);
-		pnlCards.cardSet.set(size, this, name, true);
+		cardContainer.cardSet.setSize(size);
 	}
 
 	private void initFrame() {
@@ -412,7 +458,7 @@ public class ClientGUI implements PresentationView {
 		frame.setJMenuBar(menuBar);
 	}
 
-	private void reportActionToPresenter(Action action) {
+	private void reportActionToServer(Action action) {
 		if (clientMode) {
 			try {
 				controler.performAction(name, action);
@@ -422,7 +468,7 @@ public class ClientGUI implements PresentationView {
 		}
 	}
 
-	private void reportErrorToPresenter() {
+	private void reportErrorToServer() {
 		try {
 			controler.incErrorCount(name);
 		} catch (RemoteException | NullPointerException e) {
@@ -434,7 +480,7 @@ public class ClientGUI implements PresentationView {
 		clearErrorMessage();
 		cards.reset(true);
 		updateAllComponents();
-		updateStats();
+		synchronizeStats();
 	}
 
 	private void showErrorMessage(SelectionException e) {
@@ -452,10 +498,14 @@ public class ClientGUI implements PresentationView {
 				}
 			}
 
-			updateStats();
+			synchronizeStats();
 			if (clientMode)
-				reportErrorToPresenter();
+				reportErrorToServer();
 		}
+	}
+
+	private void synchronizeStats() {
+		cardContainer.setStats(cards.getCompareCount(), cards.getSwapCount(), cards.getErrorCount());
 	}
 
 	private void updateAllComponents() {
@@ -466,6 +516,7 @@ public class ClientGUI implements PresentationView {
 	private void updateCardsIfFinished() {
 		if (cards.allMarked()) {
 			if (cards.isFinished()) {
+				// if all cards are marked and the algorithm is done
 				if (cards.isSorted()) {
 					lblHint.setForeground(POSITIVE_HINT_COLOR);
 					lblHint.setText("Congratulations!");
@@ -476,7 +527,7 @@ public class ClientGUI implements PresentationView {
 				pnlSwap.removeAll();
 				cards.selectAll();
 				updateComponents();
-				pnlCards.cardSet.finishCards(cards);
+				cardContainer.cardSet.finishCards(cards);
 			} else {
 				lblHint.setForeground(DEFAULT_HINT_COLOR);
 				lblHint.setText("The algorithm is not finished yet!");
@@ -485,15 +536,19 @@ public class ClientGUI implements PresentationView {
 	}
 
 	private void updateComponents() {
-		pnlCards.cardSet.updateCards(cards);
-		pnlSwap.updateButton(cards.twoSelected());
-		pnlCards.setTitle(config.toString());
+		// sync cards with the model
+		cardContainer.cardSet.synchronize(cards);
+		// update the swap button
+		pnlSwap.updateButton(showSwapButton());
+		cardContainer.setTitle(config.toString());
 	}
 
-	private void updateStats() {
-		pnlCards.setStats(cards.getCompareCount(), cards.getSwapCount(), cards.getErrorCount());
-	}
-
+	/**
+	 * Run the client in a new thread.
+	 * 
+	 * @param remoteConfig
+	 *            True if in client mode, false if in standalone mode.
+	 */
 	public static void initAndRun(final boolean remoteConfig) {
 		EventQueue.invokeLater(new Runnable() {
 			@Override

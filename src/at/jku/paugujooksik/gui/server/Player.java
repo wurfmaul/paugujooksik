@@ -41,15 +41,12 @@ public class Player {
 	}
 
 	public void updateComponents() {
-		getPanel().cardSet.updateCards(cards);
+		getPanel().cardSet.synchronize(cards);
 		if (cards.allMarked() && cards.isFinished()) {
 			cards.selectAll();
-			getPanel().cardSet.updateCards(cards);
+			getPanel().cardSet.synchronize(cards);
 			getPanel().cardSet.finishCards(cards);
 		}
-		// in order to balance the animation trick (see CardSetContainerPanel.validateTree()), 
-		// we have to validate manually here 
-		panel.validate();
 	}
 
 	public void updateStats() {

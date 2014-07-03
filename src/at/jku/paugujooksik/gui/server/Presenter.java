@@ -35,9 +35,9 @@ import at.jku.paugujooksik.gui.Animator;
 import at.jku.paugujooksik.gui.Card;
 import at.jku.paugujooksik.gui.CardSetContainer;
 import at.jku.paugujooksik.gui.PresentationView;
-import at.jku.paugujooksik.gui.SelectionException;
 import at.jku.paugujooksik.model.Action;
 import at.jku.paugujooksik.model.Configuration;
+import at.jku.paugujooksik.model.SelectionException;
 
 public class Presenter extends Window implements PresentationView {
 	private static final long serialVersionUID = 8299211278767397214L;

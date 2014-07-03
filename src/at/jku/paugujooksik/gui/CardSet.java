@@ -22,24 +22,54 @@ import at.jku.paugujooksik.model.CardModel;
 public class CardSet extends JPanel {
 	private static final long serialVersionUID = 8943110545308400878L;
 
-	private final List<Card> cardBtns = new LinkedList<>();
+	private final CardSetContainer container;
+	private final List<Card> cardList = new LinkedList<>();
 
-	public CardSet(int size, PresentationView target, String clientId, boolean enableMouseActions) {
-		set(size, target, clientId, enableMouseActions);
+	/**
+	 * Creates a new set of cards.
+	 * 
+	 * @param size
+	 *            The amount of cards.
+	 * @param container
+	 *            The component that contains this set.
+	 */
+	public CardSet(int size, CardSetContainer container) {
+		this.container = container;
+		setSize(size);
 		setOpaque(false);
 	}
 
+	/**
+	 * Returns the card at specified index.
+	 * 
+	 * @param index
+	 *            The card's index.
+	 * @return The card at specified position.
+	 */
 	public Card get(int index) {
-		return cardBtns.get(index);
+		return cardList.get(index);
 	}
 
-	public void finishCards(CardModel<?> cards) {
-		for (int i = 0; i < cardBtns.size(); i++) {
-			cardBtns.get(i).finish(!cards.isOnRightPosition(i));
+	/**
+	 * Prepare cards ford their final appearance according to the model.
+	 * 
+	 * @param model
+	 *            The cardset's model.
+	 */
+	public void finishCards(CardModel<?> model) {
+		for (int i = 0; i < cardList.size(); i++) {
+			cardList.get(i).finish(!model.isOnRightPosition(i));
 		}
 	}
 
-	public void set(int size, PresentationView target, String clientId, boolean enableMouseActions) {
+	/**
+	 * Sets the amount of cards this set should contain and performs the
+	 * necessary initializations.
+	 * 
+	 * @param size
+	 *            The amount of cards.
+	 */
+	public void setSize(int size) {
 		final GridBagLayout gblPnlCards = new GridBagLayout();
 		{
 			gblPnlCards.columnWidths = new int[size + 1];
@@ -54,11 +84,13 @@ public class CardSet extends JPanel {
 		}
 		setLayout(gblPnlCards);
 
+		// remove old cards from the panel
 		removeAll();
-		cardBtns.clear();
+		cardList.clear();
 
+		// setup the actual cards
 		for (int i = 0; i < size; i++) {
-			final Card card = new Card(i, target, clientId, enableMouseActions);
+			final Card card = new Card(i, container);
 			final GridBagConstraints gbcCard = new GridBagConstraints();
 			{
 				gbcCard.fill = GridBagConstraints.BOTH;
@@ -67,9 +99,10 @@ public class CardSet extends JPanel {
 				gbcCard.gridy = 0;
 			}
 			add(card, gbcCard);
-			cardBtns.add(card);
+			cardList.add(card);
 		}
 
+		// setup the borders around the cards -> slots
 		for (int i = 0; i < size; i++) {
 			final CardSlot slot = new CardSlot(i);
 			final GridBagConstraints gbcSlot = new GridBagConstraints();
@@ -81,13 +114,23 @@ public class CardSet extends JPanel {
 			}
 			add(slot, gbcSlot);
 		}
-
 	}
 
-	public void updateCards(CardModel<?> cards) {
-		for (int i = 0; i < cardBtns.size(); i++) {
-			cardBtns.get(i).updateCard(cards.getCard(i));
+	/**
+	 * Synchronizes the GUI elements with the underlying model.
+	 * 
+	 * @param model
+	 *            The model, this card should match.
+	 */
+	public void synchronize(CardModel<?> model) {
+		for (int i = 0; i < cardList.size(); i++) {
+			cardList.get(i).synchronize(model.getCard(i));
 		}
+		/**
+		 * In order to complete the layout trick, a validate command has to be
+		 * delegated manually here. See {@link CardSetContainer#validateTree()}
+		 * for further details.
+		 */
 		validate();
 	}
 }

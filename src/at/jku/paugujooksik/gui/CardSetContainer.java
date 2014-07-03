@@ -21,25 +21,50 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.border.LineBorder;
 
+/**
+ * The outer most container of one player's cards, including a label for
+ * name/config and statistics. This contains other layers in order to provide a
+ * proper layout.
+ * 
+ * @author Wolfgang Kuellinger (0955711), 2014
+ * @see Card details on the GUI architecture
+ */
 public class CardSetContainer extends JPanel {
 	public static final long serialVersionUID = 979482902923838043L;
 
+	/** The next layer, the panel that holds the cards. */
 	public final CardSet cardSet;
+	/** The representing component, responsible for this container. */
+	public final PresentationView view;
+	/** The player's unique name. */
+	public final String name;
+	/** Determines whether or not mouse actions are permitted. */
+	public final boolean mouseActionsEnabled;
 
+	private final JLabel lblTitle;
 	private final JLabel lblCompareCount;
 	private final JLabel lblErrorCount;
 	private final JLabel lblSwapCount;
-	private final PresentationView target;
-	private final String name;
-	private JLabel lblTitle;
 
-
-	public CardSetContainer(PresentationView target, int size, String name, boolean border,
-			boolean enableMouseActions) {
-
-		this.target = target;
+	/**
+	 * Creates a new basic container.
+	 * 
+	 * @param view
+	 *            See {@link #view}.
+	 * @param size
+	 *            The amount of cards.
+	 * @param name
+	 *            See {@link #name}.
+	 * @param border
+	 *            True if a border should be displayed.
+	 * @param enableMouseActions
+	 *            See {@link #mouseActionsEnabled}.
+	 */
+	public CardSetContainer(PresentationView view, int size, String name, boolean border, boolean enableMouseActions) {
+		this.view = view;
 		this.name = name;
-		
+		this.mouseActionsEnabled = enableMouseActions;
+
 		if (border)
 			setBorder(new LineBorder(PLAYER_BORDER_COLOR, PLAYER_BORDER_THICKNESS));
 
@@ -121,7 +146,7 @@ public class CardSetContainer extends JPanel {
 			pnlError.add(lblErrorCount);
 		}
 
-		cardSet = new CardSet(size, target, name, enableMouseActions);
+		cardSet = new CardSet(size, this);
 		GridBagConstraints gbc_panel = new GridBagConstraints();
 		gbc_panel.gridwidth = 5;
 		gbc_panel.insets = new Insets(5, 5, 5, 5);
@@ -129,25 +154,52 @@ public class CardSetContainer extends JPanel {
 		gbc_panel.gridx = 0;
 		gbc_panel.gridy = 1;
 		add(cardSet, gbc_panel);
-		
+
 		// disable resizing when multiple players change card contents
 		setPreferredSize(getSize());
 	}
 
+	/**
+	 * Sets the statistics.
+	 * 
+	 * @param compareCount
+	 *            Number of performed comparisons.
+	 * @param swapCount
+	 *            Number of performed Swaps.
+	 * @param errorCount
+	 *            Number of made mistakes.
+	 */
 	public void setStats(int compareCount, int swapCount, int errorCount) {
 		lblCompareCount.setText(Integer.toString(compareCount));
 		lblErrorCount.setText(Integer.toString(errorCount));
 		lblSwapCount.setText(Integer.toString(swapCount));
 	}
 
+	/**
+	 * Sets the title if it should be other than the player's name.
+	 * 
+	 * @param title
+	 *            The new title.
+	 */
 	public void setTitle(String title) {
 		lblTitle.setText(title);
 	}
-	
+
 	@Override
 	protected void validateTree() {
-		// dirty trick to avoid repainting while animating
-		if (!target.isProcessing(name))
+		/**
+		 * The following is a very dirty trick to avoid repainting while
+		 * animation is ongoing. The layout manager performs a layout operation
+		 * of all children, once certain modifications are performed (e.g.
+		 * repaint of a component). This would reset all panels to their
+		 * original positions, including the moving cards. In order to keep the
+		 * layout manager from doing this, the validation command is simply kept
+		 * from being delegated any further than here. This hack needs manual
+		 * validation after the animation has finished.
+		 * 
+		 * See {@link CardSet#synchronize(at.jku.paugujooksik.model.CardModel)}!
+		 */
+		if (!view.isProcessing(name))
 			super.validateTree();
 	}
 }

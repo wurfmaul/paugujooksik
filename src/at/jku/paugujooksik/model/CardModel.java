@@ -9,8 +9,6 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import at.jku.paugujooksik.gui.SelectionException;
-
 public class CardModel<T extends Comparable<T>> {
 	private final Statistics stat = new Statistics();
 	private final List<Card> cardList = new LinkedList<>();

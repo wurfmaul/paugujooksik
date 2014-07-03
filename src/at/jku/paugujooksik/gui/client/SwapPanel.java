@@ -11,18 +11,36 @@ import javax.swing.JButton;
 
 import at.jku.paugujooksik.gui.AbstractPanel;
 
+/**
+ * This panel includes the swap button of the client GUI. The lines to the
+ * selected cards are drawn here.
+ * 
+ * @author Wolfgang Kuellinger (0955711), 2014
+ */
 public class SwapPanel extends AbstractPanel {
 	private static final long serialVersionUID = -7863948686242926432L;
 
-	private final ClientGUI target;
-	private String clientId;
+	private final ClientGUI client;
+	private final String clientId;
 
-	public SwapPanel(ClientGUI target, String clientId) {
+	/**
+	 * Create a new panel.
+	 * 
+	 * @param client
+	 *            The current client GUI.
+	 */
+	public SwapPanel(ClientGUI client) {
 		super(null);
-		this.target = target;
-		this.clientId = clientId;
+		this.client = client;
+		this.clientId = client.getName();
 	}
 
+	/**
+	 * Specify if the button should be shown and the lines be drawn.
+	 * 
+	 * @param show
+	 *            If true, draw the lines and show the button.
+	 */
 	public void updateButton(boolean show) {
 		removeAll();
 		if (show) {
@@ -34,11 +52,11 @@ public class SwapPanel extends AbstractPanel {
 	@Override
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
-		if (target.showSwapButton()) {
+		if (client.showSwapButton()) {
 			final Graphics2D g2d = (Graphics2D) g;
 			{
-				final int left = target.getLeftReference();
-				final int right = target.getRightReference();
+				final int left = client.getLeftReference();
+				final int right = client.getRightReference();
 				final int yOff = 20;
 				g2d.drawLine(left, yOff, right, yOff);
 				g2d.drawLine(left, 0, left, yOff);
@@ -48,9 +66,12 @@ public class SwapPanel extends AbstractPanel {
 		}
 	}
 
+	/**
+	 * @return the center x coordinate of the two selected cards.
+	 */
 	private int getCenter() {
-		final int left = target.getLeftReference();
-		final int right = target.getRightReference();
+		final int left = client.getLeftReference();
+		final int right = client.getRightReference();
 		return Math.min(left, right) + Math.abs(right - left) / 2;
 	}
 
@@ -67,8 +88,8 @@ public class SwapPanel extends AbstractPanel {
 			addMouseListener(new MouseAdapter() {
 				@Override
 				public void mouseReleased(MouseEvent e) {
-					if (!target.isProcessing(clientId) && staysInsideComponent(e))
-						target.performSwapStart(clientId);
+					if (!client.isProcessing(clientId) && staysInsideComponent(e))
+						client.performSwapStart(clientId);
 				}
 			});
 		}

@@ -152,14 +152,14 @@ public class Constants {
 
 		DISPLAY_DEVICES = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices();
 
-		// deactivate root logger
+		// setup ONE logger that prints to console
 		final Logger rootLogger = Logger.getLogger("");
 		for (Handler h : rootLogger.getHandlers()) {
 			rootLogger.removeHandler(h);
 		}
-
 		final ConsoleHandler handler = new ConsoleHandler();
 		handler.setLevel(Level.ALL);
 		DEBUGLOG.addHandler(handler);
+		DEBUGLOG.setLevel(LOGLEVEL);
 	}
 }

@@ -1,4 +1,4 @@
-package at.jku.paugujooksik.server;
+package at.jku.paugujooksik.network;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;

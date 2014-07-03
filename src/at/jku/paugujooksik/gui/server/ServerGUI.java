@@ -60,8 +60,8 @@ import javax.swing.border.BevelBorder;
 import at.jku.paugujooksik.model.Configuration;
 import at.jku.paugujooksik.model.ValueGenerator.ValueMode;
 import at.jku.paugujooksik.model.ValueGenerator.ValueType;
-import at.jku.paugujooksik.server.ServerControl;
-import at.jku.paugujooksik.server.ServerControlImpl;
+import at.jku.paugujooksik.network.ServerControl;
+import at.jku.paugujooksik.network.ServerControlImpl;
 
 public class ServerGUI {
 	private static final List<String> HOST_ADDRESSES = new LinkedList<>();
