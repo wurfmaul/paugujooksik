@@ -18,6 +18,11 @@ import javax.swing.ImageIcon;
 import at.jku.paugujooksik.gui.AbstractPanel;
 import at.jku.paugujooksik.gui.client.ClientGUI;
 
+/**
+ * Loads resources from the build path.
+ * 
+ * @author Wolfgang Kuellinger (0955711), 2014
+ */
 public class ResourceLoader {
 	private static final String FONTDIR = "/font/";
 	private static final String ICONDIR = "/img/";
@@ -39,6 +44,11 @@ public class ResourceLoader {
 
 	public static final String ERROR_SND = "beep.wav";
 
+	/**
+	 * Loads fonts from the resources into the environment.
+	 * 
+	 * @return true if loading was successful.
+	 */
 	public static boolean loadFonts() {
 		final String[] fonts = new String[] { SANS_FONT, BOLD_SANS_FONT };
 		final GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
@@ -56,12 +66,11 @@ public class ResourceLoader {
 	}
 
 	/**
-	 * Provides {@link Icon} resource from the class path.
+	 * Provides {@link Icon} resource from the build path.
 	 * 
 	 * @param filename
 	 *            The file name of the image.
-	 * @return a new {@link ImageIcon} using the specified file from the
-	 *         classpath.
+	 * @return a new {@link ImageIcon} using the specified file.
 	 */
 	public static Icon loadIcon(String filename) {
 		final URL res = AbstractPanel.class.getResource(ICONDIR + filename);
@@ -71,6 +80,13 @@ public class ResourceLoader {
 		return new ImageIcon(res);
 	}
 
+	/**
+	 * Provides {@link Clip} resource from the build path.
+	 * 
+	 * @param filename
+	 *            The file name of the clip
+	 * @return a new audio clip using the specified file.
+	 */
 	public static Clip loadClip(String filename) {
 		try {
 			URL url = ClientGUI.class.getResource(SNDDIR + filename);

@@ -4,10 +4,20 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * Generates new values by specified attributes.
+ * 
+ * @author Wolfgang Kuellinger (0955711), 2014
+ */
 public class ValueGenerator {
 	private static final int MAX_CHAR = 26;
 
-	public static List<Integer> smallIntValues(int size) {
+	/**
+	 * @param size
+	 *            The number of values.
+	 * @return the first integers.
+	 */
+	public static List<Integer> smallNumberValues(int size) {
 		final List<Integer> values = new LinkedList<>();
 		for (int i = 0; i < size; i++) {
 			values.add(i + 1);
@@ -15,7 +25,12 @@ public class ValueGenerator {
 		return values;
 	}
 
-	public static List<String> smallStringValues(int size) {
+	/**
+	 * @param size
+	 *            The number of values.
+	 * @return random integers.
+	 */
+	public static List<String> smallLetterValues(int size) {
 		assert size < MAX_CHAR;
 		final List<String> values = new LinkedList<>();
 		for (int i = 0; i < size; i++) {
@@ -24,7 +39,12 @@ public class ValueGenerator {
 		return values;
 	}
 
-	public static List<Integer> randomIntValues(int size) {
+	/**
+	 * @param size
+	 *            The number of values.
+	 * @return the first letters of the alphabet.
+	 */
+	public static List<Integer> randomNumberValues(int size) {
 		final List<Integer> values = new LinkedList<>();
 		final Random rand = new Random();
 		for (int i = 0; i < size; i++) {
@@ -33,7 +53,12 @@ public class ValueGenerator {
 		return values;
 	}
 
-	public static List<String> randomStringValues(int size) {
+	/**
+	 * @param size
+	 *            The number of values.
+	 * @return random letters of the alphabet.
+	 */
+	public static List<String> randomLetterValues(int size) {
 		assert size < MAX_CHAR;
 		final List<String> values = new LinkedList<>();
 		final Random rand = new Random();
@@ -43,6 +68,9 @@ public class ValueGenerator {
 		return values;
 	}
 
+	/**
+	 * Specifies in which way the values are generatied.
+	 */
 	public enum ValueMode {
 		SMALL, RANDOM;
 
@@ -52,6 +80,9 @@ public class ValueGenerator {
 		};
 	}
 
+	/**
+	 * Specifies the values' types.
+	 */
 	public enum ValueType {
 		NUMBERS, LETTERS;
 

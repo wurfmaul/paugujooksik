@@ -9,14 +9,29 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * The model of the card set of one player.
+ * 
+ * @author Wolfgang Kuellinger (0955711), 2014
+ * @param <T>
+ *            can be any {@link Comparable}.
+ */
 public class CardModel<T extends Comparable<T>> {
+	/** Keeps track of the errors, swaps, compares. */
 	private final Statistics stat = new Statistics();
+	/** Holds an object for every card in this set. */
 	private final List<Card> cardList = new LinkedList<>();
+	/** The basic configuration for this model. */
 	private final Configuration<T> config;
+	/** The values of the cards. */
 	private final List<T> values;
+	/** A sorted copy of the values. */
 	private final List<T> sortedValues;
-	private int curAction;
+	/** A list of actions that need to be performed due to the algo. */
 	private List<Action> expectedActions;
+	/** The index of the current action in {@link #expectedActions}. */
+	private int curAction;
+	/** For history purposes, the previous action is kept. */
 	private Action prevAction = null;
 
 	public CardModel(Configuration<T> config) {
@@ -26,6 +41,9 @@ public class CardModel<T extends Comparable<T>> {
 		reset(false);
 	}
 
+	/**
+	 * @return true if all cards are marked.
+	 */
 	public boolean allMarked() {
 		for (Card card : cardList) {
 			if (!card.marked)
@@ -34,64 +52,122 @@ public class CardModel<T extends Comparable<T>> {
 		return true;
 	}
 
+	/**
+	 * @param index
+	 *            Index of the card.
+	 * @return the internal card representation.
+	 */
 	public Card getCard(int index) {
 		return cardList.get(index);
 	}
 
+	/**
+	 * @return the first selected card.
+	 * @throws SelectionException
+	 *             if not exactly two cards are selected.
+	 */
 	public int getFirstSelectedIndex() {
 		if (!twoSelected())
 			throw new SelectionException("Two buttons must be selected!");
 		return getSelection().get(0);
 	}
 
+	/**
+	 * @return the second selected card.
+	 * @throws SelectionException
+	 *             if not exactly two cards are selected.
+	 */
 	public int getSecondSelectedIndex() {
 		if (!twoSelected())
 			throw new SelectionException("Two buttons must be selected!");
 		return getSelection().get(1);
 	}
 
+	/**
+	 * @return the selected card.
+	 * @throws SelectionException
+	 *             if not exactly one card is selected.
+	 */
 	public int getSelectedIndex() {
 		if (!oneSelected())
 			throw new SelectionException("One button must be selected");
 		return getSelection().get(0);
 	}
 
+	/**
+	 * @return the amount of mistakes.
+	 */
 	public int getErrorCount() {
 		return stat.errorCount;
 	}
 
+	/**
+	 * @return the number of performed swap operations.
+	 */
 	public int getSwapCount() {
 		return stat.swapCount;
 	}
 
+	/**
+	 * @return the number of performed comparisons.
+	 */
 	public int getCompareCount() {
 		return stat.compareCount;
 	}
 
+	/**
+	 * Increment the number of errors.
+	 */
 	public void incErrorCount() {
 		stat.errorCount++;
 	}
 
+	/**
+	 * @return true if all necessary actions were performed.
+	 */
 	public boolean isFinished() {
 		return curAction == expectedActions.size();
 	}
 
+	/**
+	 * @param index
+	 *            The index of the card.
+	 * @return true if the card with specified index is marked.
+	 */
 	public boolean isMarked(int index) {
 		return cardList.get(index).marked;
 	}
 
+	/**
+	 * @param index
+	 *            The index of the card.
+	 * @return true if the card with specified index is on the right position.
+	 */
 	public boolean isOnRightPosition(int index) {
 		return cardList.get(index).value.equals(sortedValues.get(index));
 	}
 
+	/**
+	 * @param index
+	 *            The index of the card.
+	 * @return true if the card with specified index is pinned.
+	 */
 	public boolean isPinned(int index) {
 		return cardList.get(index).pinned;
 	}
 
+	/**
+	 * @param index
+	 *            The index of the card.
+	 * @return true if the card with specified index is selected.
+	 */
 	public boolean isSelected(int index) {
 		return cardList.get(index).selected;
 	}
 
+	/**
+	 * @return true if the card set is sorted.
+	 */
 	public boolean isSorted() {
 		for (int i = 0; i < values.size(); i++) {
 			if (!isOnRightPosition(i))
@@ -100,10 +176,19 @@ public class CardModel<T extends Comparable<T>> {
 		return true;
 	}
 
+	/**
+	 * @return true if exactly one card is selected.
+	 */
 	public boolean oneSelected() {
 		return getSelection().size() == 1;
 	}
 
+	/**
+	 * Resets the card model to it's initial state.
+	 * 
+	 * @param shuffleValues
+	 *            If true, the values are shuffled again.
+	 */
 	public void reset(boolean shuffleValues) {
 		if (shuffleValues) {
 			Collections.shuffle(values);
@@ -119,6 +204,13 @@ public class CardModel<T extends Comparable<T>> {
 		stat.reset();
 	}
 
+	/**
+	 * Select/open the card with the specified index.
+	 * 
+	 * @param index
+	 *            The index of the card.
+	 * @return The action that is produced by this command.
+	 */
 	public Action select(int index) {
 		Action action = Action.open(index);
 		checkAction(action);
@@ -157,6 +249,9 @@ public class CardModel<T extends Comparable<T>> {
 		return action;
 	}
 
+	/**
+	 * Select all the cards. Necessary to open all the cards at the end.
+	 */
 	public void selectAll() {
 		assert allMarked();
 		for (Card c : cardList) {
@@ -164,6 +259,13 @@ public class CardModel<T extends Comparable<T>> {
 		}
 	}
 
+	/**
+	 * Swap the two selected cards.
+	 * 
+	 * @return The action that represents this command.
+	 * @throws SelectionException
+	 *             if not exactly two cards are selected.
+	 */
 	public Action swapSelection() {
 		if (!twoSelected())
 			throw new SelectionException("Two cards need to be open.");
@@ -192,6 +294,13 @@ public class CardModel<T extends Comparable<T>> {
 		return action;
 	}
 
+	/**
+	 * Mark the card if it is not already marked and vice versa.
+	 * 
+	 * @param index
+	 *            The index of the card.
+	 * @return The action that represents this command.
+	 */
 	public Action toggleMark(int index) {
 		final Card card = cardList.get(index);
 		Action action;
@@ -205,26 +314,48 @@ public class CardModel<T extends Comparable<T>> {
 		return action;
 	}
 
+	/**
+	 * Pin the card if it is not already pinned and vice versa.
+	 * 
+	 * @param index
+	 *            The index of the card.
+	 * @return The action that represents this command.
+	 */
 	public Action togglePin(int index) {
 		return getCard(index).pinned ? unpin(index) : pin(index);
 	}
 
+	/**
+	 * @return true if exactly two cards are selected.
+	 */
 	public boolean twoSelected() {
 		return getSelection().size() == 2;
 	}
 
+	/**
+	 * @return true if no card is selected.
+	 */
 	public boolean zeroSelected() {
 		return getSelection().size() == 0;
 	}
 
+	/**
+	 * Check whether or not the specified action is compatible with the expected
+	 * one.
+	 * 
+	 * @param action
+	 *            The action that is about to be performed.
+	 * @throws SelectionException
+	 *             if the card does not match the expection.
+	 */
 	private void checkAction(Action action) {
 		if (curAction < expectedActions.size()) {
 			final Action exp = expectedActions.get(curAction);
-			
+
 			DEBUGLOG.fine("Expected: '" + exp + "'; actual: '" + action + "' " + "<"
 					+ (!exp.isCompatibleTo(action) ? "not " : "") + "compatible>" + "<"
 					+ (!exp.equals(action) ? "not " : "") + "equal>");
-			
+
 			if (exp.isCompatibleTo(action)) {
 				if (exp.equals(action)) {
 					curAction++;
@@ -299,7 +430,10 @@ public class CardModel<T extends Comparable<T>> {
 		cardList.get(index).pinned = false;
 		return action;
 	}
-	
+
+	/**
+	 * Represents one single card of that set.
+	 */
 	public class Card implements Comparable<Card>, Serializable {
 		private static final long serialVersionUID = 8151077928442901008L;
 
@@ -323,6 +457,9 @@ public class CardModel<T extends Comparable<T>> {
 		}
 	}
 
+	/**
+	 * Keeps track of the player's statistics.
+	 */
 	private class Statistics {
 		public int compareCount;
 		public int errorCount;

@@ -6,6 +6,13 @@ import java.util.List;
 
 import at.jku.paugujooksik.model.Action;
 
+/**
+ * An implementation of the "Insertion Sort" algorithm.
+ * 
+ * @author Wolfgang Kuellinger (0955711), 2014
+ * @param <T>
+ *            can be any of {@link Comparable}.
+ */
 public class InsertionSort<T extends Comparable<T>> extends SortAlgorithm<T> {
 	private static final long serialVersionUID = 2190148165959505555L;
 

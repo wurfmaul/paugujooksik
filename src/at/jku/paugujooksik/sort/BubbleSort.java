@@ -6,6 +6,13 @@ import java.util.List;
 
 import at.jku.paugujooksik.model.Action;
 
+/**
+ * An implementation of the "Bubble Sort" algorithm.
+ * 
+ * @author Wolfgang Kuellinger (0955711), 2014
+ * @param <T>
+ *            can be any of {@link Comparable}.
+ */
 public class BubbleSort<T extends Comparable<T>> extends SortAlgorithm<T> {
 	private static final long serialVersionUID = -7956968455697337445L;
 

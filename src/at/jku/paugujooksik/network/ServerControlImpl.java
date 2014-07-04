@@ -7,6 +7,12 @@ import at.jku.paugujooksik.gui.server.ServerGUI;
 import at.jku.paugujooksik.model.Action;
 import at.jku.paugujooksik.model.Configuration;
 
+/**
+ * One concrete implementation of the {@link ServerControl} interface to enable
+ * communication between client and server.
+ * 
+ * @author Wolfgang Kuellinger (0955711), 2014
+ */
 public class ServerControlImpl extends UnicastRemoteObject implements ServerControl {
 	private static final long serialVersionUID = -53275326117633745L;
 	private ServerGUI server;
